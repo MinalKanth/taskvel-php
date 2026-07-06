@@ -4,7 +4,7 @@
 // Update these 4 values for your hosting environment.
 // ------------------------------------------------------------
 define('DB_HOST', getenv('DB_HOST') ?: '127.0.0.1');
-define('DB_NAME', getenv('DB_NAME') ?: 'taskvel-php');
+define('DB_NAME', getenv('DB_NAME') ?: 'taskvel_php');
 define('DB_USER', getenv('DB_USER') ?: 'root');
 define('DB_PASS', getenv('DB_PASS') ?: '');
 
