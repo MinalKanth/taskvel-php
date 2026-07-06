@@ -3,8 +3,8 @@
 -- Charset utf8mb4 throughout, InnoDB for FK support.
 -- ============================================================
 
-CREATE DATABASE IF NOT EXISTS taskvel CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
-USE taskvel;
+CREATE DATABASE IF NOT EXISTS taskvel_php CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+USE taskvel_php;
 
 SET FOREIGN_KEY_CHECKS = 0;
 

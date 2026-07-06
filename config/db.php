@@ -4,12 +4,12 @@
 // Update these 4 values for your hosting environment.
 // ------------------------------------------------------------
 define('DB_HOST', getenv('DB_HOST') ?: '127.0.0.1');
-define('DB_NAME', getenv('DB_NAME') ?: 'taskvel');
+define('DB_NAME', getenv('DB_NAME') ?: 'taskvel-php');
 define('DB_USER', getenv('DB_USER') ?: 'root');
 define('DB_PASS', getenv('DB_PASS') ?: '');
 
 // Base URL used in invite emails (no trailing slash)
-define('APP_URL', getenv('APP_URL') ?: 'https://yourdomain.com/taskvel');
+define('APP_URL', getenv('APP_URL') ?: 'http://localhost/taskvel-php');
 
 // SMTP settings for invite emails (leave SMTP_HOST empty to fall back to PHP mail())
 define('SMTP_HOST', getenv('SMTP_HOST') ?: '');

@@ -1,4 +1,4 @@
-USE taskvel;
+USE taskvel_php;
 
 -- A team is a group of coworkers. Each member has a role:
 --   owner   — created the team, full control, can promote/demote/remove anyone

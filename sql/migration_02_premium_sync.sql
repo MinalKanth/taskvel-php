@@ -1,4 +1,4 @@
-USE taskvel;
+USE taskvel_php;
 
 -- Premium tier flag (used to gate premium-only features in the API/UI)
 ALTER TABLE users

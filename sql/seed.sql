@@ -1,4 +1,4 @@
-USE taskvel;
+USE taskvel_php;
 
 -- Passwords below are all: "password123"  (bcrypt hash generated via PHP password_hash)
 INSERT INTO users (id, name, email, password_hash, accent_color, theme) VALUES

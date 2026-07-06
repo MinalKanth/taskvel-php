@@ -1,4 +1,4 @@
-USE taskvel;
+USE taskvel_php;
 
 -- Stores the entire client-side state of the original single-file Taskvel
 -- app (tasks, remarks, notifications, focus log, streak, templates, theme,

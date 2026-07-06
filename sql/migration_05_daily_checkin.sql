@@ -1,4 +1,4 @@
-USE taskvel;
+USE taskvel_php;
 
 -- Daily Check-in / Office module — entirely optional and separate from both
 -- the personal Taskvel app and the Teams/Projects module. A user "checks in"

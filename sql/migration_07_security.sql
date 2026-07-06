@@ -1,4 +1,4 @@
-USE taskvel;
+USE taskvel_php;
 
 -- Sliding-window rate limiter backing store (login attempts, registration,
 -- password-reset requests, etc. — anything that needs brute-force throttling).
