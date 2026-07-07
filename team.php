@@ -184,7 +184,15 @@ async function submitInvite() {
         closeInvite();
         alert(`${res.name} added to the team ✓`);
         loadTeam();
-    } catch (e) { alert(e.message || 'Could not invite'); }
+    // } catch (e) { alert(e.message || 'Could not invite'); }
+    } catch (e) {
+        if (e.message.includes('Upgrade')) {
+            if (confirm(e.message + '\n\nGo to billing now?')) window.location.href = 'billing.php?team_id=' + TEAM_ID;
+        } else {
+            alert(e.message || 'Could not invite');
+        }
+    }
+    
 }
 async function changeRole(userId, role) {
     try { await Taskvel.request('/api/teams.php?action=update-role', { method:'POST', body:{ team_id: TEAM_ID, user_id: userId, role } }); loadTeam(); }

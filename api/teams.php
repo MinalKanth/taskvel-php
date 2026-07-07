@@ -1,5 +1,6 @@
 <?php
 require_once __DIR__ . '/../includes/teams.php';
+require_once __DIR__ . '/../includes/billing.php';
 require_login();
 
 $uid = current_user_id();
@@ -24,6 +25,7 @@ switch ("$method:$action") {
         break;
 
     case 'POST:create':
+        require_team_creation_allowed($uid);
         $name = clean_str($in['name'] ?? '', 120);
         if ($name === '') json_response(['error' => 'Team name is required'], 422);
         $pdo->beginTransaction();
@@ -51,6 +53,7 @@ switch ("$method:$action") {
     case 'POST:invite':
         $teamId = (int)($in['team_id'] ?? 0);
         require_team_manager($teamId);
+        require_seats_available($teamId);
         enforce_rate_limit("invite:$teamId:" . current_user_id(), 20, 3600, 'Too many invites sent. Please wait before inviting more people.');
         $email = clean_email($in['email'] ?? '');
         $role = in_array($in['role'] ?? 'member', ['manager', 'member']) ? $in['role'] : 'member';
