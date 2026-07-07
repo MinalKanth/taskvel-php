@@ -12,10 +12,10 @@ define('DB_PASS', getenv('DB_PASS') ?: '');
 define('APP_URL', getenv('APP_URL') ?: 'http://localhost/taskvel-php');
 
 // SMTP settings for invite emails (leave SMTP_HOST empty to fall back to PHP mail())
-define('SMTP_HOST', getenv('SMTP_HOST') ?: '');
+define('SMTP_HOST', getenv('SMTP_HOST') ?: 'smtp.gmail.com');
 define('SMTP_PORT', getenv('SMTP_PORT') ?: 587);
-define('SMTP_USER', getenv('SMTP_USER') ?: '');
-define('SMTP_PASS', getenv('SMTP_PASS') ?: '');
+define('SMTP_USER', getenv('SMTP_USER') ?: 'minal.viprak@gmail.com');
+define('SMTP_PASS', getenv('SMTP_PASS') ?: 'fabfkythogdyzvus');
 define('SMTP_FROM', getenv('SMTP_FROM') ?: 'noreply@taskvel.app');
 define('SMTP_FROM_NAME', 'Taskvel');
 
