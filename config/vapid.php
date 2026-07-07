@@ -10,6 +10,6 @@
  * keeps working exactly as before.
  */
 
-define('VAPID_PUBLIC_KEY', '');   // e.g. 'BN...' (base64url, ~87 chars)
-define('VAPID_PRIVATE_KEY', '');  // e.g. 'aB...' (base64url, ~43 chars) — keep secret!
-define('VAPID_SUBJECT', 'mailto:you@example.com'); // contact address required by the push spec
+define('BBeW-xaEHhE1bcur4sHeX8uY28vCqL9afquWS_Wbh2Br6Rh_m1zH4iBbANtTwaLSfok-_XaXi18UrRBcNwVTsCw', '');   
+define('2hc21Wuv7TVrEpV7-1T4W2-FqUbmqLfd_lWSz_K8CAU', '');  
+define('VAPID_SUBJECT', 'mailto:minalviprak@gmail.com'); 

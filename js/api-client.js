@@ -25,7 +25,16 @@
  *   share a task via email   -> Taskvel.share.invite(taskId, email, permission)
  */
 const Taskvel = (() => {
-    const base = ''; // same-origin; set e.g. '/taskvel' if hosted in a subfolder
+    const base = (() => {
+        const path = window.location.pathname;
+        if (path === '/') return '';
+        if (path.endsWith('/')) return path.slice(0, -1);
+        const last = path.split('/').pop();
+        if (last.includes('.')) {
+            return path.replace(/\/[^/]*$/, '');
+        }
+        return path;
+    })();
 
     function csrfToken() {
         const meta = document.querySelector('meta[name="csrf-token"]');
@@ -105,7 +114,7 @@ const Taskvel = (() => {
         },
 
         export: {
-            csv:  () => window.open('/api/export.php?format=csv', '_blank'),
+            csv:  () => window.open(base + '/api/export.php?format=csv', '_blank'),
             json: () => request('/api/export.php?action=export&format=json'),
         },
 
@@ -124,7 +133,7 @@ const Taskvel = (() => {
                 const fd = new FormData();
                 fd.append('task_id', taskId);
                 fd.append('file', file);
-                const res = await fetch('/api/attachments.php?action=upload', { method: 'POST', body: fd, credentials: 'same-origin' });
+                const res = await fetch(base + '/api/attachments.php?action=upload', { method: 'POST', body: fd, credentials: 'same-origin' });
                 const data = await res.json();
                 if (!res.ok) throw new Error(data.error || 'Upload failed');
                 return data;

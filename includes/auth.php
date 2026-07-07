@@ -92,7 +92,8 @@ function body(): array
 function register_user(string $name, string $email, string $password): array
 {
     $ip = client_ip();
-    enforce_rate_limit_soft("register:$ip", 8, 3600); // 8 signups/hour/IP — soft: returns error array, doesn't exit
+    $rl = enforce_rate_limit_soft("register:$ip", 8, 3600);
+    if (!$rl['ok']) return $rl;
 
     $name = clean_str($name, 190);
     $email = clean_email($email);
@@ -185,10 +186,10 @@ function is_common_password(string $password): bool
 // json_response()/exit — used inside register_user() which needs to return
 // a normal ['ok' => false, ...] array rather than short-circuit the whole
 // request (register_user() is also called from invite-accept.php's HTML flow).
-function enforce_rate_limit_soft(string $key, int $maxAttempts, int $windowSeconds): void
+function enforce_rate_limit_soft(string $key, int $maxAttempts, int $windowSeconds): array
 {
-    // Intentionally a no-op check here; the real gate is the rate_limit_hit()
-    // call after a duplicate-email response above and the login limiter.
-    // Kept as a named seam so registration throttling can be tightened
-    // (e.g. to hard-block) without touching call sites.
+    if (!rate_limit_check($key, $maxAttempts, $windowSeconds)) {
+        return ['ok' => false, 'error' => 'Too many signups from this network. Please wait a while and try again.'];
+    }
+    return ['ok' => true];
 }
