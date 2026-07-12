@@ -1008,105 +1008,6 @@ a:focus-visible, button:focus-visible, input:focus-visible, textarea:focus-visib
   </div>
 </header>
 
-<!-- ============================= PRODUCTS & SOLUTIONS ============================= -->
-<section class="pad products-band" id="products">
-  <span class="orb p-orb-1" aria-hidden="true"></span>
-  <span class="orb p-orb-2" aria-hidden="true"></span>
-  <div class="wrap">
-    <div class="section-head center reveal">
-      <span class="eyebrow">Built In-House</span>
-      <h2>Our Products &amp; Solutions by Samal Consultancy</h2>
-      <p>Beyond compliance — we build software that helps teams work smarter. Explore the tools we've crafted for productivity, collaboration and what's coming next.</p>
-    </div>
-
-    <div class="prod-grid stagger reveal">
-
-      <!-- 1. TASKVEL FREE -->
-      <article class="prod-card" style="--i:0" data-tilt>
-        <span class="prod-glare" aria-hidden="true"></span>
-        <div class="prod-top">
-          <div class="prod-icon">✦</div>
-          <span class="prod-badge free">Free · No Login</span>
-        </div>
-        <h3>Taskvel <em>Free</em></h3>
-        <div class="prod-sub">Browser-based task manager</div>
-        <p class="prod-desc">Open it and start working — no account, no sign-up, no friction. A fast, focused task organizer that runs entirely in your browser and keeps you in flow all day.</p>
-        <ul class="prod-feats">
-          <li>Smart Quick-Add with natural-language parsing — type "Call the client tomorrow #urgent" and it's tagged, dated and prioritised</li>
-          <li>Pomodoro focus timer with a floating, draggable mini-timer and daily focus history</li>
-          <li>Eisenhower Priority Matrix, smart tabs and a ⌘K command palette</li>
-          <li>Productivity Score, fire-streak tracker and daily goal progress</li>
-          <li>Offline-first PWA — installs like a native app, works without internet</li>
-          <li>CSV, PDF, calendar (.ics) and full JSON backup exports</li>
-        </ul>
-        <div class="prod-actions">
-          <a href="#" class="btn btn-gold" data-ripple>Try Now</a>
-          <a href="https://github.com/MinalKanth/taskvel-php" target="_blank" rel="noopener" class="btn btn-glass" data-ripple>Learn More</a>
-        </div>
-      </article>
-
-      <!-- 2. TASKVEL PREMIUM -->
-      <article class="prod-card premium" style="--i:1" data-tilt>
-        <span class="prod-glare" aria-hidden="true"></span>
-        <div class="prod-top">
-          <div class="prod-icon">⚡</div>
-          <span class="prod-badge gold">★ Premium</span>
-        </div>
-        <h3>Taskvel <em>Premium</em></h3>
-        <div class="prod-sub">Productivity &amp; compliance OS · Laravel</div>
-        <p class="prod-desc">The complete platform for individuals, teams and firms — secure accounts, real-time sync across every device, and a compliance engine built for professional practices.</p>
-        <ul class="prod-feats">
-          <li>Secure user authentication with role &amp; permission management</li>
-          <li>Multi-device synchronization — your workspace everywhere</li>
-          <li>Premium analytics dashboard with focus reports &amp; productivity trends</li>
-          <li>Team collaboration, calendar planning and smart notifications</li>
-          <li>Pomodoro focus system with custom sessions and session-level stats</li>
-          <li>Compliance &amp; client management module — GST, EPF, ESIC trackers, payroll, invoicing and reminders</li>
-        </ul>
-        <div class="prod-actions">
-          <a href="taskvel-pro.php" class="btn btn-gold" data-ripple>Get Started</a>
-          <a href="https://github.com/MinalKanth/taskvel-laravel" target="_blank" rel="noopener" class="btn btn-glass" data-ripple>Learn More</a>
-        </div>
-      </article>
-
-      <!-- 3. EVENTS NEAR YOU -->
-      <article class="prod-card soon" style="--i:2" data-tilt>
-        <span class="prod-glare" aria-hidden="true"></span>
-        <div class="prod-top">
-          <div class="prod-icon">◈</div>
-          <span class="prod-badge soon-badge">Coming Soon</span>
-        </div>
-        <h3>Events <em>Near You</em></h3>
-        <div class="prod-sub">Discover · Book · Experience</div>
-        <p class="prod-desc">One platform for everything around an event — discover what's happening nearby, book tickets, find hotels and Airbnb stays, and plan the whole experience in a few taps.</p>
-        <ul class="prod-feats">
-          <li>Discover nearby events with galleries, schedules &amp; organizer details</li>
-          <li>Book tickets, hotels and Airbnb stays in one place</li>
-          <li>Restaurants, cafés and nearby attractions around every venue</li>
-          <li>Google Maps directions, favourites, sharing &amp; organizer contact</li>
-        </ul>
-        <div class="prod-chips">
-          <span class="prod-chip">Ticket Booking</span>
-          <span class="prod-chip">Hotels</span>
-          <span class="prod-chip">Airbnb</span>
-          <span class="prod-chip">Restaurants</span>
-          <span class="prod-chip">Maps</span>
-          <span class="prod-chip">Galleries</span>
-          <span class="prod-chip">Favourites</span>
-          <span class="prod-chip">Schedules</span>
-        </div>
-        <div class="prod-actions">
-          <a href="#contact" class="btn btn-gold" data-ripple>Notify Me</a>
-          <span class="btn btn-soon">Launching Soon</span>
-        </div>
-      </article>
-
-    </div>
-
-    <p class="prod-foot-note reveal">Built and maintained in-house · <a href="#contact">Talk to us</a> about custom software for your business.</p>
-  </div>
-</section>
-
 <!-- ============================= MARQUEE ============================= -->
 <div class="marquee-band">
   <div class="marquee-track" id="marqueeTrack"></div>
@@ -1296,6 +1197,105 @@ a:focus-visible, button:focus-visible, input:focus-visible, textarea:focus-visib
         <button type="submit" class="btn btn-gold" data-ripple style="justify-self:flex-start;">Send Message</button>
       </form>
     </div>
+  </div>
+</section>
+
+<!-- ============================= PRODUCTS & SOLUTIONS ============================= -->
+<section class="pad products-band" id="products">
+  <span class="orb p-orb-1" aria-hidden="true"></span>
+  <span class="orb p-orb-2" aria-hidden="true"></span>
+  <div class="wrap">
+    <div class="section-head center reveal">
+      <span class="eyebrow">Built In-House</span>
+      <h2>Our Products &amp; Solutions by Samal Consultancy</h2>
+      <p>Beyond compliance — we build software that helps teams work smarter. Explore the tools we've crafted for productivity, collaboration and what's coming next.</p>
+    </div>
+
+    <div class="prod-grid stagger reveal">
+
+      <!-- 1. TASKVEL FREE -->
+      <article class="prod-card" style="--i:0" data-tilt>
+        <span class="prod-glare" aria-hidden="true"></span>
+        <div class="prod-top">
+          <div class="prod-icon">✦</div>
+          <span class="prod-badge free">Free · No Login</span>
+        </div>
+        <h3>Taskvel <em>Free</em></h3>
+        <div class="prod-sub">Browser-based task manager</div>
+        <p class="prod-desc">Open it and start working — no account, no sign-up, no friction. A fast, focused task organizer that runs entirely in your browser and keeps you in flow all day.</p>
+        <ul class="prod-feats">
+          <li>Smart Quick-Add with natural-language parsing — type "Call the client tomorrow #urgent" and it's tagged, dated and prioritised</li>
+          <li>Pomodoro focus timer with a floating, draggable mini-timer and daily focus history</li>
+          <li>Eisenhower Priority Matrix, smart tabs and a ⌘K command palette</li>
+          <li>Productivity Score, fire-streak tracker and daily goal progress</li>
+          <li>Offline-first PWA — installs like a native app, works without internet</li>
+          <li>CSV, PDF, calendar (.ics) and full JSON backup exports</li>
+        </ul>
+        <div class="prod-actions">
+          <a href="#" class="btn btn-gold" data-ripple>Try Now</a>
+          <a href="https://github.com/MinalKanth/taskvel-php" target="_blank" rel="noopener" class="btn btn-glass" data-ripple>Learn More</a>
+        </div>
+      </article>
+
+      <!-- 2. TASKVEL PREMIUM -->
+      <article class="prod-card premium" style="--i:1" data-tilt>
+        <span class="prod-glare" aria-hidden="true"></span>
+        <div class="prod-top">
+          <div class="prod-icon">⚡</div>
+          <span class="prod-badge gold">★ Premium</span>
+        </div>
+        <h3>Taskvel <em>Premium</em></h3>
+        <div class="prod-sub">Productivity &amp; compliance OS · Laravel</div>
+        <p class="prod-desc">The complete platform for individuals, teams and firms — secure accounts, real-time sync across every device, and a compliance engine built for professional practices.</p>
+        <ul class="prod-feats">
+          <li>Secure user authentication with role &amp; permission management</li>
+          <li>Multi-device synchronization — your workspace everywhere</li>
+          <li>Premium analytics dashboard with focus reports &amp; productivity trends</li>
+          <li>Team collaboration, calendar planning and smart notifications</li>
+          <li>Pomodoro focus system with custom sessions and session-level stats</li>
+          <li>Compliance &amp; client management module — GST, EPF, ESIC trackers, payroll, invoicing and reminders</li>
+        </ul>
+        <div class="prod-actions">
+          <a href="taskvel-pro.php" class="btn btn-gold" data-ripple>Get Started</a>
+          <a href="https://github.com/MinalKanth/taskvel-laravel" target="_blank" rel="noopener" class="btn btn-glass" data-ripple>Learn More</a>
+        </div>
+      </article>
+
+      <!-- 3. EVENTS NEAR YOU -->
+      <article class="prod-card soon" style="--i:2" data-tilt>
+        <span class="prod-glare" aria-hidden="true"></span>
+        <div class="prod-top">
+          <div class="prod-icon">◈</div>
+          <span class="prod-badge soon-badge">Coming Soon</span>
+        </div>
+        <h3>Events <em>Near You</em></h3>
+        <div class="prod-sub">Discover · Book · Experience</div>
+        <p class="prod-desc">One platform for everything around an event — discover what's happening nearby, book tickets, find hotels and Airbnb stays, and plan the whole experience in a few taps.</p>
+        <ul class="prod-feats">
+          <li>Discover nearby events with galleries, schedules &amp; organizer details</li>
+          <li>Book tickets, hotels and Airbnb stays in one place</li>
+          <li>Restaurants, cafés and nearby attractions around every venue</li>
+          <li>Google Maps directions, favourites, sharing &amp; organizer contact</li>
+        </ul>
+        <div class="prod-chips">
+          <span class="prod-chip">Ticket Booking</span>
+          <span class="prod-chip">Hotels</span>
+          <span class="prod-chip">Airbnb</span>
+          <span class="prod-chip">Restaurants</span>
+          <span class="prod-chip">Maps</span>
+          <span class="prod-chip">Galleries</span>
+          <span class="prod-chip">Favourites</span>
+          <span class="prod-chip">Schedules</span>
+        </div>
+        <div class="prod-actions">
+          <a href="#contact" class="btn btn-gold" data-ripple>Notify Me</a>
+          <span class="btn btn-soon">Launching Soon</span>
+        </div>
+      </article>
+
+    </div>
+
+    <p class="prod-foot-note reveal">Built and maintained in-house · <a href="#contact">Talk to us</a> about custom software for your business.</p>
   </div>
 </section>
 
