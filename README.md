@@ -576,7 +576,10 @@ Built with a deliberate, no-framework philosophy — vanilla JS, PHP, and MySQL,
 Questions, bug reports, or feature requests? Open an issue on the repository, or reach out via the maintainer contact listed in the repository settings.
 
 <div align="center">
-
+<!-- user login 
+minal@user.com
+ChangeMe!123
+ -->
 <br/>
 
 ### Built for one person's flow. Ready for an entire team's grind.

@@ -203,12 +203,7 @@ section{position:relative;}
     margin-left: 10px;
 }
 
-.brand-logo {
-    width: 42px;
-    height: 42px;
-    object-fit: contain;
-    border-radius: 10px;
-}
+
 #navLogoFallback {
     display: none;
     align-items: center;
@@ -690,7 +685,7 @@ footer{background:var(--charcoal); color:rgba(250,247,242,0.7); padding:60px 0 0
 @media (min-width:640px){ .footer-grid{grid-template-columns:1fr 1fr; row-gap:40px;} }
 @media (min-width:1024px){ .footer-grid{grid-template-columns:1.4fr 1fr 1fr 1.2fr; gap:50px; padding-bottom:60px;} }
 .footer-brand{display:flex; flex-direction:column; align-items:flex-start;}
-.footer-logo{height:64px; width:auto; max-width:170px; object-fit:contain; margin-bottom:4px; filter:brightness(0) invert(1);}
+.footer-logo{height:84px; width:auto; max-width:170px; object-fit:contain; margin-bottom:4px; filter:brightness(0) invert(1);}
 .footer-brand p{color:rgba(250,247,242,0.55); font-size:14px; margin-top:14px; max-width:280px;}
 .footer-est{font-family:var(--font-eyebrow); font-size:11.5px; letter-spacing:.06em; text-transform:uppercase; color:var(--teal-2); margin-top:10px;}
 .footer-col h5{color:var(--ivory); font-size:13px; letter-spacing:.06em; text-transform:uppercase; margin-bottom:18px; font-family:var(--font-eyebrow); font-weight:600;}
@@ -896,10 +891,11 @@ a:focus-visible, button:focus-visible, input:focus-visible, textarea:focus-visib
     width: auto;
     height: auto;
     max-width: 100%;
-    max-height: clamp(42px, 6vw, 60px);
+    max-height: clamp(42px, 6vw, 90px);
     object-fit: contain;
     transition: transform 0.3s ease;
     user-select: none;
+    border-radius: 10px;
 }
 
 .brand-logo:hover {
@@ -958,7 +954,6 @@ a:focus-visible, button:focus-visible, input:focus-visible, textarea:focus-visib
       <li><a href="#clients">Clients</a></li>
       <li><a href="#contact">Contact</a></li>
       <li><a href="#products">Products</a></li>
-      <li><a href="./events.php">Events</a></li>
     </ul>
     <div class="nav-cta">
       <a href="#contact" class="btn btn-gold" style="padding:12px 20px; font-size:13px;">Book Consultation</a>
@@ -1233,7 +1228,9 @@ a:focus-visible, button:focus-visible, input:focus-visible, textarea:focus-visib
           <li>CSV, PDF, calendar (.ics) and full JSON backup exports</li>
         </ul>
         <div class="prod-actions">
-          <a href="./taskvel-free.php/" class="btn btn-gold" data-ripple>Try Now</a>
+          <a href="./taskvel-free.php" target="_blank" rel="noopener noreferrer" class="btn btn-gold" data-ripple>
+              Try Now
+          </a>
           </div>
       </article>
 
@@ -1256,7 +1253,9 @@ a:focus-visible, button:focus-visible, input:focus-visible, textarea:focus-visib
           <li>Compliance &amp; client management module — GST, EPF, ESIC trackers, payroll, invoicing and reminders</li>
         </ul>
         <div class="prod-actions">
-          <a href="./taskvel-pro.php" class="btn btn-gold" data-ripple>Get Started</a>
+          <a href="./taskvel-pro.php" target="_blank" rel="noopener noreferrer" class="btn btn-gold" data-ripple>
+              Get Started
+          </a>
         </div>
       </article>
 
@@ -1287,7 +1286,9 @@ a:focus-visible, button:focus-visible, input:focus-visible, textarea:focus-visib
           <span class="prod-chip">Schedules</span>
         </div>
         <div class="prod-actions">
-          <a href="./events.php" class="btn btn-gold" data-ripple>View Events</a>
+          <a href="./events.php" target="_blank" rel="noopener noreferrer" class="btn btn-gold" data-ripple>
+            View Events
+          </a>
         </div>
       </article>
 
