@@ -958,6 +958,7 @@ a:focus-visible, button:focus-visible, input:focus-visible, textarea:focus-visib
       <li><a href="#clients">Clients</a></li>
       <li><a href="#contact">Contact</a></li>
       <li><a href="#products">Products</a></li>
+      <li><a href="./events.php">Events</a></li>
     </ul>
     <div class="nav-cta">
       <a href="#contact" class="btn btn-gold" style="padding:12px 20px; font-size:13px;">Book Consultation</a>
@@ -1232,9 +1233,8 @@ a:focus-visible, button:focus-visible, input:focus-visible, textarea:focus-visib
           <li>CSV, PDF, calendar (.ics) and full JSON backup exports</li>
         </ul>
         <div class="prod-actions">
-          <a href="#" class="btn btn-gold" data-ripple>Try Now</a>
-          <a href="https://github.com/MinalKanth/taskvel-php" target="_blank" rel="noopener" class="btn btn-glass" data-ripple>Learn More</a>
-        </div>
+          <a href="./taskvel-free.php/" class="btn btn-gold" data-ripple>Try Now</a>
+          </div>
       </article>
 
       <!-- 2. TASKVEL PREMIUM -->
@@ -1256,8 +1256,7 @@ a:focus-visible, button:focus-visible, input:focus-visible, textarea:focus-visib
           <li>Compliance &amp; client management module — GST, EPF, ESIC trackers, payroll, invoicing and reminders</li>
         </ul>
         <div class="prod-actions">
-          <a href="taskvel-pro.php" class="btn btn-gold" data-ripple>Get Started</a>
-          <a href="https://github.com/MinalKanth/taskvel-laravel" target="_blank" rel="noopener" class="btn btn-glass" data-ripple>Learn More</a>
+          <a href="./taskvel-pro.php" class="btn btn-gold" data-ripple>Get Started</a>
         </div>
       </article>
 
@@ -1288,8 +1287,7 @@ a:focus-visible, button:focus-visible, input:focus-visible, textarea:focus-visib
           <span class="prod-chip">Schedules</span>
         </div>
         <div class="prod-actions">
-          <a href="#contact" class="btn btn-gold" data-ripple>Notify Me</a>
-          <span class="btn btn-soon">Launching Soon</span>
+          <a href="./events.php" class="btn btn-gold" data-ripple>View Events</a>
         </div>
       </article>
 
