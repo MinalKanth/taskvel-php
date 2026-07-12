@@ -47,7 +47,7 @@ foreach ($stmt->fetchAll() as $row) {
         send_web_push_to_user($pdo, (int)$row['user_id'], [
             'title' => 'Taskvel — you have tasks that need attention',
             'body'  => $body,
-            'url'   => './index.php',
+            'url'   => './taskvel-pro.php',
             'tag'   => 'taskvel-daily-digest',
         ]);
         $pdo->prepare('INSERT INTO push_digest_log (user_id, sent_date) VALUES (?, CURDATE())

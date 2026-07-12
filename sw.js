@@ -1,6 +1,6 @@
 const CACHE = 'taskvel-v2';
 self.addEventListener('install', e => {
-    e.waitUntil(caches.open(CACHE).then(c => c.addAll(['./index.php', './login.php', './manifest.json'])).catch(() => {}));
+    e.waitUntil(caches.open(CACHE).then(c => c.addAll(['./taskvel-pro.php', './login.php', './manifest.json'])).catch(() => {}));
     self.skipWaiting();
 });
 self.addEventListener('activate', e => {
@@ -12,7 +12,7 @@ self.addEventListener('activate', e => {
 self.addEventListener('fetch', e => {
     if (e.request.method !== 'GET') return; // never cache API POST/DELETE calls
     e.respondWith(
-        fetch(e.request).catch(() => caches.match(e.request).then(cached => cached || caches.match('./index.php')))
+        fetch(e.request).catch(() => caches.match(e.request).then(cached => cached || caches.match('./taskvel-pro.php')))
     );
 });
 
@@ -33,7 +33,7 @@ self.addEventListener('push', event => {
         badge: data.badge || 'data:image/svg+xml,%3Csvg xmlns=\'http://www.w3.org/2000/svg\' viewBox=\'0 0 100 100\'%3E%3Crect width=\'100\' height=\'100\' rx=\'22\' fill=\'%230a0a0a\'/%3E%3C/svg%3E',
         tag: data.tag || 'taskvel-generic',
         renotify: !!data.tag,
-        data: { url: data.url || './index.php' },
+        data: { url: data.url || './taskvel-pro.php' },
         vibrate: [80, 40, 80],
         actions: data.actions || [{ action: 'open', title: 'Open Taskvel' }],
     };
@@ -44,11 +44,11 @@ self.addEventListener('push', event => {
 // one, otherwise opens a new one — standard, expected mobile behavior.
 self.addEventListener('notificationclick', event => {
     event.notification.close();
-    const targetUrl = (event.notification.data && event.notification.data.url) || './index.php';
+    const targetUrl = (event.notification.data && event.notification.data.url) || './taskvel-pro.php';
     event.waitUntil(
         clients.matchAll({ type: 'window', includeUncontrolled: true }).then(clientList => {
             for (const client of clientList) {
-                if (client.url.includes('index.php') && 'focus' in client) return client.focus();
+                if (client.url.includes('taskvel-pro.php') && 'focus' in client) return client.focus();
             }
             if (clients.openWindow) return clients.openWindow(targetUrl);
         })

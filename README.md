@@ -392,7 +392,7 @@ taskvel-php/
 │   └── api-client.js            # Handles CSRF token attachment, API calls
 ├── checkin.php                  # Daily Check-in page
 ├── manager.php                  # Manager Dashboard
-└── index.php                    # Main app entry
+└── taskvel-pro.php                    # Main app entry
 ```
 
 > Exact structure may vary slightly by release — this reflects the modules described in this document.

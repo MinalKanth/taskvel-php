@@ -6,7 +6,7 @@
  *
  * Paste the printed values into config/vapid.php. Keep the private key
  * secret — never expose it to the browser. The public key IS meant to be
- * sent to the client (it's embedded in index.php automatically once set).
+ * sent to the client (it's embedded in taskvel-pro.php automatically once set).
  */
 
 function base64url(string $data): string

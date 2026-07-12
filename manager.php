@@ -71,7 +71,7 @@ $user = current_user();
 <body>
 <div class="wrap">
     <div class="topbar">
-        <a class="back" href="index.php">← Back to Taskvel</a>
+        <a class="back" href="taskvel-pro.php">← Back to Taskvel</a>
         <span style="font-size:12.5px;color:var(--ink3)"><?= htmlspecialchars($user['email']) ?></span>
     </div>
     <h1>📊 Manager Dashboard</h1>

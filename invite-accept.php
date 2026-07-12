@@ -54,7 +54,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if (!$error && current_user_id()) {
         $pdo->prepare("UPDATE task_shares SET status = 'accepted', shared_with_user_id = ?, responded_at = NOW() WHERE id = ?")
             ->execute([current_user_id(), $invite['id']]);
-        header('Location: ' . APP_URL . '/index.php');
+        header('Location: ' . APP_URL . '/taskvel-pro.php');
         exit;
     }
     }
