@@ -13,8 +13,8 @@ $user = current_user();
     <meta name="apple-mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
     <meta name="apple-mobile-web-app-title" content="Taskvel" />
-    <meta name="theme-color" content="#f6f6f4" media="(prefers-color-scheme: light)" />
-    <meta name="theme-color" content="#0b0b0b" media="(prefers-color-scheme: dark)" />
+    <meta name="theme-color" content="#FAF8F3" media="(prefers-color-scheme: light)" />
+    <meta name="theme-color" content="#0A1128" media="(prefers-color-scheme: dark)" />
     <meta name="description" content="Taskvel — a fast, focused, beautifully simple task organiser with a built-in focus timer." />
     <title>Taskvel · कार्य, done well.</title>
     <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='22' fill='%230a0a0a'/%3E%3Ctext x='50' y='72' font-family='Arial,sans-serif' font-size='62' font-weight='800' fill='%23ffffff' text-anchor='middle'%3ET%3C/text%3E%3C/svg%3E"
@@ -29,7 +29,7 @@ $user = current_user();
         /* ════════════════════════════════════════════
            THEME SYSTEM
            data-theme  = light | dark   (lightness mode)
-           data-accent = mono | indigo | emerald | amber  (colour theme)
+           data-accent = samal | mono | indigo | emerald | amber  (colour theme)
         ════════════════════════════════════════════ */
         
          :root {
@@ -229,7 +229,52 @@ $user = current_user();
             --shadow-lg: 0 24px 64px rgba(0, 0, 0, .72);
             --ring: rgba(251, 146, 60, .3);
         }
-        
+        /* SAMAL — Samal Consultancy brand */
+
+         :root[data-accent="samal"] {
+            --bg: #FAF8F3;
+            --bg-elev: #ffffff;
+            --bg-sunk: #F3F1E9;
+            --ink: #0A1128;
+            --ink2: #3C4258;
+            --ink3: #7A7F90;
+            --ink4: #B9BCC6;
+            --line: #EAE7DD;
+            --line2: #D8D6CE;
+            --line-ink: #C9A227;
+            --paper: #ffffff;
+            --accent: #C9A227;
+            --accent-2: #0F4436;
+            --accent-soft: rgba(201, 162, 39, .12);
+            --accent-glow: rgba(201, 162, 39, .30);
+            --on-accent: #ffffff;
+            --shadow: 0 12px 38px rgba(10, 17, 40, .12);
+            --shadow-lg: 0 24px 60px rgba(10, 17, 40, .18);
+            --ring: rgba(201, 162, 39, .25);
+        }
+
+         :root[data-accent="samal"][data-theme="dark"] {
+            --bg: #0A1128;
+            --bg-elev: #121A36;
+            --bg-sunk: #060B1C;
+            --ink: #FAF8F3;
+            --ink2: #C3C8DC;
+            --ink3: #8990AC;
+            --ink4: #525A78;
+            --line: #1E2745;
+            --line2: #2C365A;
+            --line-ink: #E8C766;
+            --paper: #121A36;
+            --accent: #E8C766;
+            --accent-2: #8FA0E8;
+            --accent-soft: rgba(232, 199, 102, .14);
+            --accent-glow: rgba(232, 199, 102, .34);
+            --on-accent: #0A1128;
+            --shadow: 0 12px 40px rgba(0, 0, 0, .6);
+            --shadow-lg: 0 24px 64px rgba(0, 0, 0, .72);
+            --ring: rgba(232, 199, 102, .3);
+        }
+
         html {
             color-scheme: light;
         }
@@ -270,6 +315,7 @@ $user = current_user();
             opacity: .5;
         }
         
+         :root[data-accent="samal"] .aurora,
          :root[data-accent="indigo"] .aurora,
          :root[data-accent="emerald"] .aurora,
          :root[data-accent="amber"] .aurora {
@@ -662,7 +708,11 @@ $user = current_user();
             gap: 9px;
             flex-wrap: wrap;
         }
-        
+        .sw-samal {
+            --sw: #C9A227;
+            --sw-soft: rgba(201, 162, 39, .2);
+            --sw-grad: linear-gradient(135deg, #E8C766, #C9A227 55%, #0F4436);
+        }
         .swatch {
             flex: 1;
             min-width: 110px;
@@ -3264,11 +3314,14 @@ $user = current_user();
                 var savedTheme = localStorage.getItem('taskvel_theme_v1');
                 var theme = savedTheme || (window.matchMedia && window.matchMedia('(prefers-color-scheme:dark)').matches ? 'dark' : 'light');
                 document.documentElement.setAttribute('data-theme', theme);
-                var accent = localStorage.getItem('taskvel_accent_v1') || 'mono';
+                var accent = localStorage.getItem('taskvel_accent_v1') || 'samal';
+                if (!localStorage.getItem('taskvel_samal_migrated')) { accent = 'samal'; 
+                localStorage.setItem('taskvel_accent_v1','samal'); 
+                localStorage.setItem('taskvel_samal_migrated','1'); }
                 document.documentElement.setAttribute('data-accent', accent);
             } catch (e) {
                 document.documentElement.setAttribute('data-theme', 'light');
-                document.documentElement.setAttribute('data-accent', 'mono');
+                document.documentElement.setAttribute('data-accent', 'samal');
             }
         })();
     </script>
@@ -3326,6 +3379,7 @@ $user = current_user();
             <div class="panel" id="palette-panel">
                 <div class="panel-head"><span class="panel-title">Colour theme</span><button class="panel-close" onclick="closePanel('palette-panel')">✕</button></div>
                 <div class="palette-row">
+                    <button class="swatch sw-samal" data-accent="samal" onclick="setAccent('samal')"><span class="sw-dot"></span><span class="sw-name">Samal</span></button>
                     <button class="swatch sw-mono" data-accent="mono" onclick="setAccent('mono')"><span class="sw-dot"></span><span class="sw-name">Mono</span></button>
                     <button class="swatch sw-indigo" data-accent="indigo" onclick="setAccent('indigo')"><span class="sw-dot"></span><span class="sw-name">Indigo</span></button>
                     <button class="swatch sw-emerald" data-accent="emerald" onclick="setAccent('emerald')"><span class="sw-dot"></span><span class="sw-name">Emerald</span></button>
@@ -4108,6 +4162,10 @@ $user = current_user();
             if (el) el.textContent = t === 'dark' ? '☀' : '☾';
             const accent = document.documentElement.getAttribute('data-accent') || 'mono';
             const map = {
+                samal: {
+                    light: '#FAF8F3',
+                    dark: '#0A1128'
+                },
                 mono: {
                     light: '#f6f6f4',
                     dark: '#0b0b0b'
@@ -4151,6 +4209,7 @@ $user = current_user();
         // ACCENT (colour theme)
         // ════════════════════════════════════════════
         const ACCENT_NAMES = {
+            samal: 'Samal',
             mono: 'Mono',
             indigo: 'Indigo',
             emerald: 'Emerald',
