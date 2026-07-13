@@ -3837,6 +3837,7 @@ $user = current_user();
 
     <script src="js/api-client.js"></script>
     <script>
+        const TV_UID = <?= (int)current_user_id() ?>;
         // ════════════════════════════════════════════
         // STATE
         // ════════════════════════════════════════════
@@ -3896,7 +3897,7 @@ $user = current_user();
             document.getElementById('bulk-count').textContent = `${bulkSelected.size} selected`;
         }
         function bulkDone() {
-            tasks.forEach(t => { if (bulkSelected.has(t.id)) { t.done = true; t.steps.forEach(s => s.done = true); } });
+            tasks.forEach(t => { if (bulkSelected.has(t.id)) { t.done = true; t.steps.forEach(s => s.done = true); touch(t); } });
             save(); recordActivity(); toast(`${bulkSelected.size} tasks marked done ✓`);
             exitBulkMode();
         }
@@ -3908,24 +3909,62 @@ $user = current_user();
             exitBulkMode(); renderTabs();
         }
 
-        const LS_T = 'taskvel_tasks_v1',
-            LS_R = 'taskvel_remarks_v1',
-            LS_F = 'taskvel_focus_v1';
-        const LS_THEME = 'taskvel_theme_v1',
-            LS_ACCENT = 'taskvel_accent_v1';
-        const LS_NOTIF = 'taskvel_notifications_v1',
-            LS_FLOG = 'taskvel_focuslog_v1';
-        const LS_ORDER = 'taskvel_manualorder_v1',
-            LS_ONBOARDED = 'taskvel_onboarded_v1';
-        const LS_STREAK = 'taskvel_streak_v1';
-        const LS_GOAL = 'taskvel_goal_v1';
-        const LS_GOAL_CELEBRATED = 'taskvel_goal_celebrated_v1';
+        // const LS_T = 'taskvel_tasks_v1',
+        //     LS_R = 'taskvel_remarks_v1',
+        //     LS_F = 'taskvel_focus_v1';
+        // const LS_THEME = 'taskvel_theme_v1',
+        //     LS_ACCENT = 'taskvel_accent_v1';
+        // const LS_NOTIF = 'taskvel_notifications_v1',
+        //     LS_FLOG = 'taskvel_focuslog_v1';
+        // const LS_ORDER = 'taskvel_manualorder_v1',
+        //     LS_ONBOARDED = 'taskvel_onboarded_v1';
+        // const LS_STREAK = 'taskvel_streak_v1';
+        // const LS_GOAL = 'taskvel_goal_v1';
+        // const LS_GOAL_CELEBRATED = 'taskvel_goal_celebrated_v1';
+        const LS_NS = `taskvel_u${TV_UID}_`;
+const LS_T      = LS_NS + 'tasks_v1',
+      LS_R      = LS_NS + 'remarks_v1',
+      LS_F      = LS_NS + 'focus_v1',
+      LS_NOTIF  = LS_NS + 'notif_v1',
+      LS_FLOG   = LS_NS + 'flog_v1',
+      LS_STREAK = LS_NS + 'streak_v1',
+      LS_GOAL   = LS_NS + 'goal_v1',
+      LS_TPL    = LS_NS + 'templates_v1',
+      LS_ONBOARDED       = LS_NS + 'onboarded_v1',
+      LS_GOAL_CELEBRATED = LS_NS + 'goal_celebrated_v1';
+// Cosmetic only — safe to stay global across accounts:
+const LS_THEME  = 'taskvel_theme_v1',
+      LS_ACCENT = 'taskvel_accent_v1';
 
         function todayKey(d) {
             d = d || new Date();
             return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
         }
-
+        function migrateLegacyKeys() {
+        const map = {
+            taskvel_tasks_v1:         LS_T,
+            taskvel_remarks_v1:       LS_R,
+            taskvel_focus_v1:         LS_F,
+            taskvel_notifications_v1: LS_NOTIF,      // was wrong
+            taskvel_focuslog_v1:      LS_FLOG,       // was wrong
+            taskvel_streak_v1:        LS_STREAK,
+            taskvel_goal_v1:          LS_GOAL,
+            taskvel_templates_v1:     LS_TPL,
+            taskvel_onboarded_v1:     LS_ONBOARDED,  // add
+            taskvel_manualorder_v1:   LS_NS + 'manualorder_v1', // add (cleanup)
+        };
+        // Only migrate if this user has no namespaced data yet AND the server
+        // has no state (checked in pullStateFromServer) — otherwise just delete
+        // the legacy keys so they can't leak to the next account.
+        for (const [oldK, newK] of Object.entries(map)) {
+            const v = localStorage.getItem(oldK);
+            if (v !== null) {
+                if (localStorage.getItem(newK) === null) localStorage.setItem(newK, v);
+                localStorage.removeItem(oldK);
+            }
+        }
+    }
+    migrateLegacyKeys();
         function load() {
             try {
                 tasks = JSON.parse(localStorage.getItem(LS_T)) || []
@@ -4005,6 +4044,18 @@ $user = current_user();
         // local cache; the server is just kept in lockstep with it.
         // ════════════════════════════════════════════
         let _pushTimer = null;
+        let _stateVersion = 0;
+        const _bc = 'BroadcastChannel' in window ? new BroadcastChannel('taskvel_sync_u' + TV_UID) : null;
+        if (_bc) _bc.onmessage = () => pullStateFromServer();
+        function touch(t) { if (t) t.updatedAt = Date.now(); }
+        function mergeById(localArr, serverArr) {
+            const byId = new Map(serverArr.map(x => [x.id, x]));
+            for (const l of localArr) {
+                const r = byId.get(l.id);
+                if (!r || (l.updatedAt || 0) > (r.updatedAt || 0)) byId.set(l.id, l);
+            }
+            return [...byId.values()];
+        }
         function gatherState() {
             return {
                 tasks, remarks, notifications, focusLog, streakData,
@@ -4020,16 +4071,46 @@ $user = current_user();
             _pushTimer = setTimeout(pushStateNow, 600);
         }
         async function pushStateNow() {
-            try { await Taskvel.state.push(gatherState()); } catch (e) { /* offline or network hiccup — local copy is still safe */ }
+        try {
+            const res = await Taskvel.state.push(gatherState(), _stateVersion);
+            _stateVersion = res.version;
+            _bc?.postMessage('changed');
+        } catch (e) {
+            if (String(e.message).includes('conflict')) {
+                await resolveConflict();
+            }
+            // other errors = offline; local copy is still safe
         }
+    }
+    async function resolveConflict() {
+        try {
+            const { state: server, version } = await Taskvel.state.pull();
+            _stateVersion = version || 0;
+            if (server) {
+                tasks   = mergeById(tasks,   Array.isArray(server.tasks)   ? server.tasks   : []);
+                remarks = mergeById(remarks, Array.isArray(server.remarks) ? server.remarks : []);
+                focusLog = { ...(server.focusLog || {}), ...focusLog };
+                localStorage.setItem(LS_T, JSON.stringify(tasks));
+                localStorage.setItem(LS_R, JSON.stringify(remarks));
+                localStorage.setItem(LS_FLOG, JSON.stringify(focusLog));
+                render(); renderTabs();
+            }
+            await pushStateNow(); // re-push merged state against the new version
+        } catch (e) {}
+    }
         async function pullStateFromServer() {
             try {
-                const { state } = await Taskvel.state.pull();
-                if (!state) { schedulePush(); return; } // first ever login on this account — seed server from local
-                tasks = Array.isArray(state.tasks) ? state.tasks : tasks;
-                remarks = Array.isArray(state.remarks) ? state.remarks : remarks;
+                const { state, version } = await Taskvel.state.pull();
+                _stateVersion = version || 0;
+                // if (!state) { schedulePush(); return; } // first ever login on this account — seed server from local
+                if (!state) {
+                    if (tasks.length > 0) schedulePush(); // namespaced keys ⇒ definitely this user's data
+                    return;
+                }
+                tasks   = mergeById(tasks,   Array.isArray(state.tasks)   ? state.tasks   : []);
+                remarks = mergeById(remarks, Array.isArray(state.remarks) ? state.remarks : []);
                 notifications = Array.isArray(state.notifications) ? state.notifications : notifications;
-                focusLog = state.focusLog || focusLog;
+                focusLog = { ...(state.focusLog || {}), ...focusLog };
                 streakData = state.streakData || streakData;
                 if (typeof state.dailyGoal === 'number') { dailyGoal = state.dailyGoal; try { localStorage.setItem(LS_GOAL, String(dailyGoal)); } catch (e) {} }
                 if (Array.isArray(state.templates)) { templates = state.templates; saveTemplates(); }
@@ -4050,9 +4131,17 @@ $user = current_user();
                 render(); renderTabs(); updateStreakUI(); applyThemeIcon(); updateNotifDot(); renderHistory(); renderGoalBar();
             } catch (e) { /* not logged in yet, or offline — local data keeps working as-is */ }
         }
+        // async function logoutUser() {
+        //     try { await pushStateNow(); } catch (e) {}
+        //     try { await Taskvel.auth.logout(); } catch (e) {}
+        //     location.href = 'login.php';
+        // }
         async function logoutUser() {
             try { await pushStateNow(); } catch (e) {}
             try { await Taskvel.auth.logout(); } catch (e) {}
+            Object.keys(localStorage)
+                .filter(k => k.startsWith('taskvel_'))   // legacy + namespaced
+                .forEach(k => localStorage.removeItem(k));
             location.href = 'login.php';
         }
 
@@ -5247,7 +5336,7 @@ $user = current_user();
                             if (srcPos < 0 || tgtPos < 0) return;
                             visibleIds.splice(srcPos, 1);
                             visibleIds.splice(tgtPos, 0, dragSrcId);
-                            visibleIds.forEach((id, i) => { const t = tasks.find(t => t.id === id); if (t) t.order = i; });
+                            visibleIds.forEach((id, i) => { const t = tasks.find(t => t.id === id); if (t) { t.order = i; touch(t); } });
                             save();
                             render();
                             toast('Order updated');
@@ -5274,12 +5363,14 @@ $user = current_user();
                                         pushNotification('!', `Step "${t.steps[i].text}" in task "${t.name}" is overdue.`);
                                     }
                                 }
+                                touch(t);
                                 save();
                                 render();
                             }
                         }
                         function completeTask(t) {
                             t.done = true; t.doneAt = new Date().toISOString();
+                            touch(t);
                             recordActivity();
                             toast('All steps done — task complete ✓');
                             celebrateTaskDone(t.name);
@@ -5291,6 +5382,7 @@ $user = current_user();
                             const t = tasks.find(t => t.id === id);
                             if (t) {
                                 t.done = true; t.doneAt = new Date().toISOString(); t.steps.forEach(s => s.done = true);
+                                touch(t);
                                 save(); recordActivity(); flash(id); setTimeout(render, 80);
                                 if (t.recur && t.recur !== 'none') { spawnRecurrence(t); save(); }
                                 toast('Task completed ✓');
@@ -5298,11 +5390,12 @@ $user = current_user();
                                 checkDailyGoal();
                             }
                         }
-                        function markUndone(id) { const t = tasks.find(t => t.id === id); if (t) { t.done = false; save(); render() } }
+                        function markUndone(id) { const t = tasks.find(t => t.id === id); if (t) { t.done = false; touch(t); save(); render() } }
                         function snoozeTask(id) {
                             const t = tasks.find(t => t.id === id); if (!t || !t.deadline) return;
                             const d = new Date(t.deadline); d.setDate(d.getDate() + 1);
                             t.deadline = d.toISOString().slice(0, 10);
+                            touch(t);
                             save(); render();
                             toast('Snoozed to ' + new Date(t.deadline).toLocaleDateString('en-IN', { day: 'numeric', month: 'short' }));
                         }
@@ -5319,13 +5412,14 @@ $user = current_user();
                                 save(); saveR(); render(); renderTabs(); toast('Task restored');
                             }, 4500);
                         }
-                        function togglePin(id) { const t = tasks.find(t => t.id === id); if (t) { t.pinned = !t.pinned; save(); render(); toast(t.pinned ? 'Pinned to top ★' : 'Unpinned') } }
+                        function togglePin(id) { const t = tasks.find(t => t.id === id); if (t) { t.pinned = !t.pinned; touch(t); save(); render(); toast(t.pinned ? 'Pinned to top ★' : 'Unpinned') } }
                         function flash(id) { const c = document.getElementById('card-' + id); if (c) { c.classList.add('flash'); setTimeout(() => c.classList.remove('flash'), 650) } }
 
 function startTimeTracking(id) {
     const t = tasks.find(t => t.id === id);
     if (t) {
         t.timeTrackingStarted = Date.now();
+        touch(t);
         save();
         render();
         toast('Tracking started ▶');
@@ -5338,6 +5432,7 @@ function stopTimeTracking(id) {
         const duration = Date.now() - t.timeTrackingStarted;
         t.timeSpent = (t.timeSpent || 0) + duration;
         delete t.timeTrackingStarted;
+        touch(t);
         save();
         render();
         toast('Logged ' + formatTime(duration) + ' ⏱');
@@ -5439,7 +5534,7 @@ function stopTimeTracking(id) {
                                     links: [],
                                     pinned: false,
                                     steps: ['f-s1', 'f-s2', 'f-s3'].map(i => document.getElementById(i).value.trim()).filter(Boolean).map(t => ({ text: t, done: false, deadline: null })),
-                                    done: false, addedOn: new Date().toISOString(), order: Date.now()
+                                    done: false, addedOn: new Date().toISOString(), order: Date.now(), updatedAt: Date.now()
                                 });
                                 save();
                                 try { localStorage.setItem(LS_ONBOARDED, '1') } catch (e) {}
@@ -5528,6 +5623,7 @@ function stopTimeTracking(id) {
                             t.links = editLinks.slice();
                             t.score = score(t.urgency, t.damage);
                             t.rank = rank(t.score);
+                            touch(t);
                             save();
                             closeEdit();
                             render();
@@ -5659,7 +5755,7 @@ function stopTimeTracking(id) {
                         // ════════════════════════════════════════════
                         // TASK TEMPLATES
                         // ════════════════════════════════════════════
-                        const LS_TEMPLATES = 'taskvel_templates_v1';
+                        const LS_TEMPLATES = LS_TPL; 
                         let templates = [];
                         function loadTemplates() {
                             try { templates = JSON.parse(localStorage.getItem(LS_TEMPLATES)) || []; } catch (e) { templates = []; }

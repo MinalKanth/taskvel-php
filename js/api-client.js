@@ -144,9 +144,14 @@ const Taskvel = (() => {
         // Taskvel app to mirror its entire localStorage state to the account
         // so it's identical on every device, without remapping every field
         // into relational tables.
+        // state: {
+        //     pull: () => request('/api/state.php?action=pull'),
+        //     push: (data) => request('/api/state.php?action=push', { method: 'POST', body: { state: data } }),
+        // },
         state: {
             pull: () => request('/api/state.php?action=pull'),
-            push: (data) => request('/api/state.php?action=push', { method: 'POST', body: { state: data } }),
+            push: (state, baseVersion) => request('/api/state.php?action=push',
+                { method: 'POST', body: { state, base_version: baseVersion } }),
         },
     };
 })();
