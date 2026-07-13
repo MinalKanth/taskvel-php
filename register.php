@@ -1,6 +1,9 @@
 <?php
 require_once __DIR__ . '/includes/auth.php';
-if (current_user_id()) { header('Location: taskvel-pro.php'); exit; }
+if (current_user_id()) { header('Location: taskvel-pro.php'); exit; }if (current_user_id()) {
+    header('Location: ' . (current_user_role() === 'admin' ? 'admin/index.php' : 'taskvel-pro.php'));
+    exit;
+}
 $error = null;
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
