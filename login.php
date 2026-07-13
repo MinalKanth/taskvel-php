@@ -1,6 +1,10 @@
 <?php
 require_once __DIR__ . '/includes/auth.php';
-if (current_user_id()) { header('Location: taskvel-pro.php'); exit; }
+// if (current_user_id()) { header('Location: taskvel-pro.php'); exit; }
+if (current_user_id()) {
+    header('Location: ' . (current_user_role() === 'admin' ? 'admin/index.php' : 'taskvel-pro.php'));
+    exit;
+}
 $error = null;
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
@@ -8,7 +12,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $error = 'Your session expired. Please try again.';
     } else {
         $res = attempt_login($_POST['email'] ?? '', $_POST['password'] ?? '');
-        if ($res['ok']) { header('Location: taskvel-pro.php'); exit; }
+        if ($res['ok']) {
+            $role = $res['user']['role'] ?? current_user_role();
+            header('Location: ' . ($role === 'admin' ? 'admin/index.php' : 'taskvel-pro.php'));
+            exit;
+        }
         $error = $res['error'];
     }
 }
