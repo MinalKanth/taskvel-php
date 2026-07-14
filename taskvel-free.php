@@ -2454,6 +2454,7 @@
         }
         
         .sheet input[type=text],
+        .sheet input[type=url],
         .sheet textarea,
         .sheet input[type=date] {
             width: 100%;
@@ -2589,6 +2590,11 @@
         
         .estep input {
             flex: 1;
+        }
+
+        .estep input[type=url] {
+            flex: 0 0 38%;
+            font-size: 13px;
         }
         
         .estep button {
@@ -3607,9 +3613,9 @@
             <div class="tag-input-row"><input type="text" id="f-tag-input" placeholder="e.g. work, personal…" /><button class="tag-add-btn" onclick="addTagToForm()">Add</button></div>
             <div class="tag-pills-edit" id="f-tags"></div>
         </div>
-        <div class="fg"><label>Step 1</label><input type="text" id="f-s1" placeholder="First small move" /></div>
-        <div class="fg"><label>Step 2</label><input type="text" id="f-s2" placeholder="Optional" /></div>
-        <div class="fg"><label>Step 3</label><input type="text" id="f-s3" placeholder="Optional" /></div>
+        <div class="fg"><label>Step 1</label><div class="estep"><input type="text" id="f-s1" placeholder="First small move" /><input type="url" id="f-sl1" placeholder="Link (optional)" /></div></div>
+<div class="fg"><label>Step 2</label><div class="estep"><input type="text" id="f-s2" placeholder="Optional" /><input type="url" id="f-sl2" placeholder="Link (optional)" /></div></div>
+<div class="fg"><label>Step 3</label><div class="estep"><input type="text" id="f-s3" placeholder="Optional" /><input type="url" id="f-sl3" placeholder="Link (optional)" /></div></div>
         <div class="thinking" id="thinking">
             <div class="spinner"></div>Ranking by urgency × impact…</div>
         <button class="submit" onclick="addTask()">Add & rank</button>
@@ -4827,7 +4833,7 @@
                 `<div class="step" onclick="toggleStep(${t.id},${i})">
                     <div class="box ${s.done ? 'on' : ''}"></div>
                     <span class="step-t ${s.done ? 'struck' : ''}">
-                        ${s.link ? `<a href="${esc(s.link)}" target="_blank">${esc(s.text)}</a>` : esc(s.text)}
+                        ${s.link ? `<a href="${esc(s.link)}" target="_blank" rel="noopener" onclick="event.stopPropagation()">${esc(s.text)}</a>` : esc(s.text)}
                     </span>
                 </div>`).join('')}</div>` : '';
             const pcls = progressClass(t);
@@ -5048,7 +5054,7 @@ function stopTimeTracking(id) {
                             el.classList.add('sel'); sel[g] = v;
                         }
                         function resetAddForm() {
-                            ['f-name', 'f-person', 'f-collab', 'f-s1', 'f-s2', 'f-s3', 'f-deadline', 'f-tag-input'].forEach(i => document.getElementById(i).value = '');
+                            ['f-name', 'f-person', 'f-collab', 'f-s1', 'f-s2', 'f-s3', 'f-sl1', 'f-sl2', 'f-sl3', 'f-deadline', 'f-tag-input'].forEach(i => document.getElementById(i).value = '');
                             document.querySelectorAll('#sheet .opt').forEach(b => b.classList.remove('sel'));
                             sel.urg = null; sel.dmg = null; sel.recur = 'none';
                             formTags = []; renderFormTags();
@@ -5072,7 +5078,12 @@ function stopTimeTracking(id) {
                                     recur: sel.recur || 'none',
                                     tags: formTags.slice(),
                                     pinned: false,
-                                    steps: ['f-s1', 'f-s2', 'f-s3'].map(i => document.getElementById(i).value.trim()).filter(Boolean).map(t => ({ text: t, done: false, deadline: null })),
+                                    steps: [1, 2, 3].map(n => {
+                                        const text = document.getElementById('f-s' + n).value.trim();
+                                        let link = document.getElementById('f-sl' + n).value.trim() || null;
+                                        if (link && !/^https?:\/\//i.test(link)) link = 'https://' + link;
+                                        return text ? { text, done: false, deadline: null, link } : null;
+                                    }).filter(Boolean),
                                     done: false, addedOn: new Date().toISOString(), order: Date.now()
                                 });
                                 save();
@@ -5117,7 +5128,7 @@ function stopTimeTracking(id) {
                             const c = document.getElementById('e-steps'); const i = c.querySelectorAll('.estep').length;
                             window._eDone = window._eDone || []; window._eDone.push(false);
                             const d = document.createElement('div'); d.className = 'estep'; d.id = 'es-' + i;
-                            d.innerHTML = `<input type="text" id="est-${i}" placeholder="Step ${i + 1}"/><button onclick="rmEStep(${i})">✕</button>`;
+                            d.innerHTML = `<input type="text" id="est-${i}" placeholder="Step ${i + 1}"/><input type="url" id="esl-${i}" placeholder="Link"/><button onclick="rmEStep(${i})">✕</button>`;
                             c.appendChild(d);
                         }
                         function rmEStep(i) {
@@ -5125,7 +5136,8 @@ function stopTimeTracking(id) {
                             if (window._eDone) window._eDone.splice(i, 1);
                             document.getElementById('e-steps').querySelectorAll('.estep').forEach((row, n) => {
                                 row.id = 'es-' + n;
-                                const inp = row.querySelector('input'); if (inp) inp.id = 'est-' + n;
+                                const t = row.querySelector('input[type=text]'); if (t) t.id = 'est-' + n;
+                                const l = row.querySelector('input[type=url]'); if (l) l.id = 'esl-' + n;
                                 const b = row.querySelector('button'); if (b) b.setAttribute('onclick', `rmEStep(${n})`);
                             });
                         }
@@ -5138,12 +5150,19 @@ function stopTimeTracking(id) {
                             if (!t) return;
                             const name = document.getElementById('e-name').value.trim();
                             if (!name) { toast('Task name cannot be empty'); return }
-                            const inputs = document.getElementById('e-steps').querySelectorAll('input[type=text]');
-                            t.steps = Array.from(inputs).map((inp, i) => ({
-                                text: inp.value.trim(),
-                                done: (window._eDone || [])[i] || false,
-                                link: document.getElementById(`esl-${i}`).value.trim() || null
-                            })).filter(s => s.text);
+                            const rows = document.getElementById('e-steps').querySelectorAll('.estep');
+                                t.steps = Array.from(rows).map((row, i) => {
+                                    const textInp = row.querySelector('input[type=text]');
+                                    const linkInp = row.querySelector('input[type=url]');
+                                    const text = textInp ? textInp.value.trim() : '';
+                                    let link = linkInp && linkInp.value.trim() ? linkInp.value.trim() : null;
+                                    if (link && !/^https?:\/\//i.test(link)) link = 'https://' + link;
+                                    return {
+                                        text,
+                                        done: (window._eDone || [])[i] || false,
+                                        link
+                                    };
+                                }).filter(s => s.text);
                             t.name = name;
                             t.person = document.getElementById('e-person').value.trim();
                             t.collab = document.getElementById('e-collab').value.trim();
@@ -5299,7 +5318,7 @@ function stopTimeTracking(id) {
                             templates.push({
                                 id: Date.now(), name,
                                 urgency: t.urgency, damage: t.damage, tags: (t.tags || []).slice(),
-                                recur: t.recur, steps: (t.steps || []).map(s => ({ text: s.text }))
+                                recur: t.recur, steps: (t.steps || []).map(s => ({ text: s.text, link: s.link || null }))
                             });
                             saveTemplates();
                             toast('Template saved ✓');
@@ -5332,7 +5351,10 @@ function stopTimeTracking(id) {
                                     const val = g === 'urg' ? tm.urgency : tm.damage;
                                     document.querySelectorAll(`#sheet .opt[onclick*="'${g}'"][onclick*="'${val}'"]`).forEach(b => { b.classList.add('sel'); sel[g] = val; });
                                 });
-                                (tm.steps || []).forEach((s, i) => { const inp = document.getElementById('f-s' + (i + 1)); if (inp) inp.value = s.text; });
+                                (tm.steps || []).forEach((s, i) => {
+                                    const inp = document.getElementById('f-s' + (i + 1)); if (inp) inp.value = s.text;
+                                    const linp = document.getElementById('f-sl' + (i + 1)); if (linp) linp.value = s.link || '';
+                                });
                             }, 400);
                         }
                         function deleteTemplate(id) {
