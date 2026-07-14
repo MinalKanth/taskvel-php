@@ -922,6 +922,22 @@ a:focus-visible, button:focus-visible, input:focus-visible, textarea:focus-visib
         max-height: 40px;
     }
 }
+
+.contact-list a {
+    color: inherit;
+    text-decoration: none;
+    transition: color 0.25s ease;
+}
+
+.contact-list a:hover {
+    color: var(--primary);
+    text-decoration: underline;
+}
+
+.contact-list a:focus-visible {
+    outline: 2px solid var(--primary);
+    outline-offset: 2px;
+}
 </style>
 
 <script type="application/ld+json">
@@ -1250,11 +1266,53 @@ a:focus-visible, button:focus-visible, input:focus-visible, textarea:focus-visib
         <h2 style="margin-top:14px;">Tell us what's due, and we'll take it from here.</h2>
         <p style="color:rgba(250,247,242,0.65); margin-top:12px;">Typical response time: under 4 business hours.</p>
         <div class="contact-list">
-          <div class="c-row"><div class="c-icon">☎</div><div><h5>Phone</h5><p>+91 70020 50242 / +91 81340 44176</p></div></div>
-<div class="c-row"><div class="c-icon">✉</div><div><h5>Email</h5><p>info@samalconsultancy.com</p></div></div>
-<div class="c-row"><div class="c-icon">⌂</div><div><h5>Office</h5><p>Subarna Path, Near Railway Gate, Lakhinagar, Khutikatia, Nagaon, Assam 782002</p></div></div>
-<div class="c-row"><div class="c-icon">◷</div><div><h5>Hours</h5><p>Monday – Saturday, 10:00 – 19:00</p></div></div>
-        </div>
+
+  <div class="c-row">
+    <div class="c-icon">☎</div>
+    <div>
+      <h5>Phone</h5>
+      <p>
+        <a href="tel:+917002050242">+91 70020 50242</a> /
+        <a href="tel:+918134044176">+91 81340 44176</a>
+      </p>
+    </div>
+  </div>
+
+  <div class="c-row">
+    <div class="c-icon">✉</div>
+    <div>
+      <h5>Email</h5>
+      <p>
+        <a href="mailto:info@samalconsultancy.com">
+          info@samalconsultancy.com
+        </a>
+      </p>
+    </div>
+  </div>
+
+  <div class="c-row">
+    <div class="c-icon">⌂</div>
+    <div>
+      <h5>Office</h5>
+      <p>
+        <a href="https://maps.google.com/?q=Subarna+Path,+Near+Railway+Gate,+Lakhinagar,+Khutikatia,+Nagaon,+Assam+782002"
+           target="_blank"
+           rel="noopener noreferrer">
+          Subarna Path, Near Railway Gate, Lakhinagar, Khutikatia, Nagaon, Assam 782002
+        </a>
+      </p>
+    </div>
+  </div>
+
+  <div class="c-row">
+    <div class="c-icon">◷</div>
+    <div>
+      <h5>Business Hours</h5>
+      <p>Monday – Saturday, 10:00 AM – 7:00 PM</p>
+    </div>
+  </div>
+
+</div>
       </div>
       <form class="form-grid" id="contactForm">
         <div class="two-col">
