@@ -3322,6 +3322,46 @@ $user = current_user();
                 bottom: max(30px, calc(env(safe-area-inset-bottom) + 14px));
             }
         }
+        /* ════════ TEAMS · PROJECTS · EVENTS HUB (inside Taskvel Pro) ════════ */
+        .team-hub { background: var(--bg-elev); border: 1px solid var(--line); border-radius: var(--r-lg);
+            padding: 16px 18px; margin-bottom: 18px; box-shadow: var(--shadow); }
+        .team-hub-head { display: flex; justify-content: space-between; align-items: center; gap: 10px; cursor: pointer; }
+        .team-hub-head h3 { font-family: 'Space Grotesk'; font-size: 13px; font-weight: 700; text-transform: uppercase;
+            letter-spacing: 1px; color: var(--ink3); display: flex; align-items: center; gap: 8px; }
+        .team-hub-head .hub-actions { display: flex; gap: 6px; align-items: center; }
+        .hub-link { font-family: 'Space Grotesk'; font-size: 11.5px; font-weight: 700; color: var(--accent);
+            text-decoration: none; padding: 6px 12px; border: 1px solid var(--accent-glow); border-radius: 999px;
+            background: var(--accent-soft); transition: transform .2s; }
+        .hub-link:hover { transform: translateY(-1px); }
+        .hub-caret { font-size: 12px; color: var(--ink3); transition: transform .25s; }
+        .team-hub.open .hub-caret { transform: rotate(180deg); }
+        .team-hub-body { display: none; margin-top: 14px; }
+        .team-hub.open .team-hub-body { display: block; }
+        .hub-teams { display: flex; gap: 8px; overflow-x: auto; padding-bottom: 6px; }
+        .hub-team-chip { flex-shrink: 0; display: flex; align-items: center; gap: 8px; text-decoration: none; color: inherit;
+            background: var(--bg); border: 1px solid var(--line2); border-radius: 12px; padding: 9px 13px;
+            font-family: 'Space Grotesk'; font-size: 12.5px; font-weight: 600; transition: all .2s; }
+        .hub-team-chip:hover { border-color: var(--accent); transform: translateY(-1px); }
+        .hub-team-chip .cnt { font-size: 10.5px; color: var(--ink3); font-weight: 400; }
+        .hub-events { margin-top: 12px; display: flex; flex-direction: column; gap: 8px; }
+        .hub-event { display: flex; align-items: center; gap: 11px; background: var(--bg); border: 1px solid var(--line);
+            border-radius: 12px; padding: 9px 13px; text-decoration: none; color: inherit; transition: all .2s; }
+        .hub-event:hover { border-color: var(--accent); transform: translateY(-1px); }
+        .hub-event .dt { font-family: 'JetBrains Mono', monospace; font-size: 10.5px; font-weight: 700;
+            color: var(--accent); flex-shrink: 0; min-width: 78px; }
+        .hub-event .ttl { font-family: 'Space Grotesk'; font-size: 12.5px; font-weight: 600; flex: 1; min-width: 0;
+            white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .hub-event .tname { font-size: 10.5px; color: var(--ink3); flex-shrink: 0; }
+        .hub-event .avs { display: flex; flex-shrink: 0; }
+        .hub-event .avs span { width: 22px; height: 22px; border-radius: 50%; background: var(--ink);
+            color: var(--accent); font-family: 'Space Grotesk'; font-size: 8.5px; font-weight: 700;
+            display: inline-flex; align-items: center; justify-content: center; border: 2px solid var(--bg-elev);
+            margin-left: -7px; }
+        :root[data-theme="dark"] .hub-event .avs span { background: var(--accent); color: var(--on-accent); }
+        .hub-event .avs span:first-child { margin-left: 0; }
+        .hub-empty { font-size: 12px; color: var(--ink3); text-align: center; padding: 14px 8px;
+            background: var(--bg-sunk); border: 1px dashed var(--line2); border-radius: 12px; }
+        @media (max-width: 640px) { .hub-event .tname { display: none; } }
     </style>
     <script>
         (function() {
@@ -3610,6 +3650,20 @@ $user = current_user();
                 <span id="goal-score" class="goal-score">⚡ 0</span>
             </div>
             <div class="goal-track"><i id="goal-fill"></i></div>
+        </div>
+
+        <!-- Teams · Projects · Events hub — all your team activity, checked at once -->
+        <div class="team-hub" id="team-hub">
+            <div class="team-hub-head" onclick="toggleTeamHub()">
+                <h3>👥 Teams · Projects · Events <span class="hub-caret">▾</span></h3>
+                <div class="hub-actions" onclick="event.stopPropagation()">
+                    <a class="hub-link" href="teams.php">Open Teams →</a>
+                </div>
+            </div>
+            <div class="team-hub-body">
+                <div class="hub-teams" id="hub-teams"></div>
+                <div class="hub-events" id="hub-events"></div>
+            </div>
         </div>
 
         <!-- Focus timer -->
@@ -6306,6 +6360,70 @@ function stopTimeTracking(id) {
                                 navigator.serviceWorker.register('sw.js').catch(() => {});
                             });
                         }
+    </script>
+    <script>
+        // ════════ TEAMS · PROJECTS · EVENTS HUB ════════
+        // Pulls every team the user is in + all upcoming team events across
+        // those teams, so team work is visible without leaving Taskvel Pro.
+        (function() {
+            const hub = document.getElementById('team-hub');
+            if (!hub) return;
+
+            const HUB_KEY = 'taskvel_teamhub_open_v1';
+            window.toggleTeamHub = function() {
+                hub.classList.toggle('open');
+                try { localStorage.setItem(HUB_KEY, hub.classList.contains('open') ? '1' : '0'); } catch (e) {}
+            };
+            try { if (localStorage.getItem(HUB_KEY) !== '0') hub.classList.add('open'); } catch (e) { hub.classList.add('open'); }
+
+            const escH = s => (s || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+            const initials = n => (n || '?').split(' ').map(w => w[0]).join('').slice(0, 2).toUpperCase();
+            const fmtDate = (d) => {
+                const [y, m, dd] = d.split('-');
+                const M = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+                return `${M[parseInt(m,10)-1]} ${parseInt(dd,10)}`;
+            };
+
+            async function loadHub() {
+                const teamsEl = document.getElementById('hub-teams');
+                const eventsEl = document.getElementById('hub-events');
+                try {
+                    const { teams } = await Taskvel.request('/api/teams.php?action=list');
+                    if (!teams.length) {
+                        teamsEl.innerHTML = '';
+                        eventsEl.innerHTML = `<div class="hub-empty">No teams yet — <a href="teams.php" style="color:var(--accent);font-weight:700;text-decoration:none">create one</a> to plan projects and events with coworkers.</div>`;
+                        return;
+                    }
+                    teamsEl.innerHTML = teams.map(t => `
+                        <a class="hub-team-chip" href="team.php?id=${t.id}">
+                            ${escH(t.name)}
+                            <span class="cnt">${t.member_count}👤 · ${t.project_count}▦</span>
+                        </a>`).join('');
+                } catch (e) {
+                    eventsEl.innerHTML = `<div class="hub-empty">Couldn't load teams right now.</div>`;
+                    return;
+                }
+                try {
+                    const { events } = await Taskvel.request('/api/team_events.php?action=all');
+                    if (!events.length) {
+                        eventsEl.innerHTML = `<div class="hub-empty">No upcoming team events. Open a team and hit “+ New event”.</div>`;
+                        return;
+                    }
+                    const todayStr = new Date().toISOString().slice(0, 10);
+                    eventsEl.innerHTML = events.slice(0, 8).map(ev => `
+                        <a class="hub-event" href="team.php?id=${ev.team_id}">
+                            <span class="dt">${ev.event_date === todayStr ? 'TODAY' : fmtDate(ev.event_date)}${ev.start_time ? ' ' + ev.start_time.slice(0, 5) : ''}</span>
+                            <span class="ttl">${escH(ev.title)}</span>
+                            <span class="tname">${escH(ev.team_name)}</span>
+                            <span class="avs">${(ev.attendees || []).slice(0, 4).map(a => `<span title="${escH(a.name)}">${initials(a.name)}</span>`).join('')}</span>
+                        </a>`).join('');
+                } catch (e) {
+                    // team_events migration may not be applied yet — hub still shows teams.
+                    eventsEl.innerHTML = `<div class="hub-empty">Events unavailable — run sql/migration_11_team_events.sql to enable team events.</div>`;
+                }
+            }
+            loadHub();
+        })();
     </script>
 </body>
 

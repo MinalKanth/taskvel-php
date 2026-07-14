@@ -254,8 +254,11 @@ mysql -u youruser -p taskvel < sql/migration_06_checkin_advanced.sql
 # 4. Security hardening (hard dependency — always run this)
 mysql -u youruser -p taskvel < sql/migration_07_security.sql
 
-# 5. Point your web server's document root at this folder
-# 6. Sign up, log in, and start shipping
+# 5. Team Events — events with team members as attendees (Teams page + Pro hub)
+mysql -u youruser -p taskvel < sql/migration_11_team_events.sql
+
+# 6. Point your web server's document root at this folder
+# 7. Sign up, log in, and start shipping
 ```
 
 ### Enabling Push Notifications (optional, one-time)

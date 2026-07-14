@@ -11,12 +11,22 @@ if (!function_exists('require_team_creation_allowed')) {
     function require_team_creation_allowed(int $uid): void
     {
         $freeTeamLimit = 1; // free plan: max teams a user can own
-        $stmt = db()->prepare(
-            "SELECT COUNT(*) FROM teams t
-             JOIN team_members tm ON tm.team_id = t.id AND tm.user_id = ? AND tm.role = 'owner'
-             WHERE COALESCE(t.plan, 'free') = 'free'"
-        );
-        $stmt->execute([$uid]);
+        try {
+            $stmt = db()->prepare(
+                "SELECT COUNT(*) FROM teams t
+                 JOIN team_members tm ON tm.team_id = t.id AND tm.user_id = ? AND tm.role = 'owner'
+                 WHERE COALESCE(t.plan, 'free') = 'free'"
+            );
+            $stmt->execute([$uid]);
+        } catch (Throwable $e) {
+            // Billing migration (teams.plan) not applied yet — count all owned teams instead
+            // so team creation never 500s because of a missing optional column.
+            $stmt = db()->prepare(
+                "SELECT COUNT(*) FROM teams t
+                 JOIN team_members tm ON tm.team_id = t.id AND tm.user_id = ? AND tm.role = 'owner'"
+            );
+            $stmt->execute([$uid]);
+        }
         if ((int)$stmt->fetchColumn() >= $freeTeamLimit) {
             json_response(['error' => "Free plan allows $freeTeamLimit team. Upgrade to create more teams."], 402);
         }
@@ -74,6 +84,34 @@ switch ("$method:$action") {
             ->execute([$teamId, $uid, 'owner']);
         $pdo->commit();
         json_response(['ok' => true, 'team_id' => $teamId]);
+        break;
+
+    // One team's details (any member can view) — used by team.php to show
+    // the real team name instead of a generic "Team" heading.
+    case 'GET:get':
+        $teamId = (int)($_GET['team_id'] ?? 0);
+        $myRole = require_team_member($teamId);
+        $stmt = $pdo->prepare('SELECT t.id, t.name, t.created_by, t.created_at,
+                                      (SELECT COUNT(*) FROM team_members WHERE team_id = t.id) AS member_count,
+                                      (SELECT COUNT(*) FROM projects WHERE team_id = t.id AND archived = 0) AS project_count,
+                                      (SELECT COUNT(*) FROM team_events WHERE team_id = t.id AND event_date >= CURDATE()) AS upcoming_event_count
+                               FROM teams t WHERE t.id = ?');
+        try {
+            $stmt->execute([$teamId]);
+            $team = $stmt->fetch();
+        } catch (Throwable $e) {
+            // team_events migration not applied yet — degrade gracefully.
+            $stmt = $pdo->prepare('SELECT t.id, t.name, t.created_by, t.created_at,
+                                          (SELECT COUNT(*) FROM team_members WHERE team_id = t.id) AS member_count,
+                                          (SELECT COUNT(*) FROM projects WHERE team_id = t.id AND archived = 0) AS project_count,
+                                          0 AS upcoming_event_count
+                                   FROM teams t WHERE t.id = ?');
+            $stmt->execute([$teamId]);
+            $team = $stmt->fetch();
+        }
+        if (!$team) json_response(['error' => 'Not found'], 404);
+        $team['my_role'] = $myRole;
+        json_response(['team' => $team]);
         break;
 
     // Members + their role for one team (any member can view).
