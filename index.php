@@ -4,8 +4,8 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <!-- ============================= PRIMARY SEO ============================= -->
-<title>GST Registration, Company Registration &amp; Tax Compliance in Guwahati, Assam | Samal Consultancy</title>
-<meta name="description" content="Trusted GST registration, EPFO/ESIC compliance, company registration, trademark filing and tax advisory in Guwahati, Assam. Serving 1,500+ businesses since 1993. Book a free consultation.">
+<title>GST Registration, Company Registration &amp; Tax Compliance in Nagaon, Assam | Samal Consultancy</title>
+<meta name="description" content="Trusted GST registration, EPFO/ESIC compliance, company registration, trademark filing and tax advisory in Nagaon, Assam. Serving 70+ businesses since 1993. Book a free consultation.">
 <link rel="canonical" href="https://www.samalconsultancy.com/">
 <meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1">
 <meta name="theme-color" content="#0A1128">
@@ -17,9 +17,9 @@
  
 <!-- Local SEO hints -->
 <meta name="geo.region" content="IN-AS">
-<meta name="geo.placename" content="Guwahati">
-<meta name="geo.position" content="[FILL:LAT];[FILL:LNG]">
-<meta name="ICBM" content="[FILL:LAT], [FILL:LNG]">
+<meta name="geo.placename" content="Nagaon">
+<meta name="geo.position" content="26.3480;92.6840">
+<meta name="ICBM" content="26.3480, 92.6840">
  
 <!-- ============================= OPEN GRAPH ============================= -->
 <meta property="og:type" content="website">
@@ -976,13 +976,13 @@ a:focus-visible, button:focus-visible, input:focus-visible, textarea:focus-visib
       <span class="eyebrow">Business Compliance &amp; Advisory</span>
       <h1>Compliance, filed <em>flawlessly</em>. Every deadline, met.</h1>
       <p class="hero-tagline">Providing trusted compliance services since 1993.</p>
-      <p class="lead">Samal Consultancy runs the tax, registration and labour-law compliance behind 1,500+ businesses — so nothing slips, nothing lapses, and nothing is left to chance.</p>
+      <p class="lead">Samal Consultancy runs the tax, registration and labour-law compliance behind 70+ businesses across Assam — so nothing slips, nothing lapses, and nothing is left to chance.</p>
       <div class="hero-actions">
         <a href="#contact" class="btn btn-gold" data-ripple>Get Free Consultation</a>
         <a href="#services" class="btn btn-ghost" data-ripple>Explore Services</a>
       </div>
       <div class="trust-row">
-        <div><div class="t-num">1,500+</div><div class="t-label">Businesses served</div></div>
+        <div><div class="t-num">70+</div><div class="t-label">Businesses served</div></div>
         <div><div class="t-num">99.2%</div><div class="t-label">On-time filing rate</div></div>
         <div><div class="t-num">30+ yrs</div><div class="t-label">In practice</div></div>
       </div>
@@ -1016,7 +1016,7 @@ a:focus-visible, button:focus-visible, input:focus-visible, textarea:focus-visib
       <div class="about-visual">
         <span class="quote-mark">"</span>
         <p>We don't sell paperwork. We sell the certainty that your business is standing on solid legal ground.</p>
-        <div class="sig">— Founding Principal, Samal Consultancy</div>
+        <div class="sig">— Subham Kumar Samal, Managing Partner</div>
       </div>
     </div>
     <div>
@@ -1046,10 +1046,10 @@ a:focus-visible, button:focus-visible, input:focus-visible, textarea:focus-visib
 <!-- ============================= STATS ============================= -->
 <section class="stats-band">
   <div class="wrap stats-grid">
-    <div class="stat-block reveal"><div class="stat-num" data-count="1500" data-suffix="+">0</div><div class="stat-label">Clients served</div></div>
-    <div class="stat-block reveal" style="transition-delay:.08s;"><div class="stat-num" data-count="4200" data-suffix="+">0</div><div class="stat-label">GST returns filed</div></div>
-    <div class="stat-block reveal" style="transition-delay:.16s;"><div class="stat-num" data-count="30" data-suffix="+">0</div><div class="stat-label">Years of experience</div></div>
-    <div class="stat-block reveal" style="transition-delay:.24s;"><div class="stat-num" data-count="99" data-suffix="%">0</div><div class="stat-label">Compliance success rate</div></div>
+    <div class="stat-block reveal"><div class="stat-num" data-count="70" data-suffix="+">0</div><div class="stat-label">Clients served</div></div>
+<div class="stat-block reveal" style="transition-delay:.08s;"><div class="stat-num" data-count="40" data-suffix="+">0</div><div class="stat-label">Active clients</div></div>
+<div class="stat-block reveal" style="transition-delay:.16s;"><div class="stat-num" data-count="40" data-suffix="+">0</div><div class="stat-label">EPFO &amp; ESIC registrations</div></div>
+<div class="stat-block reveal" style="transition-delay:.24s;"><div class="stat-num" data-count="30" data-suffix="+">0</div><div class="stat-label">Years of experience</div></div>
   </div>
 </section>
 
@@ -1125,17 +1125,10 @@ a:focus-visible, button:focus-visible, input:focus-visible, textarea:focus-visib
       <h2>Compliance experience across the sectors that build India's economy.</h2>
     </div>
     <div class="industry-scroll reveal">
-      <div class="industry-card"><div class="n">01</div><h4>Startups</h4></div>
-      <div class="industry-card"><div class="n">02</div><h4>MSMEs</h4></div>
-      <div class="industry-card"><div class="n">03</div><h4>Manufacturers</h4></div>
-      <div class="industry-card"><div class="n">04</div><h4>Traders</h4></div>
-      <div class="industry-card"><div class="n">05</div><h4>Service Businesses</h4></div>
-      <div class="industry-card"><div class="n">06</div><h4>Restaurants</h4></div>
-      <div class="industry-card"><div class="n">07</div><h4>Retail</h4></div>
-      <div class="industry-card"><div class="n">08</div><h4>Freelancers</h4></div>
-      <div class="industry-card"><div class="n">09</div><h4>Professionals</h4></div>
-      <div class="industry-card"><div class="n">10</div><h4>Exporters</h4></div>
-      <div class="industry-card"><div class="n">11</div><h4>Importers</h4></div>
+      <div class="industry-card"><div class="n">01</div><h4>Manufacturers</h4></div>
+      <div class="industry-card"><div class="n">02</div><h4>Hospitals</h4></div>
+      <div class="industry-card"><div class="n">03</div><h4>Hotels</h4></div>
+      <div class="industry-card"><div class="n">04</div><h4>Contractors</h4></div>industry-card"><div class="n">11</div><h4>Importers</h4></div>
     </div>
   </div>
 </section>
@@ -1177,10 +1170,10 @@ a:focus-visible, button:focus-visible, input:focus-visible, textarea:focus-visib
         <h2 style="margin-top:14px;">Tell us what's due, and we'll take it from here.</h2>
         <p style="color:rgba(250,247,242,0.65); margin-top:12px;">Typical response time: under 4 business hours.</p>
         <div class="contact-list">
-          <div class="c-row"><div class="c-icon">☎</div><div><h5>Phone</h5><p>+91 98765 43210</p></div></div>
-          <div class="c-row"><div class="c-icon">✉</div><div><h5>Email</h5><p>hello@samalconsultancy.com</p></div></div>
-          <div class="c-row"><div class="c-icon">⌂</div><div><h5>Office</h5><p>4th Floor, Corporate Tower, Guwahati, Assam</p></div></div>
-          <div class="c-row"><div class="c-icon">◷</div><div><h5>Hours</h5><p>Monday – Saturday, 10:00 – 19:00</p></div></div>
+          <div class="c-row"><div class="c-icon">☎</div><div><h5>Phone</h5><p>+91 70020 50242 / +91 81340 44176</p></div></div>
+<div class="c-row"><div class="c-icon">✉</div><div><h5>Email</h5><p>info@samalconsultancy.com</p></div></div>
+<div class="c-row"><div class="c-icon">⌂</div><div><h5>Office</h5><p>Subarna Path, Near Railway Gate, Lakhinagar, Khutikatia, Nagaon, Assam 782002</p></div></div>
+<div class="c-row"><div class="c-icon">◷</div><div><h5>Hours</h5><p>Monday – Saturday, 10:00 – 19:00</p></div></div>
         </div>
       </div>
       <form class="form-grid" id="contactForm">
@@ -1362,7 +1355,7 @@ a:focus-visible, button:focus-visible, input:focus-visible, textarea:focus-visib
 
 <!-- ============================= MOBILE STICKY CTA ============================= -->
 <div class="mobile-cta-bar" id="mobileCtaBar">
-  <a href="tel:+919876543210" class="btn btn-outline-dark" data-ripple>Call Now</a>
+  <a href="tel:+917002050242" class="btn btn-outline-dark" data-ripple>Call Now</a>
   <a href="#contact" class="btn btn-gold" data-ripple>Get Consultation</a>
 </div>
 
@@ -1394,9 +1387,11 @@ const faqData = [
 ];
 
 const testimonials = [
-  { text:"They made our company registration seamless — no back-and-forth, no missed steps. Exactly what a first-time founder needs.", name:"Rajesh Sharma", role:"Founder, TechStart", initials:"RS" },
-  { text:"GST used to eat a full day of our accountant's month. Now it's handled before we even think about the deadline.", name:"Priya Patel", role:"Owner, Priya Exports", initials:"PP" },
-  { text:"Responsive, precise, and refreshingly honest about timelines. Our labour-law compliance has never been cleaner.", name:"Vikram Kohli", role:"Director, Kohli Industries", initials:"VK" }
+  { text:"Samal Consultancy handles our GST and compliance without us ever having to chase them. Reliable, every cycle.", name:"Parbin Industries", role:"Manufacturing", initials:"PI" },
+  { text:"From registration to ongoing filings, they've made compliance one less thing we worry about.", name:"Hill Queen", role:"Hospitality", initials:"HQ" },
+  { text:"Straightforward, on time, and easy to reach whenever I have a question.", name:"Bimal Baruah", role:"Client", initials:"BB" },
+  { text:"Their team understands agri-manufacturing compliance and keeps every filing on schedule.", name:"Satyam Vedany Agrotech", role:"Agro-Manufacturing", initials:"SV" },
+  { text:"A dependable compliance partner for our contracting business — accurate and always ahead of deadlines.", name:"SBB Associates", role:"Contracting", initials:"SB" }
 ];
 
 /* ============================= NAVBAR SCROLL ============================= */
