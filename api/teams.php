@@ -3,6 +3,44 @@ require_once __DIR__ . '/../includes/teams.php';
 require_once __DIR__ . '/../includes/billing.php';
 require_login();
 
+// ────────────────────────────────────────────────────────────
+// BILLING FALLBACKS — used only if includes/billing.php doesn't
+// already define these. Adjust FREE limits as needed.
+// ────────────────────────────────────────────────────────────
+if (!function_exists('require_team_creation_allowed')) {
+    function require_team_creation_allowed(int $uid): void
+    {
+        $freeTeamLimit = 1; // free plan: max teams a user can own
+        $stmt = db()->prepare(
+            "SELECT COUNT(*) FROM teams t
+             JOIN team_members tm ON tm.team_id = t.id AND tm.user_id = ? AND tm.role = 'owner'
+             WHERE COALESCE(t.plan, 'free') = 'free'"
+        );
+        $stmt->execute([$uid]);
+        if ((int)$stmt->fetchColumn() >= $freeTeamLimit) {
+            json_response(['error' => "Free plan allows $freeTeamLimit team. Upgrade to create more teams."], 402);
+        }
+    }
+}
+
+if (!function_exists('require_seats_available')) {
+    function require_seats_available(int $teamId): void
+    {
+        $freeSeatLimit = 3; // free plan: max members per team
+        $pdo = db();
+        $stmt = $pdo->prepare('SELECT COALESCE(plan, "free") AS plan FROM teams WHERE id = ?');
+        $stmt->execute([$teamId]);
+        $plan = $stmt->fetchColumn();
+        if ($plan !== 'free') return; // paid plans: unlimited seats
+
+        $stmt = $pdo->prepare('SELECT COUNT(*) FROM team_members WHERE team_id = ?');
+        $stmt->execute([$teamId]);
+        if ((int)$stmt->fetchColumn() >= $freeSeatLimit) {
+            json_response(['error' => "Free plan allows $freeSeatLimit members per team. Upgrade to add more seats."], 402);
+        }
+    }
+}
+
 $uid = current_user_id();
 $pdo = db();
 $method = $_SERVER['REQUEST_METHOD'];

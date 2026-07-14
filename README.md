@@ -579,7 +579,6 @@ Questions, bug reports, or feature requests? Open an issue on the repository, or
 <!-- user login 
 minal@user.com
 ChangeMe!123
-
 minaladmin@user.com
  -->
 <br/>
