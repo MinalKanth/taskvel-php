@@ -1,11 +1,11 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en-IN">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <!-- ============================= PRIMARY SEO ============================= -->
-<title>GST Registration, Company Registration &amp; Tax Compliance in Nagaon, Assam | Samal Consultancy</title>
-<meta name="description" content="Trusted GST registration, EPFO/ESIC compliance, company registration, trademark filing and tax advisory in Nagaon, Assam. Serving 70+ businesses since 1993. Book a free consultation.">
+<title>Best GST &amp; Business Registration Consultancy in Assam | Samal Consultancy</title>
+<meta name="description" content="GST, EPFO/ESIC, company & trademark registration across Nagaon, Tezpur, Guwahati and Assam. 30+ years, 70+ businesses trusted. Book a free consultation.">
 <link rel="canonical" href="https://www.samalconsultancy.com/">
 <meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1">
 <meta name="theme-color" content="#0A1128">
@@ -24,8 +24,8 @@
 <!-- ============================= OPEN GRAPH ============================= -->
 <meta property="og:type" content="website">
 <meta property="og:site_name" content="Samal Consultancy">
-<meta property="og:title" content="GST, Company Registration &amp; Tax Compliance in Guwahati, Assam | Samal Consultancy">
-<meta property="og:description" content="Trusted GST registration, EPFO/ESIC compliance, company registration, trademark filing and tax advisory. Serving 1,500+ businesses since 1993.">
+<meta property="og:title" content="Best GST &amp; Business Registration Consultancy in Assam | Samal Consultancy">
+<meta property="og:description" content="Trusted GST registration, EPFO/ESIC compliance, company registration, trademark filing and tax advisory across Nagaon, Tezpur, Guwahati and Assam. 30+ years, 70+ businesses served.">
 <meta property="og:url" content="https://www.samalconsultancy.com/">
 <meta property="og:image" content="https://www.samalconsultancy.com/assets/images/og-cover.jpg">
 <meta property="og:image:width" content="1200">
@@ -34,8 +34,8 @@
  
 <!-- ============================= TWITTER CARD ============================= -->
 <meta name="twitter:card" content="summary_large_image">
-<meta name="twitter:title" content="GST, Company Registration &amp; Tax Compliance in Guwahati, Assam">
-<meta name="twitter:description" content="Trusted compliance and tax advisory since 1993. GST, EPFO/ESIC, company registration, trademarks, payroll and more.">
+<meta name="twitter:title" content="Best GST &amp; Business Registration Consultancy in Assam">
+<meta name="twitter:description" content="Trusted compliance and tax advisory since 1993. GST, EPFO/ESIC, company registration, trademarks, payroll and more — Nagaon, Tezpur, Guwahati and across Assam.">
 <meta name="twitter:image" content="https://www.samalconsultancy.com/assets/images/og-cover.jpg">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -923,6 +923,66 @@ a:focus-visible, button:focus-visible, input:focus-visible, textarea:focus-visib
     }
 }
 </style>
+
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "ProfessionalService",
+  "name": "Samal Consultancy",
+  "image": "https://www.samalconsultancy.com/assets/images/og-cover.jpg",
+  "url": "https://www.samalconsultancy.com/",
+  "telephone": "+91-7002050242",
+  "priceRange": "₹₹",
+  "founder": {"@type": "Person", "name": "Subham Kumar Samal"},
+  "foundingDate": "1993",
+  "address": {
+    "@type": "PostalAddress",
+    "streetAddress": "Subarna Path, Near Railway Gate, Lakhinagar, Khutikatia",
+    "addressLocality": "Nagaon",
+    "addressRegion": "Assam",
+    "postalCode": "782002",
+    "addressCountry": "IN"
+  },
+  "geo": {"@type": "GeoCoordinates", "latitude": "26.3480", "longitude": "92.6840"},
+  "areaServed": [
+    {"@type":"City","name":"Nagaon"},
+    {"@type":"City","name":"Tezpur"},
+    {"@type":"City","name":"Guwahati"},
+    {"@type":"City","name":"Jorhat"},
+    {"@type":"City","name":"Dibrugarh"},
+    {"@type":"City","name":"Silchar"},
+    {"@type":"State","name":"Assam"}
+  ],
+  "openingHoursSpecification": {
+    "@type": "OpeningHoursSpecification",
+    "dayOfWeek": ["Monday","Tuesday","Wednesday","Thursday","Friday","Saturday"],
+    "opens": "10:00",
+    "closes": "19:00"
+  },
+  "makesOffer": [
+    {"@type":"Offer","itemOffered":{"@type":"Service","name":"GST Registration & Return Filing"}},
+    {"@type":"Offer","itemOffered":{"@type":"Service","name":"EPFO & ESIC Compliance"}},
+    {"@type":"Offer","itemOffered":{"@type":"Service","name":"Company & LLP Registration"}},
+    {"@type":"Offer","itemOffered":{"@type":"Service","name":"Trademark Registration"}},
+    {"@type":"Offer","itemOffered":{"@type":"Service","name":"Payroll & Bookkeeping"}}
+  ]
+}
+</script>
+
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  "mainEntity": [
+    {"@type":"Question","name":"What are your service charges?","acceptedAnswer":{"@type":"Answer","text":"Charges vary by service and business complexity — every quote is itemised upfront, with no hidden add-ons."}},
+    {"@type":"Question","name":"How long does company registration take?","acceptedAnswer":{"@type":"Answer","text":"Once documentation is complete, most private limited or LLP registrations are finalised within 10–15 working days."}},
+    {"@type":"Question","name":"What documents are needed for GST registration?","acceptedAnswer":{"@type":"Answer","text":"PAN, Aadhaar of directors or partners, address proof of the place of business, a bank statement, digital signature and a letter of authorisation."}},
+    {"@type":"Question","name":"Do you handle trademark objections?","acceptedAnswer":{"@type":"Answer","text":"Yes, from search and filing through to responding to examination objections and securing registration."}},
+    {"@type":"Question","name":"Can you manage payroll for a distributed team?","acceptedAnswer":{"@type":"Answer","text":"Yes, payroll processing, statutory deductions and compliance filings are covered regardless of location."}},
+    {"@type":"Question","name":"Do you offer ongoing compliance monitoring, or only one-off filings?","acceptedAnswer":{"@type":"Answer","text":"Both — most clients are on an ongoing retainer with a compliance calendar and renewal alerts."}}
+  ]
+}
+</script>
 </head>
 <body>
 
@@ -951,6 +1011,7 @@ a:focus-visible, button:focus-visible, input:focus-visible, textarea:focus-visib
       <li><a href="#services">Services</a></li>
       <li><a href="#registry">Registry</a></li>
       <li><a href="#process">Process</a></li>
+      <li><a href="#areas">Areas</a></li>
       <li><a href="#clients">Clients</a></li>
       <li><a href="#contact">Contact</a></li>
       <li><a href="#products">Products</a></li>
@@ -974,7 +1035,7 @@ a:focus-visible, button:focus-visible, input:focus-visible, textarea:focus-visib
     <div class="hero-content reveal in">
       <div class="est-badge">Est. <b>1993</b> &nbsp;·&nbsp; 30+ Years in Practice</div>
       <span class="eyebrow">Business Compliance &amp; Advisory</span>
-      <h1>Compliance, filed <em>flawlessly</em>. Every deadline, met.</h1>
+      <h1>GST, Company &amp; Compliance Consultancy in <em>Nagaon, Tezpur &amp; Assam</em>. Every deadline, met.</h1>
       <p class="hero-tagline">Providing trusted compliance services since 1993.</p>
       <p class="lead">Samal Consultancy runs the tax, registration and labour-law compliance behind 70+ businesses across Assam — so nothing slips, nothing lapses, and nothing is left to chance.</p>
       <div class="hero-actions">
@@ -1058,7 +1119,7 @@ a:focus-visible, button:focus-visible, input:focus-visible, textarea:focus-visib
   <div class="wrap">
     <div class="section-head reveal">
       <span class="eyebrow">Core Services</span>
-      <h2>The four pillars businesses lean on us for most.</h2>
+      <h2>GST, EPFO/ESIC and company registration — the four pillars businesses across Assam lean on us for most.</h2>
     </div>
     <div class="core-grid stagger reveal">
       <div class="core-card" style="--i:0"><div class="core-icon">◈</div><h3>GST Registration &amp; Return Filing</h3><p>End-to-end GST — registration, monthly/annual returns, reconciliation and notice handling.</p><a href="#registry" class="core-link">View scope <span class="arrow">→</span></a></div>
@@ -1122,13 +1183,32 @@ a:focus-visible, button:focus-visible, input:focus-visible, textarea:focus-visib
   <div class="wrap">
     <div class="section-head reveal">
       <span class="eyebrow">Industries We Serve</span>
-      <h2>Compliance experience across the sectors that build India's economy.</h2>
+      <h2>Compliance experience across the sectors that build Assam's economy.</h2>
     </div>
     <div class="industry-scroll reveal">
       <div class="industry-card"><div class="n">01</div><h4>Manufacturers</h4></div>
       <div class="industry-card"><div class="n">02</div><h4>Hospitals</h4></div>
       <div class="industry-card"><div class="n">03</div><h4>Hotels</h4></div>
-      <div class="industry-card"><div class="n">04</div><h4>Contractors</h4></div>industry-card"><div class="n">11</div><h4>Importers</h4></div>
+      <div class="industry-card"><div class="n">04</div><h4>Contractors</h4></div>
+    </div>
+  </div>
+</section>
+
+<!-- ============================= SERVICE AREAS ============================= -->
+<section class="pad" id="areas">
+  <div class="wrap">
+    <div class="section-head reveal">
+      <span class="eyebrow">Where We Work</span>
+      <h2>Serving businesses across Nagaon, Tezpur, Guwahati and Assam.</h2>
+      <p>Based in Nagaon, Samal Consultancy handles GST, company registration and compliance filings for clients across Assam — including Tezpur, Guwahati, Jorhat, Dibrugarh and Silchar — all managed digitally.</p>
+    </div>
+    <div class="industry-scroll reveal">
+      <div class="industry-card"><div class="n">01</div><h4>Nagaon</h4></div>
+      <div class="industry-card"><div class="n">02</div><h4>Tezpur</h4></div>
+      <div class="industry-card"><div class="n">03</div><h4>Guwahati</h4></div>
+      <div class="industry-card"><div class="n">04</div><h4>Jorhat</h4></div>
+      <div class="industry-card"><div class="n">05</div><h4>Dibrugarh</h4></div>
+      <div class="industry-card"><div class="n">06</div><h4>Silchar</h4></div>
     </div>
   </div>
 </section>
