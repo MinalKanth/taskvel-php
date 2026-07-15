@@ -159,7 +159,21 @@ body::before{
   pointer-events:none; transition:all .25s var(--ease);
 }
 .field input:focus{border-color:var(--gold); background:rgba(255,255,255,0.11); box-shadow:0 0 0 4px rgba(201,162,39,0.14);}
+.field input:focus + label, .field input:not(:placeholder-shown) + label{top:6px; font-size:10.5px; color:var(--gold-2); letter-spacing:.04em;}.field input:focus{border-color:var(--gold); background:rgba(255,255,255,0.11); box-shadow:0 0 0 4px rgba(201,162,39,0.14);}
 .field input:focus + label, .field input:not(:placeholder-shown) + label{top:6px; font-size:10.5px; color:var(--gold-2); letter-spacing:.04em;}
+
+.field.has-toggle input{padding-right:44px;}
+.toggle-pass{
+  position:absolute; right:12px; top:50%; transform:translateY(-50%);
+  background:none; border:none; cursor:pointer; padding:6px;
+  display:flex; align-items:center; justify-content:center;
+  color:rgba(250,248,243,0.55); transition:color .2s ease;
+}
+.toggle-pass:hover{color:var(--gold-2);}
+.toggle-pass svg{width:18px; height:18px; display:block;}
+.toggle-pass .eye-off{display:none;}
+.toggle-pass.is-visible .eye-on{display:none;}
+.toggle-pass.is-visible .eye-off{display:block;}
 
 .btn{
   position:relative; overflow:hidden; width:100%; padding:15px 22px; border:none; cursor:pointer;
@@ -237,9 +251,13 @@ input:focus-visible, button:focus-visible, a:focus-visible{outline:2px solid var
           <input type="email" name="email" placeholder=" " required maxlength="190" autocomplete="username" id="email">
           <label for="email">Email address</label>
         </div>
-        <div class="field">
+        <div class="field has-toggle">
           <input type="password" name="password" placeholder=" " required maxlength="200" autocomplete="current-password" id="password">
           <label for="password">Password</label>
+          <button type="button" class="toggle-pass" id="togglePass" aria-label="Show password" aria-pressed="false">
+            <svg class="eye-on" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8Z"/><circle cx="12" cy="12" r="3"/></svg>
+            <svg class="eye-off" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17.94 17.94A10.94 10.94 0 0 1 12 20c-7 0-11-8-11-8a21.6 21.6 0 0 1 5.06-6.94M9.9 4.24A10.4 10.4 0 0 1 12 4c7 0 11 8 11 8a21.6 21.6 0 0 1-2.61 3.94M14.12 14.12a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/></svg>
+          </button>
         </div>
         <button type="submit" class="btn" id="submitBtn">Log in</button>
       </form>
@@ -285,6 +303,21 @@ input:focus-visible, button:focus-visible, a:focus-visible{outline:2px solid var
     });
   }
 })();
+/* Show/hide password */
+  var togglePass = document.getElementById('togglePass');
+  var passInput  = document.getElementById('password');
+  if(togglePass && passInput){
+    togglePass.addEventListener('click', function(){
+      var isVisible = passInput.type === 'text';
+      passInput.type = isVisible ? 'password' : 'text';
+      this.classList.toggle('is-visible', !isVisible);
+      this.setAttribute('aria-pressed', String(!isVisible));
+      this.setAttribute('aria-label', isVisible ? 'Show password' : 'Hide password');
+      passInput.focus({ preventScroll: true });
+    });
+  }
+
+  /* Button ripple */
 </script>
 </body>
 </html>
