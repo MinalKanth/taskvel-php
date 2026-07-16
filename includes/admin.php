@@ -4,21 +4,13 @@
  * require_admin() must be the first call on every admin page — it layers a
  * role check on top of the normal session auth, and logs every denial to
  * the security audit trail.
+ *
+ * Note: current_user_role() now lives in auth.php (it's needed by
+ * non-admin pages too, e.g. login.php's post-login redirect), so it's
+ * no longer defined here — this file just require_once's auth.php and
+ * uses it like everything else does.
  */
 require_once __DIR__ . '/auth.php';
-
-function current_user_role(): string
-{
-    $uid = current_user_id();
-    if (!$uid) return 'guest';
-    static $role = null;
-    if ($role === null) {
-        $stmt = db()->prepare('SELECT role FROM users WHERE id = ?');
-        $stmt->execute([$uid]);
-        $role = $stmt->fetchColumn() ?: 'user';
-    }
-    return $role;
-}
 
 function require_admin(): void
 {

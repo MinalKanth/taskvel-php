@@ -259,6 +259,9 @@ input:focus-visible, button:focus-visible, a:focus-visible{outline:2px solid var
             <svg class="eye-off" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17.94 17.94A10.94 10.94 0 0 1 12 20c-7 0-11-8-11-8a21.6 21.6 0 0 1 5.06-6.94M9.9 4.24A10.4 10.4 0 0 1 12 4c7 0 11 8 11 8a21.6 21.6 0 0 1-2.61 3.94M14.12 14.12a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/></svg>
           </button>
         </div>
+        <p style="text-align:right;margin:-8px 0 18px;font-size:13px;">
+          <a href="forgot-password.php" style="color:var(--gold-2);text-decoration:none;font-weight:600;">Forgot password?</a>
+        </p>
         <button type="submit" class="btn" id="submitBtn">Log in</button>
       </form>
       <p class="alt">No account? <a href="register.php">Create one free</a></p>

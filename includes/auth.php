@@ -193,3 +193,76 @@ function enforce_rate_limit_soft(string $key, int $maxAttempts, int $windowSecon
     }
     return ['ok' => true];
 }
+
+function request_password_reset(string $email): array
+{
+    $ip = client_ip();
+    $rl = enforce_rate_limit_soft("pwreset:$ip", 5, 3600);
+    if (!$rl['ok']) return $rl;
+
+    $email = clean_email($email);
+    rate_limit_hit("pwreset:$ip", 3600);
+
+    $stmt = db()->prepare('SELECT id, name FROM users WHERE email = ?');
+    $stmt->execute([$email]);
+    $user = $stmt->fetch();
+
+    // Always behave the same whether or not the account exists, so this
+    // can't be used to check which emails are registered.
+    if ($user) {
+        $token = bin2hex(random_bytes(32));
+        $expires = date('Y-m-d H:i:s', time() + 3600); // 1 hour
+
+        db()->prepare('DELETE FROM password_resets WHERE email = ?')->execute([$email]);
+        db()->prepare('INSERT INTO password_resets (email, token, expires_at) VALUES (?, ?, ?)')
+            ->execute([$email, $token, $expires]);
+
+        require_once __DIR__ . '/mailer.php';
+        send_password_reset_email($email, $user['name'], $token);
+        audit_log((int)$user['id'], 'password_reset_requested', []);
+    }
+
+    return ['ok' => true];
+}
+
+function validate_reset_token(string $token): ?array
+{
+    if ($token === '') return null;
+    $stmt = db()->prepare('SELECT * FROM password_resets WHERE token = ?');
+    $stmt->execute([$token]);
+    $row = $stmt->fetch();
+    if (!$row) return null;
+    if (strtotime($row['expires_at']) < time()) return null;
+    return $row;
+}
+
+function reset_password(string $token, string $password): array
+{
+    $reset = validate_reset_token($token);
+    if (!$reset) {
+        return ['ok' => false, 'error' => 'This reset link is invalid or has expired. Please request a new one.'];
+    }
+    if (strlen($password) < 8) {
+        return ['ok' => false, 'error' => 'Password must be at least 8 characters.'];
+    }
+    if (strlen($password) > 200) {
+        return ['ok' => false, 'error' => 'Password is too long.'];
+    }
+    if (is_common_password($password)) {
+        return ['ok' => false, 'error' => 'That password is too common. Please choose something less guessable.'];
+    }
+
+    $stmt = db()->prepare('SELECT id FROM users WHERE email = ?');
+    $stmt->execute([$reset['email']]);
+    $user = $stmt->fetch();
+    if (!$user) {
+        return ['ok' => false, 'error' => 'This reset link is invalid or has expired. Please request a new one.'];
+    }
+
+    $hash = password_hash($password, PASSWORD_BCRYPT);
+    db()->prepare('UPDATE users SET password_hash = ? WHERE id = ?')->execute([$hash, $user['id']]);
+    db()->prepare('DELETE FROM password_resets WHERE email = ?')->execute([$reset['email']]);
+
+    audit_log((int)$user['id'], 'password_reset_success', []);
+    return ['ok' => true];
+}
