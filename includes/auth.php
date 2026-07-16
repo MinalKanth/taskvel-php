@@ -57,6 +57,22 @@ function current_user(): ?array
     return $cache;
 }
 
+// Moved here from admin.php — login.php and forgot-password.php need this
+// for their post-login redirect, but they only require_once auth.php,
+// not admin.php, so it has to live here rather than there.
+function current_user_role(): string
+{
+    $uid = current_user_id();
+    if (!$uid) return 'guest';
+    static $role = null;
+    if ($role === null) {
+        $stmt = db()->prepare('SELECT role FROM users WHERE id = ?');
+        $stmt->execute([$uid]);
+        $role = $stmt->fetchColumn() ?: 'user';
+    }
+    return $role;
+}
+
 // Called by every API endpoint. Enforces both authentication AND CSRF (for
 // state-changing methods) in one place, so no individual endpoint can
 // forget either check.
