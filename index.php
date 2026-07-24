@@ -406,6 +406,51 @@ section{position:relative;}
 .ledger-foot .score{color:var(--amber-2); font-family:var(--font-display); font-weight:700; font-size:18px;}
 .ledger-foot .score-label{color:rgba(250,247,242,0.55); font-size:10.5px;}
 
+/* ============================= HERO PREMIUM 3D ENHANCEMENTS ============================= */
+.hero-content{
+  transform-style:preserve-3d;
+  will-change:transform;
+  transition:transform .5s var(--ease);
+}
+.hero-orbs .orb{ transition:transform .4s var(--ease); will-change:transform; }
+
+.hero-particles{position:absolute; inset:0; pointer-events:none; z-index:0; overflow:hidden;}
+.hero-particle{
+  position:absolute; border-radius:50%;
+  filter:blur(.5px);
+  opacity:.6;
+  animation-name:particleDrift;
+  animation-timing-function:ease-in-out;
+  animation-iteration-count:infinite;
+}
+@keyframes particleDrift{
+  0%{ transform:translate3d(0,0,0) scale(1); opacity:.4; }
+  50%{ transform:translate3d(16px,-26px,0) scale(1.4); opacity:.85; }
+  100%{ transform:translate3d(0,0,0) scale(1); opacity:.4; }
+}
+@media (prefers-reduced-motion: reduce){ .hero-particle{animation:none;} }
+
+.btn[data-ripple]{ position:relative; overflow:hidden; }
+.btn-shine{
+  position:absolute; top:0; left:-60%; width:40%; height:100%;
+  background:linear-gradient(120deg, transparent, rgba(255,255,255,0.55), transparent);
+  transform:skewX(-20deg);
+  pointer-events:none;
+}
+.btn[data-ripple]:hover .btn-shine{ animation:shineSweep 1s var(--ease); }
+@keyframes shineSweep{ from{ left:-60%; } to{ left:130%; } }
+
+.ledger-card{
+  box-shadow:var(--shadow-lg), 0 1px 0 rgba(255,255,255,0.12) inset;
+  position:relative;
+}
+.ledger-card::after{
+  content:''; position:absolute; inset:0; border-radius:inherit; pointer-events:none; z-index:2;
+  background:radial-gradient(420px circle at var(--gx,50%) var(--gy,30%), rgba(255,255,255,0.12), transparent 60%);
+  opacity:0; transition:opacity .4s ease;
+}
+.ledger-card:hover::after{ opacity:1; }
+
 /* ============================= MARQUEE ============================= */
 .marquee-band{
   background:var(--paper); border-top:1px solid var(--line); border-bottom:1px solid var(--line);
@@ -552,6 +597,44 @@ section{position:relative;}
 .why-cell h4{font-size:16px; margin-bottom:8px;}
 .why-cell p{font-size:13.5px;}
 
+/* ============================= CORE SERVICES + WHY US PREMIUM 3D ============================= */
+.core-card, .why-cell{
+  transform-style:preserve-3d;
+  will-change:transform;
+  position:relative;
+}
+.core-card{ perspective:800px; }
+.core-glare{
+  position:absolute; inset:0; z-index:0; pointer-events:none; border-radius:inherit;
+  background:radial-gradient(300px circle at var(--mx,50%) var(--my,40%), rgba(232,199,102,0.14), transparent 60%);
+  opacity:0; transition:opacity .4s ease;
+}
+.core-card:hover .core-glare{ opacity:1; }
+.core-card > *:not(.core-glare){ position:relative; z-index:1; }
+
+.core-icon{ box-shadow:0 10px 24px -12px rgba(10,17,40,0.35); }
+.core-card:hover .core-icon{
+  transform:rotate(-8deg) scale(1.08) translateZ(24px);
+  box-shadow:0 18px 32px -14px rgba(201,162,39,0.45);
+}
+
+.why-cell{ overflow:hidden; }
+.why-cell::before{
+  content:''; position:absolute; inset:0; z-index:0; pointer-events:none;
+  background:linear-gradient(120deg, transparent 30%, rgba(255,255,255,0.14) 48%, transparent 65%);
+  transform:translateX(-120%);
+  transition:transform .8s var(--ease);
+}
+.why-cell:hover::before{ transform:translateX(120%); }
+.why-cell > *{ position:relative; z-index:1; }
+.why-cell .why-icon{
+  display:inline-flex; align-items:center; justify-content:center;
+  width:44px; height:44px; border-radius:12px;
+  background:rgba(14,124,140,0.08);
+  transition:transform .4s var(--ease), background .35s ease;
+}
+.why-cell:hover .why-icon{ transform:rotate(-6deg) scale(1.12) translateZ(20px); background:rgba(255,255,255,0.14); }
+
 /* ============================= PROCESS ============================= */
 .process-strip{position:relative;}
 .process-track{
@@ -595,6 +678,33 @@ section{position:relative;}
 .industry-card h4{color:var(--ivory); font-size:16.5px; margin-top:28px;}
 @media (min-width:640px){ .industry-card h4{font-size:18px; margin-top:34px;} }
 
+/* ============================= INDUSTRY CARDS PREMIUM 3D ============================= */
+.industry-scroll{ perspective:1000px; }
+.industry-card{
+  position:relative; overflow:hidden;
+  transform-style:preserve-3d;
+  will-change:transform;
+  transition:transform .45s var(--ease), box-shadow .45s var(--ease);
+  border:1px solid rgba(255,255,255,0.08);
+}
+.industry-card::before{
+  content:''; position:absolute; inset:0; z-index:0; pointer-events:none;
+  background:linear-gradient(120deg, transparent 30%, rgba(255,255,255,0.16) 48%, transparent 65%);
+  transform:translateX(-130%);
+  transition:transform .8s var(--ease);
+}
+.industry-card:hover::before{ transform:translateX(130%); }
+.industry-card > *{ position:relative; z-index:1; }
+.industry-card:hover, .industry-card:active{
+  box-shadow:0 26px 50px -20px rgba(10,17,40,0.5);
+}
+.industry-card .n{
+  display:inline-block; transition:transform .4s var(--ease);
+}
+.industry-card:hover .n{ transform:translateZ(18px) scale(1.1); }
+.industry-card h4{ transition:transform .4s var(--ease); }
+.industry-card:hover h4{ transform:translateZ(14px); }
+
 /* ============================= TESTIMONIALS ============================= */
 .test-wrap{max-width:820px; margin:0 auto; text-align:center; position:relative;}
 .test-slide{display:none;}
@@ -617,6 +727,41 @@ section{position:relative;}
 @media (min-width:640px){ .test-dots{margin-top:36px;} }
 .test-dot{width:8px;height:8px;border-radius:50%; background:var(--line); border:none; cursor:pointer; transition:all .3s ease; -webkit-tap-highlight-color:transparent;}
 .test-dot.active{background:var(--amber); width:24px; border-radius:6px;}
+
+/* ============================= TESTIMONIALS PREMIUM 3D GLASS ============================= */
+.test-wrap{ perspective:1200px; }
+.test-card{
+  position:relative;
+  background:linear-gradient(160deg, rgba(255,255,255,0.55), rgba(255,255,255,0.18));
+  border:1px solid rgba(255,255,255,0.5);
+  border-radius:var(--radius-lg);
+  backdrop-filter:blur(14px);
+  box-shadow:var(--shadow-sm);
+  padding:40px 28px;
+  transform-style:preserve-3d;
+  will-change:transform;
+  transition:transform .4s var(--ease), box-shadow .4s var(--ease);
+}
+@media (min-width:640px){ .test-card{padding:52px 48px;} }
+.test-card::before{
+  content:''; position:absolute; inset:0; border-radius:inherit; pointer-events:none;
+  background:radial-gradient(360px circle at var(--tx,50%) var(--ty,20%), rgba(201,162,39,0.14), transparent 60%);
+  opacity:0; transition:opacity .4s ease;
+}
+.test-card:hover::before{ opacity:1; }
+.test-card:hover{ box-shadow:0 34px 70px -28px rgba(10,17,40,0.28); }
+.test-quote-mark{ position:relative; z-index:1; transition:transform .4s var(--ease); }
+.test-card:hover .test-quote-mark{ transform:translateZ(24px) scale(1.08); }
+.test-text, .test-author{ position:relative; z-index:1; }
+
+.avatar-fallback{
+  transition:transform .4s var(--ease);
+  box-shadow:0 8px 18px -8px rgba(14,124,140,0.4);
+}
+.test-card:hover .avatar-fallback{ transform:translateZ(16px) scale(1.06); }
+
+.test-dot{ transform-style:preserve-3d; }
+.test-dot:hover{ transform:scale(1.3); }
 
 /* ============================= FAQ ============================= */
 .faq-wrap{max-width:800px; margin:0 auto;}
@@ -642,6 +787,47 @@ section{position:relative;}
 .faq-a{max-height:0; overflow:hidden; transition:max-height .5s var(--ease);}
 .faq-a p{padding:0 2px 20px; font-size:14.5px; max-width:640px;}
 @media (min-width:640px){ .faq-a p{padding:0 4px 24px; font-size:15px;} }
+
+/* ============================= FAQ PREMIUM 3D + GLASS ============================= */
+.faq-search input{
+  transition:border-color .3s ease, box-shadow .3s ease, background .3s ease, transform .3s var(--ease);
+}
+.faq-search input:focus{
+  transform:translateY(-2px);
+  box-shadow:0 0 0 4px rgba(14,124,140,0.10), 0 14px 30px -14px rgba(10,17,40,0.25);
+}
+.faq-search .sicon{ transition:transform .3s var(--ease), color .3s ease; }
+.faq-search input:focus ~ .sicon{ transform:translateY(-50%) scale(1.15); color:var(--teal-deep); }
+
+.faq-item{
+  position:relative;
+  transition:background .35s ease, border-color .35s ease, box-shadow .35s ease, transform .3s var(--ease);
+  border-radius:14px;
+}
+.faq-item:hover{
+  background:rgba(255,255,255,0.6);
+  box-shadow:var(--shadow-sm);
+  transform:translateY(-2px);
+}
+.faq-item.open{
+  background:var(--ivory);
+  border-color:transparent;
+  box-shadow:var(--shadow-sm);
+}
+.faq-q{ transition:color .3s ease; }
+.faq-item:hover .faq-q, .faq-item.open .faq-q{ color:var(--teal-deep); }
+.fplus{
+  display:inline-flex; align-items:center; justify-content:center;
+  width:26px; height:26px; border-radius:50%;
+  background:rgba(201,162,39,0.10);
+  transition:transform .4s var(--ease), background .3s ease, color .3s ease;
+}
+.faq-item.open .fplus{ background:var(--teal-deep); color:var(--ivory); }
+.faq-a p{
+  opacity:0; transform:translateY(-6px);
+  transition:opacity .4s var(--ease) .1s, transform .4s var(--ease) .1s;
+}
+.faq-item.open .faq-a p{ opacity:1; transform:translateY(0); }
 
 /* ============================= CONTACT ============================= */
 .contact-panel{
@@ -678,41 +864,169 @@ section{position:relative;}
 .two-col{display:grid; grid-template-columns:1fr; gap:16px;}
 @media (min-width:480px){ .two-col{grid-template-columns:1fr 1fr; gap:18px;} }
 
-/* ============================= FOOTER ============================= */
-footer{background:var(--charcoal); color:rgba(250,247,242,0.7); padding:60px 0 0;}
-@media (min-width:768px){ footer{padding:80px 0 0;} }
-/* Reserve room at the very bottom of the footer so the fixed mobile Call
-   Now / Get Consultation bar (.mobile-cta-bar) never covers the last
-   footer column or the copyright row once scrolled to the end. */
-@media (max-width:900px){ footer{padding-bottom:calc(88px + env(safe-area-inset-bottom));} }
-.footer-grid{display:grid; grid-template-columns:1fr; gap:36px; padding-bottom:44px; border-bottom:1px solid rgba(255,255,255,0.08);}
-@media (min-width:640px){ .footer-grid{grid-template-columns:1fr 1fr; row-gap:40px;} }
-@media (min-width:1024px){ .footer-grid{grid-template-columns:1.4fr 1fr 1fr 1.2fr; gap:50px; padding-bottom:60px;} }
-.footer-brand{display:flex; flex-direction:column; align-items:flex-start;}
-.footer-logo{height:84px; width:auto; max-width:170px; object-fit:contain; margin-bottom:4px; filter:brightness(0) invert(1);}
-.footer-brand p{color:rgba(250,247,242,0.55); font-size:14px; margin-top:14px; max-width:280px;}
-.footer-est{font-family:var(--font-eyebrow); font-size:11.5px; letter-spacing:.06em; text-transform:uppercase; color:var(--teal-2); margin-top:10px;}
-.footer-col h5{color:var(--ivory); font-size:13px; letter-spacing:.06em; text-transform:uppercase; margin-bottom:18px; font-family:var(--font-eyebrow); font-weight:600;}
-.footer-col ul{display:grid; gap:11px; list-style:none;}
-.footer-col a{color:rgba(250,247,242,0.6); text-decoration:none; font-size:14px; transition:color .3s ease;}
-.footer-col a:hover{color:var(--teal-2);}
-.social-row{display:flex; gap:12px; margin-top:18px;}
-.social-row a{
-  width:36px;height:36px;border-radius:50%; border:1px solid rgba(255,255,255,0.15);
-  display:flex;align-items:center;justify-content:center; font-size:13px; transition:all .3s ease;
+/* ============================= CONTACT PANEL PREMIUM 3D GLASS ============================= */
+.contact-panel{
+  position:relative; overflow:hidden;
+  border:1px solid rgba(255,255,255,0.12);
+  box-shadow:var(--shadow-lg);
 }
-.social-row a:hover{background:var(--amber); color:#fff; border-color:var(--amber);}
-.sub-form{display:flex; gap:0; margin-top:14px; border:1px solid rgba(255,255,255,0.15); border-radius:100px; overflow:hidden; padding:4px;}
-.sub-form input{flex:1; min-width:0; background:none; border:none; padding:10px 14px; color:var(--ivory); outline:none; font-family:inherit; font-size:13.5px;}
-.sub-form button{background:var(--amber); border:none; color:#fff; font-weight:700; padding:10px 18px; border-radius:100px; cursor:pointer; font-size:12.5px; flex-shrink:0;}
-.footer-bottom{display:flex; justify-content:space-between; align-items:center; padding:22px 0; font-size:12.5px; color:rgba(250,247,242,0.45); flex-wrap:wrap; gap:10px; text-align:center;}
-@media (min-width:768px){ .footer-bottom{padding:26px 0; font-size:13px;} }
+.contact-panel::before{
+  content:''; position:absolute; inset:0; z-index:0; pointer-events:none;
+  background:radial-gradient(460px circle at var(--px,20%) var(--py,20%), rgba(232,199,102,0.12), transparent 60%);
+  opacity:0; transition:opacity .5s ease;
+}
+.contact-panel:hover::before{ opacity:1; }
+.contact-panel > *{ position:relative; z-index:1; }
+
+.c-icon{
+  transition:transform .4s var(--ease), background .35s ease, color .35s ease;
+}
+.c-row:hover .c-icon{
+  transform:translateY(-3px) rotate(-6deg) scale(1.08);
+  background:rgba(232,199,102,0.18); color:var(--amber-2);
+}
+
+.field input, .field textarea{
+  position:relative;
+}
+.field::after{
+  content:''; position:absolute; inset:0; border-radius:12px; pointer-events:none;
+  box-shadow:0 0 0 0 rgba(232,199,102,0);
+  transition:box-shadow .35s ease;
+}
+.field:focus-within::after{ box-shadow:0 0 0 4px rgba(232,199,102,0.16); }
+.field:focus-within input, .field:focus-within textarea{ background:rgba(255,255,255,0.13); }
+
+#contactForm button[type="submit"]{ position:relative; overflow:hidden; will-change:transform; }
+.form-btn-shine{
+  position:absolute; top:0; left:-60%; width:40%; height:100%;
+  background:linear-gradient(120deg, transparent, rgba(255,255,255,0.55), transparent);
+  transform:skewX(-20deg); pointer-events:none;
+}
+#contactForm button[type="submit"]:hover .form-btn-shine{ animation:shineSweep 1s var(--ease); }
+@keyframes shineSweep{ from{ left:-60%; } to{ left:130%; } }
+
+/* ============================= FOOTER — PREMIUM REDESIGN ============================= */
+footer{
+  position:relative; overflow:hidden; color:rgba(250,247,242,0.72);
+  padding:0 0 0;
+  background:
+    radial-gradient(900px 480px at 15% 0%, rgba(232,199,102,0.08), transparent 60%),
+    radial-gradient(800px 500px at 100% 100%, rgba(143,160,232,0.10), transparent 60%),
+    linear-gradient(190deg, var(--navy-ink) 0%, var(--teal-deep) 55%, #0B1330 100%);
+}
+footer::after{
+  content:''; position:absolute; inset:0; pointer-events:none; opacity:.45; z-index:0;
+  background:
+    linear-gradient(rgba(255,255,255,0.03) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255,255,255,0.03) 1px, transparent 1px);
+  background-size:52px 52px;
+  mask-image:radial-gradient(ellipse 90% 60% at 50% 0%, #000 30%, transparent 100%);
+  -webkit-mask-image:radial-gradient(ellipse 90% 60% at 50% 0%, #000 30%, transparent 100%);
+}
+footer::before{
+  content:''; position:absolute; inset:0; z-index:1; pointer-events:none;
+  background:radial-gradient(520px circle at var(--fx,50%) var(--fy,0%), rgba(232,199,102,0.10), transparent 65%);
+  opacity:0; transition:opacity .5s ease;
+}
+footer:hover::before{ opacity:1; }
+footer .wrap{ position:relative; z-index:2; }
+.footer-orb{position:absolute; border-radius:50%; filter:blur(80px); opacity:.20; pointer-events:none; z-index:0;}
+.footer-orb-1{width:320px;height:320px; background:var(--amber-2); top:-100px; left:-60px; animation:orbFloat 20s ease-in-out infinite;}
+.footer-orb-2{width:260px;height:260px; background:var(--teal-2); bottom:-80px; right:-40px; animation:orbFloat 24s ease-in-out infinite; animation-delay:3s;}
+@media (prefers-reduced-motion: reduce){ .footer-orb{animation:none;} }
+
+@media (max-width:900px){ footer{padding-bottom:calc(88px + env(safe-area-inset-bottom));} }
+
+.footer-cta{
+  display:flex; flex-direction:column; gap:20px; align-items:flex-start;
+  padding:44px 0 40px; border-bottom:1px solid rgba(255,255,255,0.10);
+}
+@media (min-width:768px){
+  .footer-cta{ flex-direction:row; align-items:center; justify-content:space-between; padding:56px 0 48px; }
+}
+.footer-cta-text h3{ color:var(--ivory); font-size:clamp(20px,4vw,30px); margin-top:10px; line-height:1.25; max-width:560px; }
+.footer-cta .btn{ flex-shrink:0; }
+
+.footer-grid{display:grid; grid-template-columns:1fr; gap:36px; padding:48px 0 40px; border-bottom:1px solid rgba(255,255,255,0.08);}
+@media (min-width:640px){ .footer-grid{grid-template-columns:1fr 1fr; row-gap:40px;} }
+@media (min-width:1024px){ .footer-grid{grid-template-columns:1.4fr 1fr 1fr 1.2fr; gap:50px; padding:60px 0 52px;} }
+
+.footer-brand{display:flex; flex-direction:column; align-items:flex-start;}
+.footer-logo{height:84px; width:auto; max-width:170px; object-fit:contain; margin-bottom:4px; filter:brightness(0) invert(1); transition:transform .4s var(--ease);}
+.footer-brand:hover .footer-logo{ transform:translateY(-3px) scale(1.04); }
+.footer-brand p{color:rgba(250,247,242,0.55); font-size:14px; margin-top:14px; max-width:280px;}
+.footer-est{
+  display:inline-flex; align-items:center; gap:8px;
+  font-family:var(--font-eyebrow); font-size:11px; letter-spacing:.06em; text-transform:uppercase; color:var(--amber-2);
+  margin-top:14px; padding:7px 14px; border-radius:100px;
+  background:rgba(232,199,102,0.08); border:1px solid rgba(232,199,102,0.25);
+}
+.footer-est::before{ content:'◆'; font-size:7px; }
+
+.footer-mini-contact{ display:grid; gap:10px; margin-top:20px; }
+.footer-mini-contact a{
+  display:flex; align-items:center; gap:10px; color:rgba(250,247,242,0.75); text-decoration:none; font-size:13.5px;
+  transition:color .3s ease, transform .3s var(--ease);
+}
+.footer-mini-contact a:hover{ color:var(--teal-2); transform:translateX(3px); }
+.fmc-icon{
+  width:28px; height:28px; border-radius:9px; flex-shrink:0;
+  display:flex; align-items:center; justify-content:center; font-size:12px;
+  background:rgba(255,255,255,0.07); border:1px solid rgba(255,255,255,0.14); color:var(--teal-2);
+}
+
+.footer-col h5{color:var(--ivory); font-size:13px; letter-spacing:.06em; text-transform:uppercase; margin-bottom:20px; font-family:var(--font-eyebrow); font-weight:600; position:relative; padding-bottom:12px;}
+.footer-col h5::after{ content:''; position:absolute; left:0; bottom:0; width:26px; height:2px; background:linear-gradient(90deg,var(--amber),var(--amber-2)); border-radius:2px; }
+.footer-col ul{display:grid; gap:12px; list-style:none;}
+.footer-col a{color:rgba(250,247,242,0.62); text-decoration:none; font-size:14px; position:relative; display:inline-flex; align-items:center; gap:8px; transition:color .3s ease, transform .25s var(--ease);}
+.footer-col a::before{ content:'→'; font-size:11px; color:var(--amber-2); opacity:0; transform:translateX(-6px); transition:opacity .25s ease, transform .25s var(--ease); }
+.footer-col a:hover{ color:var(--ivory); transform:translateX(4px); }
+.footer-col a:hover::before{ opacity:1; transform:translateX(0); }
+
+.social-row{display:flex; gap:12px; margin-top:20px;}
+.social-row a{
+  width:40px;height:40px;border-radius:12px;
+  background:rgba(255,255,255,0.06); border:1px solid rgba(255,255,255,0.14);
+  display:flex;align-items:center;justify-content:center; font-size:14px; color:var(--ivory);
+  transform-style:preserve-3d; will-change:transform;
+  transition:transform .55s var(--ease), background .3s ease, border-color .3s ease, box-shadow .3s ease;
+}
+.social-row a:hover{
+  background:linear-gradient(135deg,var(--amber-2),var(--amber)); border-color:transparent; color:#fff;
+  transform:translateY(-4px) rotateY(360deg);
+  box-shadow:0 14px 26px -12px rgba(201,162,39,0.6);
+}
+
+.sub-form{display:flex; gap:0; margin-top:16px; border:1px solid rgba(255,255,255,0.16); border-radius:100px; overflow:hidden; padding:4px; background:rgba(255,255,255,0.04); transition:box-shadow .3s ease, border-color .3s ease;}
+.sub-form:focus-within{ box-shadow:0 0 0 4px rgba(232,199,102,0.14); border-color:rgba(232,199,102,0.45); }
+.sub-form input{flex:1; min-width:0; background:none; border:none; padding:11px 16px; color:var(--ivory); outline:none; font-family:inherit; font-size:13.5px;}
+.sub-form button{
+  background:linear-gradient(135deg,var(--amber-2),var(--amber)); border:none; color:#fff; font-weight:700;
+  padding:11px 20px; border-radius:100px; cursor:pointer; font-size:12.5px; flex-shrink:0;
+  transition:transform .3s var(--ease), box-shadow .3s ease;
+}
+.sub-form button:hover{ transform:translateY(-2px) scale(1.04); box-shadow:0 10px 22px -10px rgba(201,162,39,0.65); }
+
+.footer-bottom{display:flex; justify-content:space-between; align-items:center; padding:24px 0; font-size:12.5px; color:rgba(250,247,242,0.42); flex-wrap:wrap; gap:10px; text-align:center;}
+@media (min-width:768px){ .footer-bottom{padding:28px 0; font-size:13px;} }
+
+.back-to-top{ transform-style:preserve-3d; }
+.back-to-top:hover{ transform:translateY(-4px) rotateX(10deg); }
+
 /* Center footer content on mobile */
 @media (max-width:639px){
+  .footer-cta{ text-align:center; align-items:center; }
+  .footer-cta-text{ margin-left:auto; margin-right:auto; }
   .footer-grid{ text-align:center; }
   .footer-brand{ align-items:center; }
   .footer-brand p{ margin-left:auto; margin-right:auto; }
+  .footer-mini-contact{ justify-items:center; }
+  .footer-mini-contact a{ justify-content:center; }
   .footer-col ul{ justify-items:center; }
+  .footer-col a::before{ display:none; }
+  .footer-col h5{ display:inline-block;  margin-left:auto; margin-right:auto; }
+  .footer-col h5::after{ left:50%; transform:translateX(-50%); }
   .social-row{ justify-content:center; }
   .sub-form{ max-width:320px; margin-left:auto; margin-right:auto; }
   .footer-bottom{ justify-content:center; text-align:center; }
@@ -890,6 +1204,41 @@ footer{background:var(--charcoal); color:rgba(250,247,242,0.7); padding:60px 0 0
 .prod-foot-note a{color:var(--amber-2); text-decoration:none; font-weight:600;}
 .prod-foot-note a:hover{text-decoration:underline;}
 
+/* ============================= PRODUCT CARDS PREMIUM 3D ENHANCEMENTS ============================= */
+@keyframes shineSweep{ from{ left:-60%; } to{ left:130%; } }
+
+.prod-icon{ animation:iconFloat 4.5s ease-in-out infinite; }
+@keyframes iconFloat{
+  0%,100%{ transform:translateZ(30px) translateY(0); }
+  50%{ transform:translateZ(30px) translateY(-5px); }
+}
+.prod-card:hover .prod-icon{ animation-play-state:paused; }
+@media (prefers-reduced-motion: reduce){ .prod-icon{ animation:none; } }
+
+.prod-shine{
+  position:absolute; inset:0; z-index:0; pointer-events:none; border-radius:inherit;
+  background:linear-gradient(115deg, transparent 30%, rgba(255,255,255,0.10) 45%, transparent 60%);
+  transform:translateX(-120%);
+  transition:transform .9s var(--ease);
+}
+.prod-card:hover .prod-shine{ transform:translateX(120%); }
+
+.prod-badge{ transition:transform .35s var(--ease), box-shadow .35s var(--ease); }
+.prod-card:hover .prod-badge{ transform:translateZ(20px) scale(1.05); }
+
+.prod-actions .btn{ position:relative; overflow:hidden; }
+.prod-btn-shine{
+  position:absolute; top:0; left:-60%; width:40%; height:100%;
+  background:linear-gradient(120deg, transparent, rgba(255,255,255,0.5), transparent);
+  transform:skewX(-20deg); pointer-events:none;
+}
+.prod-actions .btn:hover .prod-btn-shine{ animation:shineSweep 1s var(--ease); }
+
+.prod-feats li{ transition:transform .3s var(--ease); }
+.prod-card:hover .prod-feats li{ transform:translateZ(6px); }
+
+.prod-chip{ transform-style:preserve-3d; }
+
 /* Scroll reveal */
 .reveal{opacity:0; transform:translateY(22px); transition:opacity .8s var(--ease), transform .8s var(--ease);}
 .reveal.in{opacity:1; transform:translateY(0);}
@@ -1060,6 +1409,7 @@ a:focus-visible, button:focus-visible, input:focus-visible, textarea:focus-visib
     <span class="orb orb-2"></span>
     <span class="orb orb-3"></span>
   </div>
+  <div class="hero-particles" id="heroParticles" aria-hidden="true"></div>
   <div class="cursor-glow" id="cursorGlow" aria-hidden="true"></div>
   <div class="wrap hero-grid">
     <div class="hero-content reveal in">
@@ -1069,8 +1419,8 @@ a:focus-visible, button:focus-visible, input:focus-visible, textarea:focus-visib
       <p class="hero-tagline">Providing trusted compliance services since 1993.</p>
       <p class="lead">Samal Consultancy runs the tax, registration and labour-law compliance behind 70+ businesses across Assam — so nothing slips, nothing lapses, and nothing is left to chance.</p>
       <div class="hero-actions">
-        <a href="#contact" class="btn btn-gold" data-ripple>Get Free Consultation</a>
-        <a href="#services" class="btn btn-ghost" data-ripple>Explore Services</a>
+        <a href="#contact" class="btn btn-gold" data-ripple>Get Free Consultation<span class="btn-shine" aria-hidden="true"></span></a>
+        <a href="#services" class="btn btn-ghost" data-ripple>Explore Services<span class="btn-shine" aria-hidden="true"></span></a>
       </div>
       <div class="trust-row">
         <div><div class="t-num">70+</div><div class="t-label">Businesses served</div></div>
@@ -1152,10 +1502,10 @@ a:focus-visible, button:focus-visible, input:focus-visible, textarea:focus-visib
       <h2>GST, EPFO/ESIC and company registration — the four pillars businesses across Assam lean on us for most.</h2>
     </div>
     <div class="core-grid stagger reveal">
-      <div class="core-card" style="--i:0"><div class="core-icon">◈</div><h3>GST Registration &amp; Return Filing</h3><p>End-to-end GST — registration, monthly/annual returns, reconciliation and notice handling.</p><a href="#registry" class="core-link">View scope <span class="arrow">→</span></a></div>
-      <div class="core-card" style="--i:1"><div class="core-icon">◆</div><h3>EPFO &amp; ESIC Compliance</h3><p>Registration, monthly ECR filing, UAN activation and employee benefit administration.</p><a href="#registry" class="core-link">View scope <span class="arrow">→</span></a></div>
-      <div class="core-card" style="--i:2"><div class="core-icon">◇</div><h3>Business Registrations</h3><p>Udyam, FSSAI, IEC, Trademark, and Shop &amp; Establishment — set up correctly, first time.</p><a href="#registry" class="core-link">View scope <span class="arrow">→</span></a></div>
-      <div class="core-card" style="--i:3"><div class="core-icon">◉</div><h3>Payroll &amp; Bookkeeping</h3><p>Accurate payroll, statutory deductions and books that are always audit-ready.</p><a href="#registry" class="core-link">View scope <span class="arrow">→</span></a></div>
+      <div class="core-card" style="--i:0" data-glare><span class="core-glare" aria-hidden="true"></span><div class="core-icon">◈</div><h3>GST Registration &amp; Return Filing</h3><p>End-to-end GST — registration, monthly/annual returns, reconciliation and notice handling.</p><a href="#registry" class="core-link">View scope <span class="arrow">→</span></a></div>
+      <div class="core-card" style="--i:1" data-glare><span class="core-glare" aria-hidden="true"></span><div class="core-icon">◆</div><h3>EPFO &amp; ESIC Compliance</h3><p>Registration, monthly ECR filing, UAN activation and employee benefit administration.</p><a href="#registry" class="core-link">View scope <span class="arrow">→</span></a></div>
+      <div class="core-card" style="--i:2" data-glare><span class="core-glare" aria-hidden="true"></span><div class="core-icon">◇</div><h3>Business Registrations</h3><p>Udyam, FSSAI, IEC, Trademark, and Shop &amp; Establishment — set up correctly, first time.</p><a href="#registry" class="core-link">View scope <span class="arrow">→</span></a></div>
+      <div class="core-card" style="--i:3" data-glare><span class="core-glare" aria-hidden="true"></span><div class="core-icon">◉</div><h3>Payroll &amp; Bookkeeping</h3><p>Accurate payroll, statutory deductions and books that are always audit-ready.</p><a href="#registry" class="core-link">View scope <span class="arrow">→</span></a></div>
     </div>
   </div>
 </section>
@@ -1247,8 +1597,10 @@ a:focus-visible, button:focus-visible, input:focus-visible, textarea:focus-visib
 <section class="pad" id="clients">
   <div class="wrap">
     <div class="test-wrap reveal">
-      <span class="test-quote-mark">"</span>
-      <div id="testSlides"></div>
+      <div class="test-card" data-glare-3d>
+        <span class="test-quote-mark">"</span>
+        <div id="testSlides"></div>
+      </div>
       <div class="test-dots" id="testDots"></div>
     </div>
   </div>
@@ -1274,7 +1626,7 @@ a:focus-visible, button:focus-visible, input:focus-visible, textarea:focus-visib
 <!-- ============================= CONTACT ============================= -->
 <section class="pad" id="contact">
   <div class="wrap">
-    <div class="contact-panel reveal">
+    <div class="contact-panel reveal" data-glare-panel>
       <div>
         <span class="eyebrow" style="color:var(--teal-2);">Get In Touch</span>
         <h2 style="margin-top:14px;">Tell us what's due, and we'll take it from here.</h2>
@@ -1335,7 +1687,7 @@ a:focus-visible, button:focus-visible, input:focus-visible, textarea:focus-visib
         </div>
         <div class="field"><input type="email" placeholder=" " required id="femail"><label>Email address</label></div>
         <div class="field"><textarea placeholder=" " required id="fmsg"></textarea><label>What do you need help with?</label></div>
-        <button type="submit" class="btn btn-gold" data-ripple style="justify-self:flex-start;">Send Message</button>
+        <button type="submit" class="btn btn-gold" data-ripple style="justify-self:flex-start;">Send Message<span class="form-btn-shine" aria-hidden="true"></span></button>
       </form>
     </div>
   </div>
@@ -1357,6 +1709,7 @@ a:focus-visible, button:focus-visible, input:focus-visible, textarea:focus-visib
       <!-- 1. TASKVEL FREE -->
       <article class="prod-card" style="--i:0" data-tilt>
         <span class="prod-glare" aria-hidden="true"></span>
+        <span class="prod-shine" aria-hidden="true"></span>
         <div class="prod-top">
           <div class="prod-icon">✦</div>
           <span class="prod-badge free">Free · No Login</span>
@@ -1375,6 +1728,7 @@ a:focus-visible, button:focus-visible, input:focus-visible, textarea:focus-visib
         <div class="prod-actions">
           <a href="./taskvel-free.php" target="_blank" rel="noopener noreferrer" class="btn btn-gold" data-ripple>
               Try Now
+              <span class="prod-btn-shine" aria-hidden="true"></span>
           </a>
           </div>
       </article>
@@ -1382,6 +1736,7 @@ a:focus-visible, button:focus-visible, input:focus-visible, textarea:focus-visib
       <!-- 2. TASKVEL PREMIUM -->
       <article class="prod-card premium" style="--i:1" data-tilt>
         <span class="prod-glare" aria-hidden="true"></span>
+        <span class="prod-shine" aria-hidden="true"></span>
         <div class="prod-top">
           <div class="prod-icon">⚡</div>
           <span class="prod-badge gold">★ Premium</span>
@@ -1400,6 +1755,7 @@ a:focus-visible, button:focus-visible, input:focus-visible, textarea:focus-visib
         <div class="prod-actions">
           <a href="./taskvel-pro.php" target="_blank" rel="noopener noreferrer" class="btn btn-gold" data-ripple>
               Get Started
+              <span class="prod-btn-shine" aria-hidden="true"></span>
           </a>
         </div>
       </article>
@@ -1407,6 +1763,7 @@ a:focus-visible, button:focus-visible, input:focus-visible, textarea:focus-visib
       <!-- 3. EVENTS NEAR YOU -->
       <article class="prod-card soon" style="--i:2" data-tilt>
         <span class="prod-glare" aria-hidden="true"></span>
+        <span class="prod-shine" aria-hidden="true"></span>
         <div class="prod-top">
           <div class="prod-icon">◈</div>
           <span class="prod-badge soon-badge">Coming Soon</span>
@@ -1433,6 +1790,7 @@ a:focus-visible, button:focus-visible, input:focus-visible, textarea:focus-visib
         <div class="prod-actions">
           <a href="./events.php" target="_blank" rel="noopener noreferrer" class="btn btn-gold" data-ripple>
             View Events
+            <span class="prod-btn-shine" aria-hidden="true"></span>
           </a>
         </div>
       </article>
@@ -1444,7 +1802,18 @@ a:focus-visible, button:focus-visible, input:focus-visible, textarea:focus-visib
 </section>
 
 <!-- ============================= FOOTER ============================= -->
-<footer>
+<footer id="footer">
+  <span class="footer-orb footer-orb-1" aria-hidden="true"></span>
+  <span class="footer-orb footer-orb-2" aria-hidden="true"></span>
+
+  <div class="footer-cta wrap reveal">
+    <div class="footer-cta-text">
+      <span class="eyebrow" style="color:var(--amber-2);">Let's Talk Compliance</span>
+      <h3>Ready to hand off your GST, EPFO &amp; ROC filings?</h3>
+    </div>
+    <a href="#contact" class="btn btn-gold" data-ripple>Book Free Consultation<span class="btn-shine" aria-hidden="true"></span></a>
+  </div>
+
   <div class="wrap">
     <div class="footer-grid">
       <div class="footer-brand">
@@ -1467,10 +1836,14 @@ a:focus-visible, button:focus-visible, input:focus-visible, textarea:focus-visib
         <span class="brand-name" style="color:var(--ivory);">Samal Consultancy</span>
         <p>End-to-end tax, registration and labour-law compliance for growing businesses.</p>
         <div class="footer-est">Providing trusted compliance services since 1993</div>
+        <div class="footer-mini-contact">
+          <a href="tel:+917002050242"><span class="fmc-icon">☎</span> +91 70020 50242</a>
+          <a href="mailto:info@samalconsultancy.com"><span class="fmc-icon">✉</span> info@samalconsultancy.com</a>
+        </div>
         <div class="social-row">
-          <a href="#" aria-label="LinkedIn">in</a>
-          <a href="#" aria-label="Twitter">𝕏</a>
-          <a href="#" aria-label="Instagram">◎</a>
+          <a href="#" aria-label="LinkedIn"><span>in</span></a>
+          <a href="#" aria-label="Twitter"><span>𝕏</span></a>
+          <a href="#" aria-label="Instagram"><span>◎</span></a>
         </div>
       </div>
       <div class="footer-col">
@@ -1483,7 +1856,7 @@ a:focus-visible, button:focus-visible, input:focus-visible, textarea:focus-visib
       </div>
       <div class="footer-col">
         <h5>Stay Updated</h5>
-        <p style="font-size:14px; margin-bottom:4px;">Compliance deadlines, in your inbox monthly.</p>
+        <p style="font-size:14px; margin-bottom:4px; color: #e0bd57;">Compliance deadlines, in your inbox monthly.</p>
         <form class="sub-form" onsubmit="event.preventDefault();this.reset();">
           <input type="email" placeholder="Your email" required>
           <button type="submit">Join</button>
@@ -1596,10 +1969,15 @@ const prefersReduced = window.matchMedia('(prefers-reduced-motion: reduce)').mat
 const isCoarsePointer = window.matchMedia('(pointer: coarse)').matches;
 
 if(heroEl && !prefersReduced && !isCoarsePointer){
+  const heroContentEl = document.querySelector('.hero-content');
+  const orbEls = document.querySelectorAll('.hero-orbs .orb');
+
   heroEl.addEventListener('mousemove', (e)=>{
     const rect = heroEl.getBoundingClientRect();
     const relX = e.clientX - rect.left;
     const relY = e.clientY - rect.top;
+    const px = relX / rect.width;
+    const py = relY / rect.height;
 
     if(cursorGlow){
       cursorGlow.style.left = relX + 'px';
@@ -1614,11 +1992,29 @@ if(heroEl && !prefersReduced && !isCoarsePointer){
       const dy = (e.clientY - cy) / (cardRect.height/2);
       const clampedX = Math.max(-1, Math.min(1, dx));
       const clampedY = Math.max(-1, Math.min(1, dy));
-      ledgerCard.style.transform = `rotateY(${clampedX*8}deg) rotateX(${-clampedY*8}deg)`;
+      ledgerCard.style.transform = `rotateY(${clampedX*8}deg) rotateX(${-clampedY*8}deg) translateZ(10px)`;
+      ledgerCard.style.setProperty('--gx', ((e.clientX - cardRect.left) / cardRect.width * 100) + '%');
+      ledgerCard.style.setProperty('--gy', ((e.clientY - cardRect.top) / cardRect.height * 100) + '%');
     }
+
+    if(heroContentEl){
+      const rx = (py - 0.5) * -6;
+      const ry = (px - 0.5) * 6;
+      heroContentEl.style.transform = `rotateX(${rx}deg) rotateY(${ry}deg)`;
+    }
+
+    orbEls.forEach((orb, i)=>{
+      const depth = (i + 1) * 14;
+      const ox = (px - 0.5) * depth;
+      const oy = (py - 0.5) * depth;
+      orb.style.transform = `translate3d(${ox}px, ${oy}px, 0)`;
+    });
   });
+
   heroEl.addEventListener('mouseleave', ()=>{
-    if(ledgerCard) ledgerCard.style.transform = 'rotateY(0deg) rotateX(0deg)';
+    if(ledgerCard) ledgerCard.style.transform = 'rotateY(0deg) rotateX(0deg) translateZ(0)';
+    if(heroContentEl) heroContentEl.style.transform = 'rotateX(0deg) rotateY(0deg)';
+    orbEls.forEach(orb=> orb.style.transform = '');
   });
 
   /* Magnetic hero buttons */
@@ -1633,6 +2029,23 @@ if(heroEl && !prefersReduced && !isCoarsePointer){
   });
 }
 
+/* Floating ambient particles in hero */
+const heroParticlesEl = document.getElementById('heroParticles');
+if(heroParticlesEl && !prefersReduced){
+  const colors = ['rgba(232,199,102,0.9)','rgba(143,160,232,0.85)','rgba(255,255,255,0.7)'];
+  let particleHtml = '';
+  for(let i=0;i<18;i++){
+    const size = Math.random()*4+2;
+    const left = Math.random()*100;
+    const top = Math.random()*100;
+    const dur = Math.random()*6+6;
+    const delay = Math.random()*6;
+    const color = colors[i % colors.length];
+    particleHtml += `<span class="hero-particle" style="width:${size}px;height:${size}px;left:${left}%;top:${top}%;background:radial-gradient(circle, ${color}, transparent);animation-duration:${dur}s;animation-delay:${delay}s;"></span>`;
+  }
+  heroParticlesEl.innerHTML = particleHtml;
+}
+
 /* ============================= PRODUCT CARDS: 3D TILT + GLARE ============================= */
 if(!prefersReduced && !isCoarsePointer){
   document.querySelectorAll('.prod-card[data-tilt]').forEach(card=>{
@@ -1645,6 +2058,17 @@ if(!prefersReduced && !isCoarsePointer){
       card.style.setProperty('--my', (py * 100) + '%');
     });
     card.addEventListener('mouseleave', ()=>{ card.style.transform = ''; });
+  });
+
+  /* Magnetic product action buttons */
+  document.querySelectorAll('.prod-actions .btn').forEach(btn=>{
+    btn.addEventListener('mousemove', (e)=>{
+      const r = btn.getBoundingClientRect();
+      const mx = e.clientX - r.left - r.width/2;
+      const my = e.clientY - r.top - r.height/2;
+      btn.style.transform = `translate(${mx*0.15}px, ${my*0.3}px)`;
+    });
+    btn.addEventListener('mouseleave', ()=>{ btn.style.transform=''; });
   });
 }
 
@@ -1747,8 +2171,16 @@ function renderFaq(list){
     const a = item.querySelector('.faq-a');
     q.addEventListener('click', ()=>{
       const isOpen = item.classList.contains('open');
-      faqList.querySelectorAll('.faq-item.open').forEach(o=>{ o.classList.remove('open'); o.querySelector('.faq-a').style.maxHeight=null; });
-      if(!isOpen){ item.classList.add('open'); a.style.maxHeight = a.scrollHeight + 'px'; }
+      faqList.querySelectorAll('.faq-item.open').forEach(o=>{
+        o.classList.remove('open');
+        o.querySelector('.faq-a').style.maxHeight = null;
+      });
+      if(!isOpen){
+        item.classList.add('open');
+        a.style.maxHeight = a.scrollHeight + 'px';
+        const reopen = ()=>{ if(item.classList.contains('open')) a.style.maxHeight = a.scrollHeight + 'px'; };
+        window.addEventListener('resize', reopen, { once:true });
+      }
     });
   });
 }
@@ -1796,6 +2228,59 @@ testWrapEl.addEventListener('touchend', e=>{
   }
 }, {passive:true});
 
+/* Testimonial card: cursor glare + gentle 3D tilt */
+const testCardEl = document.querySelector('.test-card[data-glare-3d]');
+if(testCardEl && !prefersReduced && !isCoarsePointer){
+  testCardEl.addEventListener('mousemove', (e)=>{
+    const r = testCardEl.getBoundingClientRect();
+    const px = (e.clientX - r.left) / r.width;
+    const py = (e.clientY - r.top) / r.height;
+    testCardEl.style.setProperty('--tx', (px * 100) + '%');
+    testCardEl.style.setProperty('--ty', (py * 100) + '%');
+    testCardEl.style.transform = `rotateY(${(px - 0.5) * 4}deg) rotateX(${(0.5 - py) * 4}deg)`;
+  });
+  testCardEl.addEventListener('mouseleave', ()=>{ testCardEl.style.transform = ''; });
+}
+
+/* ============================= CORE SERVICES: TILT + GLARE ============================= */
+if(!prefersReduced && !isCoarsePointer){
+  document.querySelectorAll('.core-card[data-glare]').forEach(card=>{
+    card.addEventListener('mousemove', (e)=>{
+      const r = card.getBoundingClientRect();
+      const px = (e.clientX - r.left) / r.width;
+      const py = (e.clientY - r.top) / r.height;
+      card.style.setProperty('--mx', (px * 100) + '%');
+      card.style.setProperty('--my', (py * 100) + '%');
+      card.style.transform = `translateY(-6px) rotateY(${(px - 0.5) * 6}deg) rotateX(${(0.5 - py) * 6}deg)`;
+    });
+    card.addEventListener('mouseleave', ()=>{ card.style.transform = ''; });
+  });
+
+  /* Why Us cells: subtle 3D tilt */
+  document.querySelectorAll('.why-cell').forEach(cell=>{
+    cell.addEventListener('mousemove', (e)=>{
+      const r = cell.getBoundingClientRect();
+      const px = (e.clientX - r.left) / r.width;
+      const py = (e.clientY - r.top) / r.height;
+      cell.style.transform = `rotateY(${(px - 0.5) * 5}deg) rotateX(${(0.5 - py) * 5}deg)`;
+    });
+    cell.addEventListener('mouseleave', ()=>{ cell.style.transform = ''; });
+  });
+}
+
+/* ============================= INDUSTRY / AREA CARDS: 3D TILT ============================= */
+if(!prefersReduced && !isCoarsePointer){
+  document.querySelectorAll('.industry-card').forEach(card=>{
+    card.addEventListener('mousemove', (e)=>{
+      const r = card.getBoundingClientRect();
+      const px = (e.clientX - r.left) / r.width;
+      const py = (e.clientY - r.top) / r.height;
+      card.style.transform = `translateY(-6px) rotateY(${(px - 0.5) * 10}deg) rotateX(${(0.5 - py) * 10}deg)`;
+    });
+    card.addEventListener('mouseleave', ()=>{ card.style.transform = ''; });
+  });
+}
+
 /* ============================= SCROLL REVEAL ============================= */
 const revealEls = document.querySelectorAll('.reveal');
 const revealObserver = new IntersectionObserver((entries)=>{
@@ -1809,12 +2294,48 @@ revealEls.forEach(el=>revealObserver.observe(el));
 document.getElementById('contactForm').addEventListener('submit', function(e){
   e.preventDefault();
   const btn = this.querySelector('button');
-  const original = btn.textContent;
-  btn.textContent = 'Message Sent ✓';
+  const original = btn.innerHTML;
+  btn.innerHTML = 'Message Sent ✓';
   btn.style.opacity = '0.85';
   this.reset();
-  setTimeout(()=>{ btn.textContent = original; btn.style.opacity='1'; }, 2600);
+  setTimeout(()=>{ btn.innerHTML = original; btn.style.opacity='1'; }, 2600);
 });
+
+/* Contact panel: cursor-tracked glare */
+const contactPanelEl = document.querySelector('.contact-panel[data-glare-panel]');
+if(contactPanelEl && !prefersReduced && !isCoarsePointer){
+  contactPanelEl.addEventListener('mousemove', (e)=>{
+    const r = contactPanelEl.getBoundingClientRect();
+    const px = ((e.clientX - r.left) / r.width) * 100;
+    const py = ((e.clientY - r.top) / r.height) * 100;
+    contactPanelEl.style.setProperty('--px', px + '%');
+    contactPanelEl.style.setProperty('--py', py + '%');
+  });
+}
+
+/* Magnetic submit button */
+const submitBtnEl = document.querySelector('#contactForm button[type="submit"]');
+if(submitBtnEl && !prefersReduced && !isCoarsePointer){
+  submitBtnEl.addEventListener('mousemove', (e)=>{
+    const r = submitBtnEl.getBoundingClientRect();
+    const mx = e.clientX - r.left - r.width/2;
+    const my = e.clientY - r.top - r.height/2;
+    submitBtnEl.style.transform = `translate(${mx*0.15}px, ${my*0.3}px)`;
+  });
+  submitBtnEl.addEventListener('mouseleave', ()=>{ submitBtnEl.style.transform = ''; });
+}
+
+/* ============================= FOOTER: CURSOR-TRACKED AMBIENT GLOW ============================= */
+const footerEl = document.querySelector('footer');
+if(footerEl && !prefersReduced && !isCoarsePointer){
+  footerEl.addEventListener('mousemove', (e)=>{
+    const r = footerEl.getBoundingClientRect();
+    const fx = ((e.clientX - r.left) / r.width) * 100;
+    const fy = ((e.clientY - r.top) / r.height) * 100;
+    footerEl.style.setProperty('--fx', fx + '%');
+    footerEl.style.setProperty('--fy', fy + '%');
+  });
+}
 
 /* ============================= FOOTER YEAR ============================= */
 document.getElementById('year').textContent = new Date().getFullYear();
