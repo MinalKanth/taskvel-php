@@ -3,10 +3,10 @@
 // Database connection (PDO, MySQL)
 // Update these 4 values for your hosting environment.
 // ------------------------------------------------------------
-define('DB_HOST', getenv('DB_HOST') ?: '127.0.0.1');
-define('DB_NAME', getenv('DB_NAME') ?: 'taskvel_php');
-define('DB_USER', getenv('DB_USER') ?: 'root');
-define('DB_PASS', getenv('DB_PASS') ?: '');
+define('DB_HOST', getenv('DB_HOST') ?: 'localhost');
+define('DB_NAME', getenv('DB_NAME') ?: 'u985910219_samal');
+define('DB_USER', getenv('DB_USER') ?: 'u985910219_samal');
+define('DB_PASS', getenv('DB_PASS') ?: 'SAmal@2026in');
 
 // Base URL used in invite/reset-password emails (no trailing slash).
 // Prefers the APP_URL environment variable if it's set (recommended for
@@ -34,18 +34,13 @@ function detect_app_url(): string
 define('APP_URL', detect_app_url());
 
 // SMTP settings for invite emails (leave SMTP_HOST empty to fall back to PHP mail())
-// define('SMTP_HOST', getenv('SMTP_HOST') ?: 'smtp.gmail.com');
-// define('SMTP_PORT', getenv('SMTP_PORT') ?: 587);
-// define('SMTP_USER', getenv('SMTP_USER') ?: 'minal.viprak@gmail.com');
-// define('SMTP_PASS', getenv('SMTP_PASS') ?: 'fabfkythogdyzvus');
-// define('SMTP_FROM', getenv('SMTP_FROM') ?: 'noreply@taskvel.app');
-// define('SMTP_FROM_NAME', 'Taskvel');
-define('SMTP_HOST', getenv('SMTP_HOST') ?: 'smtp.gmail.com');
-define('SMTP_PORT', getenv('SMTP_PORT') ?: 587);
+define('SMTP_HOST', getenv('SMTP_HOST') ?: 'smtp.hostinger.com');
+define('SMTP_PORT', getenv('SMTP_PORT') ?: 465);
 define('SMTP_USER', getenv('SMTP_USER') ?: 'info@samalconsultancy.com');
 define('SMTP_PASS', getenv('SMTP_PASS') ?: 'SAmal@2026in');
 define('SMTP_FROM', getenv('SMTP_FROM') ?: 'noreply@samalconsultancy.com');
 define('SMTP_FROM_NAME', 'Samal Consultancy');
+
 
 function db(): PDO
 {
@@ -64,10 +59,10 @@ function db(): PDO
 // // Database connection (PDO, MySQL)
 // // Update these 4 values for your hosting environment.
 // // ------------------------------------------------------------
-// define('DB_HOST', getenv('DB_HOST') ?: '127.0.0.1');
-// define('DB_NAME', getenv('DB_NAME') ?: 'taskvel_php');
-// define('DB_USER', getenv('DB_USER') ?: 'root');
-// define('DB_PASS', getenv('DB_PASS') ?: '');
+// define('DB_HOST', getenv('DB_HOST') ?: 'localhost');
+// define('DB_NAME', getenv('DB_NAME') ?: 'u985910219_samal');
+// define('DB_USER', getenv('DB_USER') ?: 'u985910219_samal');
+// define('DB_PASS', getenv('DB_PASS') ?: 'SAmal@2026in');
 
 // // Base URL used in invite emails (no trailing slash)
 // define('APP_URL', getenv('APP_URL') ?: 'http://localhost/taskvel-php');
