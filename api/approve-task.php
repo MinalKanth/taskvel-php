@@ -5,12 +5,22 @@
  * report-to person might not even have a Taskvel account; the random
  * 24-byte token is the only credential, matching the pattern used by
  * invite-accept.php elsewhere in the app.
+ *
+ * IMPORTANT: the action only happens on POST (a real button click). GET
+ * only ever renders a confirmation page — it never mutates anything. This
+ * matters because GET requests to this URL can fire without the person
+ * ever consciously clicking: email link-scanners (Outlook Safe Links,
+ * corporate mail gateways), image/link preview fetchers, and chat-app
+ * link unfurling all issue a GET the moment the email/message is
+ * received or opened, not when a human clicks.
  */
 require_once __DIR__ . '/../includes/mailer.php';
 require_once __DIR__ . '/../includes/security.php';
 
-$token = $_GET['token'] ?? '';
-$decision = $_GET['decision'] ?? '';
+$token = $_GET['token'] ?? $_POST['token'] ?? '';
+$decision = $_GET['decision'] ?? $_POST['decision'] ?? '';
+$method = $_SERVER['REQUEST_METHOD'];
+
 if (!in_array($decision, ['approve', 'reject']) || !preg_match('/^[a-f0-9]{48}$/', $token)) {
     http_response_code(400);
     echo 'Invalid link.';
@@ -47,6 +57,32 @@ if ($task['approval_status'] !== 'pending') {
     exit;
 }
 
+// ---- GET: show a confirmation page only. No database writes happen here. ----
+if ($method !== 'POST') {
+    $verb = $decision === 'approve' ? 'approve' : 'send back';
+    $color = $decision === 'approve' ? '#059669' : '#dc2626';
+    ?>
+    <!DOCTYPE html>
+    <html><head><meta charset="UTF-8"><title>Taskvel</title>
+    <style>body{font-family:-apple-system,Arial,sans-serif;background:#f6f6f4;display:flex;align-items:center;justify-content:center;height:100vh;margin:0}
+    .card{background:#fff;padding:36px;border-radius:16px;box-shadow:0 10px 30px rgba(0,0,0,.08);max-width:400px;text-align:center}
+    h1{font-size:19px;margin:0 0 10px}p{color:#666;font-size:14px;line-height:1.5}
+    button{margin-top:18px;padding:12px 26px;border:none;border-radius:10px;background:<?= $color ?>;color:#fff;font-weight:700;font-size:14.5px;cursor:pointer}
+    button:hover{opacity:.92}</style></head>
+    <body><div class="card">
+    <h1>Confirm: <?= $decision === 'approve' ? '✓ Approve task' : '↩ Send task back' ?></h1>
+    <p>You're about to <strong><?= htmlspecialchars($verb) ?></strong> "<strong><?= htmlspecialchars($task['title']) ?></strong>" from <?= htmlspecialchars($task['employee_name']) ?>.</p>
+    <form method="POST">
+        <input type="hidden" name="token" value="<?= htmlspecialchars($token) ?>">
+        <input type="hidden" name="decision" value="<?= htmlspecialchars($decision) ?>">
+        <button type="submit"><?= $decision === 'approve' ? 'Confirm approval' : 'Confirm send back' ?></button>
+    </form>
+    </div></body></html>
+    <?php
+    exit;
+}
+
+// ---- POST: this is a real, deliberate click. Perform the action. ----
 if ($decision === 'approve') {
     $pdo->prepare("UPDATE workday_tasks SET status = 'done', approval_status = 'approved' WHERE id = ?")->execute([$task['id']]);
     $message = 'approved ✓';
