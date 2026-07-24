@@ -112,6 +112,25 @@ body{
 .alt a{color:var(--gold-2); text-decoration:none; font-weight:600;}
 .alt a:hover{text-decoration:underline;}
 input:focus-visible, button:focus-visible, a:focus-visible{outline:2px solid var(--gold); outline-offset:3px;}
+
+.loader-overlay{
+  position:fixed; inset:0; z-index:50; display:none; align-items:center; justify-content:center;
+  flex-direction:column; gap:18px;
+  background:rgba(10,17,40,0.72); backdrop-filter:blur(6px);
+}
+.loader-overlay.active{display:flex;}
+.loader-spinner{
+  width:52px; height:52px; border-radius:50%;
+  border:3px solid rgba(255,255,255,0.18); border-top-color:var(--gold-2);
+  animation:spin .85s linear infinite;
+}
+@keyframes spin{to{transform:rotate(360deg);}}
+.loader-text{
+  font-family:'Space Grotesk'; font-size:15px; font-weight:600; color:var(--ivory);
+  letter-spacing:.02em; text-align:center; padding:0 20px;
+}
+.loader-subtext{font-size:12.5px; color:rgba(250,248,243,0.55); text-align:center; padding:0 20px;}
+@media (prefers-reduced-motion:reduce){.loader-spinner{animation:none; border-top-color:rgba(255,255,255,0.18);}}
 </style>
 </head>
 <body>
@@ -133,17 +152,38 @@ input:focus-visible, button:focus-visible, a:focus-visible{outline:2px solid var
       <div class="ok">If an account exists for that email, a reset link is on its way. Check your inbox (and spam folder) — the link expires in 1 hour.</div>
       <p class="alt"><a href="login.php">Back to log in</a></p>
     <?php else: ?>
-      <form method="post">
+      <form method="post" id="forgotForm">
         <input type="hidden" name="csrf_token" value="<?= htmlspecialchars($csrfToken) ?>">
         <div class="field">
           <input type="email" name="email" placeholder=" " required maxlength="190" autocomplete="username" id="email">
           <label for="email">Email address</label>
         </div>
-        <button type="submit" class="btn">Send reset link</button>
+        <button type="submit" class="btn" id="forgotBtn">Send reset link</button>
       </form>
       <p class="alt">Remembered it? <a href="login.php">Log in</a></p>
     <?php endif; ?>
   </div>
 </div>
+
+<div class="loader-overlay" id="loaderOverlay">
+  <div class="loader-spinner"></div>
+  <div class="loader-text">Sending your reset link…</div>
+  <div class="loader-subtext">Please wait, this only takes a moment.</div>
+</div>
+
+<script>
+(function () {
+  var form = document.getElementById('forgotForm');
+  if (!form) return;
+  var overlay = document.getElementById('loaderOverlay');
+  var btn = document.getElementById('forgotBtn');
+  form.addEventListener('submit', function () {
+    if (!form.checkValidity()) return; // let native validation messages show first
+    overlay.classList.add('active');
+    btn.disabled = true;
+    btn.textContent = 'Sending…';
+  });
+})();
+</script>
 </body>
 </html>

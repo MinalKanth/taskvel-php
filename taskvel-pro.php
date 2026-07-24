@@ -6353,6 +6353,17 @@ function stopTimeTracking(id) {
                             // this is what makes tasks/remarks/streaks/theme identical everywhere.
                             await pullStateFromServer();
                             try { await Taskvel.settings.touchDevice(navigator.userAgent.slice(0, 60)); } catch (e) {}
+
+                            // Keep this device in sync with changes made on OTHER devices while
+                            // this tab stays open: a one-time pull at load isn't enough, since
+                            // nothing here was re-checking the server afterwards. Poll periodically,
+                            // and also re-pull immediately whenever the tab becomes visible again
+                            // (e.g. switching back from another app/tab), so a change made on
+                            // another device shows up without requiring a manual page reload.
+                            setInterval(pullStateFromServer, 20000);
+                            document.addEventListener('visibilitychange', () => {
+                                if (!document.hidden) pullStateFromServer();
+                            });
                         }
                         init();
                         if ('serviceWorker' in navigator) {
