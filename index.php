@@ -945,6 +945,7 @@ a:focus-visible, button:focus-visible, input:focus-visible, textarea:focus-visib
   "@context": "https://schema.org",
   "@type": "ProfessionalService",
   "name": "Samal Consultancy",
+  "logo": "https://www.samalconsultancy.com/images/3.png",
   "image": "https://www.samalconsultancy.com/assets/images/og-cover.jpg",
   "url": "https://www.samalconsultancy.com/",
   "telephone": "+91-7002050242",
@@ -975,13 +976,46 @@ a:focus-visible, button:focus-visible, input:focus-visible, textarea:focus-visib
     "opens": "10:00",
     "closes": "19:00"
   },
-  "makesOffer": [
-    {"@type":"Offer","itemOffered":{"@type":"Service","name":"GST Registration & Return Filing"}},
-    {"@type":"Offer","itemOffered":{"@type":"Service","name":"EPFO & ESIC Compliance"}},
-    {"@type":"Offer","itemOffered":{"@type":"Service","name":"Company & LLP Registration"}},
-    {"@type":"Offer","itemOffered":{"@type":"Service","name":"Trademark Registration"}},
-    {"@type":"Offer","itemOffered":{"@type":"Service","name":"Payroll & Bookkeeping"}}
-  ]
+  "hasOfferCatalog": {
+    "@type": "OfferCatalog",
+    "name": "Samal Consultancy Service Registry",
+    "itemListElement": [
+      { "@type":"OfferCatalog", "name":"GST Services", "itemListElement":[
+        {"@type":"Offer","itemOffered":{"@type":"Service","name":"GST Registration"}},
+        {"@type":"Offer","itemOffered":{"@type":"Service","name":"GSTR-1 Filing"}},
+        {"@type":"Offer","itemOffered":{"@type":"Service","name":"GSTR-3B Filing"}},
+        {"@type":"Offer","itemOffered":{"@type":"Service","name":"GSTR-9 Annual Return"}},
+        {"@type":"Offer","itemOffered":{"@type":"Service","name":"GST Refund Processing"}},
+        {"@type":"Offer","itemOffered":{"@type":"Service","name":"GST Notice Reply"}}
+      ]},
+      { "@type":"OfferCatalog", "name":"EPFO & ESIC", "itemListElement":[
+        {"@type":"Offer","itemOffered":{"@type":"Service","name":"EPFO Registration"}},
+        {"@type":"Offer","itemOffered":{"@type":"Service","name":"EPFO Monthly ECR Filing"}},
+        {"@type":"Offer","itemOffered":{"@type":"Service","name":"ESIC Registration"}},
+        {"@type":"Offer","itemOffered":{"@type":"Service","name":"ESIC Monthly Return Filing"}}
+      ]},
+      { "@type":"OfferCatalog", "name":"Company & LLP Services", "itemListElement":[
+        {"@type":"Offer","itemOffered":{"@type":"Service","name":"Private Limited Company Registration"}},
+        {"@type":"Offer","itemOffered":{"@type":"Service","name":"LLP Registration"}},
+        {"@type":"Offer","itemOffered":{"@type":"Service","name":"One Person Company Registration"}}
+      ]},
+      { "@type":"OfferCatalog", "name":"Business Registrations", "itemListElement":[
+        {"@type":"Offer","itemOffered":{"@type":"Service","name":"Udyam MSME Registration"}},
+        {"@type":"Offer","itemOffered":{"@type":"Service","name":"FSSAI Registration"}},
+        {"@type":"Offer","itemOffered":{"@type":"Service","name":"Trademark Registration"}},
+        {"@type":"Offer","itemOffered":{"@type":"Service","name":"IEC Import Export Code"}}
+      ]},
+      { "@type":"OfferCatalog", "name":"Income Tax Services", "itemListElement":[
+        {"@type":"Offer","itemOffered":{"@type":"Service","name":"ITR Filing"}},
+        {"@type":"Offer","itemOffered":{"@type":"Service","name":"TDS Return Filing"}}
+      ]},
+      { "@type":"OfferCatalog", "name":"Accounting & Payroll", "itemListElement":[
+        {"@type":"Offer","itemOffered":{"@type":"Service","name":"Bookkeeping"}},
+        {"@type":"Offer","itemOffered":{"@type":"Service","name":"Payroll Processing"}},
+        {"@type":"Offer","itemOffered":{"@type":"Service","name":"Virtual CFO Services"}}
+      ]}
+    ]
+  }
 }
 </script>
 
@@ -997,6 +1031,47 @@ a:focus-visible, button:focus-visible, input:focus-visible, textarea:focus-visib
     {"@type":"Question","name":"Can you manage payroll for a distributed team?","acceptedAnswer":{"@type":"Answer","text":"Yes, payroll processing, statutory deductions and compliance filings are covered regardless of location."}},
     {"@type":"Question","name":"Do you offer ongoing compliance monitoring, or only one-off filings?","acceptedAnswer":{"@type":"Answer","text":"Both — most clients are on an ongoing retainer with a compliance calendar and renewal alerts."}}
   ]
+}
+</script>
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "SoftwareApplication",
+  "name": "Taskvel Free",
+  "applicationCategory": "BusinessApplication",
+  "operatingSystem": "Web",
+  "url": "https://www.samalconsultancy.com/taskvel-free.php",
+  "description": "Browser-based task manager with no login required — natural-language quick-add, Pomodoro focus timer, Eisenhower priority matrix, productivity scoring, offline-first PWA support, and CSV/PDF/ICS/JSON exports.",
+  "creator": { "@type": "Organization", "name": "Samal Consultancy" },
+  "offers": { "@type": "Offer", "price": "0", "priceCurrency": "INR" }
+}
+</script>
+
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "SoftwareApplication",
+  "name": "Taskvel Premium",
+  "applicationCategory": "BusinessApplication",
+  "operatingSystem": "Web",
+  "url": "https://www.samalconsultancy.com/taskvel-pro.php",
+  "description": "Productivity and compliance operating system with secure authentication, multi-device sync, team collaboration, analytics dashboard, and a compliance module covering GST, EPF and ESIC tracking, payroll and invoicing.",
+  "creator": { "@type": "Organization", "name": "Samal Consultancy" },
+  "offers": { "@type": "Offer", "priceCurrency": "INR", "availability": "https://schema.org/InStock" }
+}
+</script>
+
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "SoftwareApplication",
+  "name": "Events Near You",
+  "applicationCategory": "LifestyleApplication",
+  "operatingSystem": "Web",
+  "url": "https://www.samalconsultancy.com/events.php",
+  "description": "Upcoming platform to discover nearby events, book tickets, hotels and Airbnb stays, and find restaurants and attractions around each venue.",
+  "creator": { "@type": "Organization", "name": "Samal Consultancy" },
+  "releaseNotes": "Coming soon"
 }
 </script>
 </head>
@@ -1478,7 +1553,7 @@ a:focus-visible, button:focus-visible, input:focus-visible, textarea:focus-visib
     </div>
     <div class="footer-bottom">
       <span>© <span id="year"></span> Samal Consultancy. All rights reserved.</span>
-      <span>Privacy Policy · Terms of Service</span>
+      <span>Content last updated: July 2026 · Privacy Policy · Terms of Service</span>
     </div>
   </div>
 </footer>
