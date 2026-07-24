@@ -1,6 +1,7 @@
 <?php
 require_once __DIR__ . '/includes/auth.php';
-if (current_user_id()) { header('Location: taskvel-pro.php'); exit; }if (current_user_id()) {
+require_once __DIR__ . '/includes/mail.php';
+if (current_user_id()) {
     header('Location: ' . (current_user_role() === 'admin' ? 'admin/index.php' : 'taskvel-pro.php'));
     exit;
 }
@@ -10,7 +11,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if (empty($_POST['csrf_token']) || !hash_equals($_SESSION['csrf_token'] ?? '', $_POST['csrf_token'])) {
         $error = 'Your session expired. Please try again.';
     } else {
-        $res = register_user($_POST['name'] ?? '', $_POST['email'] ?? '', $_POST['password'] ?? '');
+        $name = trim($_POST['name'] ?? '');
+        $email = trim($_POST['email'] ?? '');
+        $res = register_user($name, $email, $_POST['password'] ?? '');
         if ($res['ok']) {
             session_regenerate_id(true); // was missing — prevented a fixed pre-auth session ID from carrying over
             $_SESSION['user_id'] = $res['user_id'];
@@ -18,6 +21,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $_SESSION['last_activity'] = time();
             $_SESSION['last_rotated_at'] = time();
             unset($_SESSION['csrf_token']);
+
+            // Fire the welcome email. Never let a mail hiccup block or fail
+            // the signup itself — log and move on either way.
+            try {
+                send_welcome_email($email, $name);
+            } catch (\Throwable $e) {
+                error_log('Welcome email failed for ' . $email . ': ' . $e->getMessage());
+            }
+
             header('Location: taskvel-pro.php'); exit;
         }
         $error = $res['error'];
