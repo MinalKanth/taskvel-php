@@ -1,4 +1,8 @@
 User-agent: *
-Allow: /
+Allow: /taskvel-free.php
+Allow: /taskvel-pro.php
+Allow: /login.php
+Disallow: /dashboard.php
+Disallow: /api/
 
 Sitemap: https://www.samalconsultancy.com/sitemap.xml
