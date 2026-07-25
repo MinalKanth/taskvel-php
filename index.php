@@ -1372,6 +1372,33 @@ a:focus-visible, button:focus-visible, input:focus-visible, textarea:focus-visib
   ]
 }
 </script>
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@graph": [
+    {
+      "@type": "SoftwareApplication",
+      "name": "Taskvel Free",
+      "url": "https://www.samalconsultancy.com/taskvel-free.php",
+      "applicationCategory": "ProductivityApplication",
+      "operatingSystem": "Any (Web Browser)",
+      "description": "Free browser-based task tracker and to-do organizer with smart quick-add, Pomodoro focus timer, priority matrix and offline PWA support. No account or sign-up required.",
+      "offers": { "@type": "Offer", "price": "0", "priceCurrency": "USD" },
+      "publisher": { "@type": "Organization", "name": "Samal Consultancy" }
+    },
+    {
+      "@type": "SoftwareApplication",
+      "name": "Taskvel Premium",
+      "url": "https://www.samalconsultancy.com/taskvel-pro.php",
+      "applicationCategory": "BusinessApplication",
+      "operatingSystem": "Web",
+      "description": "Premium task management and productivity OS with team collaboration, multi-device sync, analytics dashboard, and a compliance & client management module.",
+      "offers": { "@type": "Offer", "category": "Subscription" },
+      "publisher": { "@type": "Organization", "name": "Samal Consultancy" }
+    }
+  ]
+}
+</script>
 </head>
 <body>
 
@@ -1771,7 +1798,7 @@ a:focus-visible, button:focus-visible, input:focus-visible, textarea:focus-visib
           <li>Compliance &amp; client management module — GST, EPF, ESIC trackers, payroll, invoicing and reminders</li>
         </ul>
         <div class="prod-actions">
-          <a href="./taskvel-pro.php" target="_blank" rel="noopener noreferrer" class="btn btn-gold" data-ripple>
+          <a href="./taskvel-premium.php" target="_blank" rel="noopener noreferrer" class="btn btn-gold" data-ripple>
               Get Started
               <span class="prod-btn-shine" aria-hidden="true"></span>
           </a>
