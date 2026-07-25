@@ -863,6 +863,16 @@ section{position:relative;}
 }
 .two-col{display:grid; grid-template-columns:1fr; gap:16px;}
 @media (min-width:480px){ .two-col{grid-template-columns:1fr 1fr; gap:18px;} }
+.form-status{
+  border-radius:12px; padding:13px 16px; font-size:13.5px; line-height:1.55;
+  font-family:var(--font-body);
+}
+.form-status.success{
+  background:rgba(74,222,128,0.14); border:1px solid rgba(74,222,128,0.4); color:#4ADE80;
+}
+.form-status.error{
+  background:rgba(220,38,38,0.14); border:1px solid rgba(248,113,113,0.4); color:#FCA5A5;
+}
 
 /* ============================= CONTACT PANEL PREMIUM 3D GLASS ============================= */
 .contact-panel{
@@ -1680,15 +1690,23 @@ a:focus-visible, button:focus-visible, input:focus-visible, textarea:focus-visib
 
 </div>
       </div>
-      <form class="form-grid" id="contactForm">
-        <div class="two-col">
-          <div class="field"><input type="text" placeholder=" " required id="fname"><label>Full name</label></div>
-          <div class="field"><input type="tel" placeholder=" " required id="fphone"><label>Phone number</label></div>
-        </div>
-        <div class="field"><input type="email" placeholder=" " required id="femail"><label>Email address</label></div>
-        <div class="field"><textarea placeholder=" " required id="fmsg"></textarea><label>What do you need help with?</label></div>
-        <button type="submit" class="btn btn-gold" data-ripple style="justify-self:flex-start;">Send Message<span class="form-btn-shine" aria-hidden="true"></span></button>
-      </form>
+      <form class="form-grid" id="contactForm" novalidate>
+      <div class="two-col">
+        <div class="field"><input type="text" name="name" placeholder=" " required id="fname"><label>Full name</label></div>
+        <div class="field"><input type="tel" name="phone" placeholder=" " required id="fphone"><label>Phone number</label></div>
+      </div>
+      <div class="field"><input type="email" name="email" placeholder=" " required id="femail"><label>Email address</label></div>
+      <div class="field"><textarea name="message" placeholder=" " required id="fmsg"></textarea><label>What do you need help with?</label></div>
+
+      <!-- honeypot: hidden from real visitors, bots tend to fill every field -->
+      <div style="position:absolute;left:-9999px;top:auto;width:1px;height:1px;overflow:hidden;" aria-hidden="true">
+        <input type="text" name="website" id="fwebsite" tabindex="-1" autocomplete="off">
+      </div>
+
+      <div id="formStatus" class="form-status" role="status" aria-live="polite" style="display:none;"></div>
+
+      <button type="submit" class="btn btn-gold" data-ripple id="contactSubmitBtn">Send Message<span class="form-btn-shine" aria-hidden="true"></span></button>
+    </form>
     </div>
   </div>
 </section>
@@ -2291,14 +2309,51 @@ const revealObserver = new IntersectionObserver((entries)=>{
 revealEls.forEach(el=>revealObserver.observe(el));
 
 /* ============================= CONTACT FORM ============================= */
-document.getElementById('contactForm').addEventListener('submit', function(e){
+document.getElementById('contactForm').addEventListener('submit', async function(e){
   e.preventDefault();
-  const btn = this.querySelector('button');
+  const form = this;
+  const btn = document.getElementById('contactSubmitBtn');
+  const statusEl = document.getElementById('formStatus');
   const original = btn.innerHTML;
-  btn.innerHTML = 'Message Sent ✓';
-  btn.style.opacity = '0.85';
-  this.reset();
-  setTimeout(()=>{ btn.innerHTML = original; btn.style.opacity='1'; }, 2600);
+
+  // Honeypot check — if a bot filled the hidden field, quietly stop.
+  if (document.getElementById('fwebsite').value.trim() !== '') return;
+
+  btn.disabled = true;
+  btn.innerHTML = 'Sending…';
+  statusEl.style.display = 'none';
+
+  try {
+    const res = await fetch('api/contact-submit.php', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        name: document.getElementById('fname').value.trim(),
+        phone: document.getElementById('fphone').value.trim(),
+        email: document.getElementById('femail').value.trim(),
+        message: document.getElementById('fmsg').value.trim(),
+        website: document.getElementById('fwebsite').value
+      })
+    });
+    const data = await res.json();
+
+    statusEl.style.display = 'block';
+    if (data.success) {
+      statusEl.className = 'form-status success';
+      statusEl.textContent = data.message;
+      form.reset();
+    } else {
+      statusEl.className = 'form-status error';
+      statusEl.textContent = data.message || 'Something went wrong. Please try again or call us directly.';
+    }
+  } catch (err) {
+    statusEl.style.display = 'block';
+    statusEl.className = 'form-status error';
+    statusEl.textContent = 'Network error — please try again or call us directly.';
+  } finally {
+    btn.disabled = false;
+    btn.innerHTML = original;
+  }
 });
 
 /* Contact panel: cursor-tracked glare */

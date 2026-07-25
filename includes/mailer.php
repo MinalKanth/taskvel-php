@@ -418,3 +418,42 @@ function send_password_reset_email(string $to, string $name, string $token): boo
 
     return send_mail($to, $subject, $html);
 }
+
+function send_contact_notification_email(string $to, string $name, string $phone, string $email, string $message): bool
+{
+    $subject = "New website enquiry from $name";
+ 
+    $safeName    = htmlspecialchars($name, ENT_QUOTES, 'UTF-8');
+    $safePhone   = htmlspecialchars($phone, ENT_QUOTES, 'UTF-8');
+    $safeEmail   = htmlspecialchars($email, ENT_QUOTES, 'UTF-8');
+    $safeMessage = nl2br(htmlspecialchars($message, ENT_QUOTES, 'UTF-8'));
+ 
+    $body = <<<HTML
+      <p style="margin:0 0 14px;">You've received a new enquiry through the Samal Consultancy website contact form:</p>
+      <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background-color:#f7f7fb;border-left:3px solid #C9A227;border-radius:8px;margin:0 0 16px;">
+        <tr>
+          <td style="padding:14px 18px;font-family:'Segoe UI',Helvetica,Arial,sans-serif;font-size:14px;line-height:1.7;color:#141425;">
+            <strong>Name:</strong> {$safeName}<br>
+            <strong>Phone:</strong> {$safePhone}<br>
+            <strong>Email:</strong> {$safeEmail}
+          </td>
+        </tr>
+      </table>
+      <p style="margin:0 0 6px;font-family:'Segoe UI',Helvetica,Arial,sans-serif;font-weight:700;color:#141425;">Message:</p>
+      <p style="margin:0;font-family:'Segoe UI',Helvetica,Arial,sans-serif;">{$safeMessage}</p>
+    HTML;
+ 
+    $html = email_shell(
+        preheader: "New website enquiry from $name",
+        badgeLabel: 'Website Enquiry',
+        heading: 'New contact form submission 📩',
+        bodyHtml: $body,
+        ctaLabel: 'Reply by email',
+        ctaLink: 'mailto:' . $email,
+        footerNote: 'This message was submitted through the "Get in Touch" form on samalconsultancy.com.',
+        accentFrom: '#0F4436',
+        accentTo: '#C9A227'
+    );
+ 
+    return send_mail($to, $subject, $html);
+}
