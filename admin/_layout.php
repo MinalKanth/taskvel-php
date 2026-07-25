@@ -13,11 +13,12 @@
 function admin_nav_items(): array
 {
     return [
-        'dashboard' => ['index.php',      '◈', 'Dashboard'],
-        'users'     => ['users.php',      '◔', 'Users'],
-        'events'    => ['events.php',     '✦', 'Events'],
-        'enquiries' => ['enquiries.php',  '✉', 'Enquiries'],
-        'audit'     => ['audit.php',      '☰', 'Audit log'],
+        'dashboard'         => ['index.php',            '◈', 'Dashboard'],
+        'users'             => ['users.php',            '◔', 'Users'],
+        'events'            => ['events.php',           '✦', 'Events'],
+        // 'enquiries'         => ['enquiries.php',        '✉', 'Enquiries'],
+        'contact-messages'  => ['contact-messages.php', '☏', 'Contact Messages'],
+        'audit'             => ['audit.php',             '☰', 'Audit log'],
     ];
 }
 
@@ -27,8 +28,13 @@ function admin_header(string $title, string $active): void
     $csrf = csrf_token();
 
     // Unseen enquiry count for the sidebar badge
-    $newEnq = 0;
-    try { $newEnq = (int) db()->query("SELECT COUNT(*) FROM enquiries WHERE status = 'new'")->fetchColumn(); }
+    // $newEnq = 0;
+    // try { $newEnq = (int) db()->query("SELECT COUNT(*) FROM enquiries WHERE status = 'new'")->fetchColumn(); }
+    // catch (Throwable $e) { /* table not migrated yet */ }
+
+    // Unseen contact message count for the sidebar badge
+    $newContact = 0;
+    try { $newContact = (int) db()->query("SELECT COUNT(*) FROM contact_messages WHERE status = 'new'")->fetchColumn(); }
     catch (Throwable $e) { /* table not migrated yet */ }
 ?><!DOCTYPE html>
 <html lang="en">
@@ -193,7 +199,8 @@ textarea{min-height:110px;resize:vertical;}
     <?php foreach (admin_nav_items() as $key => [$href, $icon, $label]): ?>
       <a href="<?= h($href) ?>" class="<?= $key === $active ? 'on' : '' ?>">
         <i><?= $icon ?></i><?= h($label) ?>
-        <?php if ($key === 'enquiries' && $newEnq > 0): ?><span class="pill"><?= $newEnq ?></span><?php endif; ?>
+        <?php /* if ($key === 'enquiries' && $newEnq > 0): ?><span class="pill"><?= $newEnq ?></span><?php endif; */ ?>
+        <?php if ($key === 'contact-messages' && $newContact > 0): ?><span class="pill"><?= $newContact ?></span><?php endif; ?>
       </a>
     <?php endforeach; ?>
   </nav>
