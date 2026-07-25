@@ -111,7 +111,7 @@
    (parallax, tilt, glass reflections) so the console feels machined,
    not flat — like the instrument case has actual glass over it.
 */
-:root{
+/* :root{
   --ink:#0A0D1A;
   --ink-2:#10142A;
   --ink-3:#171C38;
@@ -127,6 +127,28 @@
   --line:rgba(201,161,92,.16);
   --line-2:rgba(246,242,231,.10);
   --shadow:0 30px 80px -30px rgba(0,0,0,.6);
+  --ease:cubic-bezier(.22,1,.36,1);
+  --spring:cubic-bezier(.34,1.56,.64,1);
+  --display:'Fraunces',serif;
+  --body:'Inter',-apple-system,sans-serif;
+  --mono:'JetBrains Mono',monospace;
+} */
+  :root{
+  --ink:#0A1128;
+  --ink-2:#0F1830;
+  --ink-3:#13204A;
+  --ink-4:#1A2A5C;
+  --paper:#FAF8F3;
+  --paper-dim:#C3C8DC;
+  --brass:#C9A227;
+  --brass-2:#E8C766;
+  --brass-dim:#8F7112;
+  --teal:#8FA0E8;
+  --teal-dim:#0F4436;
+  --copper:#C9A227;
+  --line:rgba(201,162,39,.16);
+  --line-2:rgba(250,248,243,.10);
+  --shadow:0 30px 80px -30px rgba(10,17,40,.6);
   --ease:cubic-bezier(.22,1,.36,1);
   --spring:cubic-bezier(.34,1.56,.64,1);
   --display:'Fraunces',serif;
@@ -342,6 +364,45 @@ section{position:relative;}
 .tl-copy p{font-size:14px;max-width:340px;}
 @media (min-width:760px){.tl-item:nth-child(odd) .tl-copy p{margin-left:auto;}}
 
+/* ── Fix timeline grid order on mobile: node first, copy second, spacer hidden ── */
+.tl-item{
+  grid-template-columns:56px 1fr;
+}
+.tl-item .tl-node{
+  grid-column:1;
+  grid-row:1;
+}
+.tl-item .tl-copy{
+  grid-column:2;
+  grid-row:1;
+}
+.tl-item .tl-spacer{
+  display:none;
+}
+
+/* Restore the desktop 3-column symmetric layout (spacer needed here) */
+@media (min-width:760px){
+  .tl-item{
+    grid-template-columns:1fr 56px 1fr;
+  }
+  .tl-item .tl-spacer{
+    display:block;
+  }
+  .tl-item:nth-child(odd) .tl-copy{grid-column:1;grid-row:1;text-align:right;}
+  .tl-item:nth-child(odd) .tl-node{grid-column:2;grid-row:1;}
+  .tl-item:nth-child(odd) .tl-spacer{grid-column:3;grid-row:1;}
+  .tl-item:nth-child(even) .tl-copy{grid-column:3;grid-row:1;}
+  .tl-item:nth-child(even) .tl-node{grid-column:2;grid-row:1;}
+  .tl-item:nth-child(even) .tl-spacer{grid-column:1;grid-row:1;}
+}
+
+@media (max-width:759px){
+  .timeline::before{left:19px;}
+  .tl-item{grid-template-columns:40px 1fr;gap:14px;padding:18px 0;}
+  .tl-item .tl-node{width:40px;height:40px;font-size:12px;}
+  .tl-copy h4{font-size:15.5px;}
+  .tl-copy p{font-size:13px;max-width:100%;}
+}
 /* ── Deep-dive ledger showcase ── */
 .showcase{display:grid;grid-template-columns:1fr;gap:48px;align-items:center;}
 @media (min-width:980px){.showcase{grid-template-columns:.95fr 1.05fr;}}
@@ -449,6 +510,212 @@ footer{border-top:1px solid var(--line);padding:48px 0 30px;}
 .reveal{opacity:0;transform:translateY(18px);transition:opacity .8s var(--ease),transform .8s var(--ease);}
 .reveal.in{opacity:1;transform:none;}
 :focus-visible{outline:2px solid var(--brass-2);outline-offset:3px;}
+
+/* ═══════════════════════ MOBILE-FIRST REFINEMENTS ═══════════════════════ */
+
+/* ── Hamburger toggle ── */
+.menu-toggle{
+  display:flex;flex-direction:column;justify-content:center;gap:5px;
+  width:42px;height:42px;padding:0;border:1px solid var(--line);border-radius:4px;
+  background:rgba(255,255,255,.02);cursor:pointer;position:relative;z-index:920;
+  -webkit-tap-highlight-color:transparent;flex-shrink:0;
+}
+.menu-toggle span{
+  display:block;width:18px;height:1.5px;margin:0 auto;background:var(--brass-2);
+  border-radius:2px;transition:transform .35s var(--spring),opacity .25s ease;
+}
+.menu-toggle.open span:nth-child(1){transform:translateY(6.5px) rotate(45deg);}
+.menu-toggle.open span:nth-child(2){opacity:0;}
+.menu-toggle.open span:nth-child(3){transform:translateY(-6.5px) rotate(-45deg);}
+@media (min-width:900px){.menu-toggle{display:none;}}
+
+/* ── Overlay behind drawer ── */
+.nav-overlay{
+  position:fixed;inset:0;z-index:899;background:rgba(6,8,18,.6);backdrop-filter:blur(3px);
+  opacity:0;visibility:hidden;transition:opacity .4s var(--ease),visibility .4s var(--ease);
+}
+.nav-overlay.show{opacity:1;visibility:visible;}
+
+/* ── Mobile drawer (nav-links off-canvas below 900px) ── */
+@media (max-width:899px){
+  .nav-inner{flex-wrap:nowrap;}
+  .brand-tier{display:none;}
+  .brand-txt{font-size:15.5px;}
+  .nav-cta{display:none;}
+  .nav-links{
+    position:fixed;top:0;right:0;height:100dvh;width:min(300px,82vw);
+    background:linear-gradient(175deg,var(--ink-3),var(--ink));
+    border-left:1px solid var(--line);
+    display:flex;flex-direction:column;align-items:stretch;
+    padding:90px 26px 30px;gap:4px;
+    transform:translateX(100%);transition:transform .45s var(--ease);
+    z-index:910;overflow-y:auto;
+  }
+  .nav-links.open{transform:translateX(0);}
+  .nav-links li{width:100%;list-style:none;}
+  .nav-links a{
+    display:block;padding:14px 4px;font-size:16px;font-weight:500;
+    border-bottom:1px solid var(--line-2);color:var(--paper);
+  }
+  .nav-links a::after{display:none;}
+  .nav-links-mobile-cta{
+    display:flex;flex-direction:column;gap:10px;margin-top:18px;border-bottom:none!important;
+  }
+  .nav-links-mobile-cta a{border-bottom:none;padding:0;}
+  .nav-links-mobile-cta .btn{padding:13px 18px;font-size:14px;justify-content:center;}
+}
+@media (min-width:900px){
+  .nav-links-mobile-cta{display:none;}
+}
+
+
+/* ── Global mobile-first spacing ── */
+@media (max-width:640px){
+  .wrap{padding:0 16px;}
+  .pad{padding:56px 0;}
+  .section-head{margin-bottom:34px;}
+  .section-head h2{font-size:clamp(22px,7vw,30px);}
+  .section-head p{font-size:14.5px;}
+  .eyebrow{font-size:10px;letter-spacing:.12em;}
+}
+
+/* ── Hero ── */
+@media (max-width:899px){
+  .hero{min-height:auto;padding:104px 0 56px;}
+  .hero-copy h1{font-size:clamp(28px,8vw,40px);}
+  .hero-copy p.lead{font-size:15px;max-width:100%;}
+  .hero-actions{gap:10px;}
+  .hero-actions .btn{flex:1 1 auto;width:100%;padding:14px 18px;font-size:13.5px;}
+  .stat-row{gap:20px;margin-top:28px;}
+  .stat-row .stat b{font-size:21px;}
+  .hero-fine{flex-wrap:wrap;}
+}
+@media (max-width:480px){
+  .hero-actions{flex-direction:column;}
+  .stat-row{justify-content:space-between;gap:12px;}
+  .stat-row .stat{flex:1 1 28%;}
+}
+
+/* ── Instrument panel (hero visual) ── */
+@media (max-width:899px){
+  .panel{padding:20px 16px 16px;}
+  .gauges{gap:8px;margin-bottom:16px;}
+  .gauge{padding:10px 4px;}
+  .gauge svg{width:44px;height:44px;}
+  .gauge-num{font-size:12.5px;}
+  .gauge-lbl{font-size:7.5px;}
+  .ledger-row{padding:9px 10px;gap:8px;}
+  .ledger-name{font-size:11.5px;}
+  .ledger-tag{font-size:8px;}
+}
+@media (max-width:360px){
+  .gauges{grid-template-columns:repeat(3,1fr);gap:6px;}
+  .gauge svg{width:38px;height:38px;}
+  .ledger-tag{display:none;}
+  .ledger-row{grid-template-columns:auto 1fr;}
+}
+
+/* ── Stats band ── */
+@media (max-width:759px){
+  .stats-grid{grid-template-columns:repeat(2,1fr);}
+  .stat-cell{padding:22px 14px;}
+  .stat-cell b{font-size:clamp(22px,7vw,28px);}
+  .stat-cell span{font-size:9px;margin-top:6px;}
+}
+
+/* ── Instruments grid ── */
+@media (max-width:899px){
+  .instr{padding:26px 20px;}
+  .instr-dial{width:34px;height:34px;font-size:13px;margin-bottom:16px;}
+  .instr h3{font-size:15.5px;}
+  .instr p{font-size:13px;}
+  .instr-badge{top:14px;right:16px;opacity:1;transform:none;font-size:8px;}
+}
+
+/* ── Timeline ── */
+@media (max-width:759px){
+  .timeline::before{left:19px;}
+  .tl-item{grid-template-columns:40px 1fr;gap:14px;padding:18px 0;}
+  .tl-node{width:40px;height:40px;font-size:12px;}
+  .tl-copy h4{font-size:15.5px;}
+  .tl-copy p{font-size:13px;max-width:100%;}
+}
+
+/* ── Ledger showcase + device mockup ── */
+@media (max-width:979px){
+  .showcase{gap:32px;}
+}
+@media (max-width:899px){
+  .showcase-item{padding:16px 0;}
+  .showcase-item h4{font-size:14.5px;}
+  .showcase-item p{font-size:12.5px;}
+  .device{transform:none;width:min(100%,300px);}
+  .device-stage:hover .device{transform:none;}
+  .device-frame{padding:10px;border-radius:18px;}
+  .device-screen{padding:12px;min-height:auto;}
+}
+
+/* ── Spec / compare table ── */
+@media (max-width:640px){
+  .spec-row{grid-template-columns:1.4fr .6fr .6fr;}
+  .spec-cell{padding:11px 8px;font-size:11.5px;gap:4px;}
+  .spec-row.head .spec-cell{font-size:9px;}
+}
+@media (max-width:400px){
+  .spec-cell.feat{font-size:11px;line-height:1.35;}
+}
+
+/* ── Logbook / testimonials ── */
+@media (max-width:759px){
+  .logbook-stage{min-height:340px;}
+  .logbook{padding:34px 22px;}
+  .logbook-mark{font-size:38px;}
+  .logbook-text{font-size:16px;}
+  .logbook-avatar{width:32px;height:32px;font-size:10px;}
+  .logbook-name{font-size:12.5px;}
+}
+
+/* ── Pricing ── */
+@media (max-width:759px){
+  .price-toggle{gap:10px;margin-bottom:26px;flex-wrap:wrap;justify-content:center;}
+  .price-toggle span{font-size:11px;}
+  .price-card{padding:26px 20px;}
+  .price-amt{font-size:30px;}
+}
+
+/* ── FAQ ── */
+@media (max-width:640px){
+  .faq-q{font-size:14.5px;padding:17px 2px;gap:10px;}
+  .faq-a p{font-size:13px;padding:0 2px 18px;}
+}
+
+/* ── Final CTA ── */
+@media (max-width:640px){
+  .final-cta{padding:44px 20px;border-radius:6px;}
+  .final-cta h2{font-size:clamp(22px,7vw,30px);}
+  .final-actions{flex-direction:column;}
+  .final-actions .btn{width:100%;}
+}
+
+/* ── Footer ── */
+@media (max-width:639px){
+  footer{padding:36px 0 22px;}
+  .foot-links{gap:14px 18px;}
+  .foot-links a{font-size:11.5px;}
+  .foot-fine{font-size:9.5px;margin-top:20px;}
+}
+
+/* ── Touch: disable custom cursor + hover-only tilt cleanly ── */
+@media (hover:none), (pointer:coarse){
+  body{cursor:auto;}
+  .cursor,.cursor-dot{display:none;}
+  .instr,.panel,.price-card{transform:none!important;}
+}
+
+/* ── Safe-area padding for notch devices ── */
+@supports (padding:max(0px)){
+  .wrap{padding-left:max(16px,env(safe-area-inset-left));padding-right:max(16px,env(safe-area-inset-right));}
+}
 </style>
 </head>
 <body>
@@ -466,7 +733,6 @@ footer{border-top:1px solid var(--line);padding:48px 0 30px;}
 
 <div class="grid-bg"></div>
 <canvas id="motes"></canvas>
-
 <nav class="nav" id="nav">
   <div class="wrap nav-inner">
     <a href="#top" class="brand">
@@ -474,20 +740,29 @@ footer{border-top:1px solid var(--line);padding:48px 0 30px;}
       <span class="brand-txt">Taskvel <em>Premium</em></span>
       <span class="brand-tier">Pro tier</span>
     </a>
-    <ul class="nav-links">
+    <ul class="nav-links" id="navLinks">
+      <li><a href="https://www.samalconsultancy.com" style="color:var(--brass-2);">← Samal Consultancy</a></li>
       <li><a href="#instruments">Instruments</a></li>
       <li><a href="#how">How it works</a></li>
       <li><a href="#ledger">The Ledger</a></li>
       <li><a href="#compare">Compare</a></li>
       <li><a href="#pricing">Pricing</a></li>
       <li><a href="#faq">FAQ</a></li>
+      <li class="nav-links-mobile-cta">
+        <a href="login.php" class="btn btn-ghost magnetic" style="width:100%;">Log in</a>
+        <a href="register.php" class="btn btn-brass magnetic" style="width:100%;">Start free trial</a>
+      </li>
     </ul>
     <div class="nav-cta">
       <a href="login.php" class="btn btn-ghost magnetic">Log in</a>
       <a href="register.php" class="btn btn-brass magnetic">Start free trial</a>
     </div>
+    <button class="menu-toggle" id="menuToggle" aria-label="Toggle menu" aria-expanded="false">
+      <span></span><span></span><span></span>
+    </button>
   </div>
 </nav>
+<div class="nav-overlay" id="navOverlay"></div>
 
 <!-- ═══════════════════════ HERO ═══════════════════════ -->
 <header class="hero" id="top">
@@ -806,7 +1081,7 @@ footer{border-top:1px solid var(--line);padding:48px 0 30px;}
       <div class="foot-brand">Taskvel <em style="color:var(--brass-2);font-style:normal">Premium</em></div>
       <div class="foot-links">
         <a href="taskvel-free.php">Taskvel Free</a>
-        <a href="https://www.samalconsultancy.com" target="_blank" rel="noopener">Samal Consultancy</a>
+        <a href="https://www.samalconsultancy.com" target="_blank" rel="noopener">← Back to Samal Consultancy</a>
         <a href="#instruments">Instruments</a>
         <a href="#pricing">Pricing</a>
         <a href="login.php">Log in</a>
@@ -865,6 +1140,31 @@ document.querySelectorAll('.magnetic').forEach(btn=>{
   });
   btn.addEventListener('mouseleave',()=>{btn.style.transform='';});
 });
+/* ═══════════════════════ MOBILE MENU ═══════════════════════ */
+const menuToggle=document.getElementById('menuToggle');
+const navLinksEl=document.getElementById('navLinks');
+const navOverlay=document.getElementById('navOverlay');
+
+function openMenu(){
+  navLinksEl.classList.add('open');
+  navOverlay.classList.add('show');
+  menuToggle.classList.add('open');
+  menuToggle.setAttribute('aria-expanded','true');
+  document.body.style.overflow='hidden';
+}
+function closeMenu(){
+  navLinksEl.classList.remove('open');
+  navOverlay.classList.remove('show');
+  menuToggle.classList.remove('open');
+  menuToggle.setAttribute('aria-expanded','false');
+  document.body.style.overflow='';
+}
+menuToggle.addEventListener('click',()=>{
+  navLinksEl.classList.contains('open')?closeMenu():openMenu();
+});
+navOverlay.addEventListener('click',closeMenu);
+navLinksEl.querySelectorAll('a').forEach(a=>a.addEventListener('click',closeMenu));
+document.addEventListener('keydown',e=>{ if(e.key==='Escape') closeMenu(); });
 
 /* ═══════════════════════ 3D TILT: hero panel, instrument cards, price cards ═══════════════════════ */
 function apply3DTilt(el,intensity=10){
