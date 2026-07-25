@@ -42,9 +42,17 @@ function admin_header(string $title, string $active): void
 <head>
 <meta charset="UTF-8">
 <title><?= h($title) ?> — Taskvel Admin</title>
+<meta name="description" content="Taskvel Admin — manage users, events, contact messages, and newsletter campaigns for Samal Consultancy.">
+<meta name="robots" content="noindex, nofollow">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="csrf-token" content="<?= h($csrf) ?>">
 <meta name="theme-color" content="#0A1128">
+<meta name="author" content="Samal Consultancy">
+
+<!-- Favicon -->
+<link rel="icon" href="../images/favicon.ico" type="image/x-icon">
+<link rel="shortcut icon" href="../images/favicon.ico" type="image/x-icon">
+<link rel="apple-touch-icon" href="../images/favicon.ico">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
@@ -100,8 +108,9 @@ nav a .pill{margin-left:auto;background:var(--bad);color:#fff;font-size:10px;fon
 .side-foot .who{min-width:0;flex:1;}
 .side-foot .who b{display:block;font-size:12.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
 .side-foot .who span{font-size:10.5px;color:var(--gold-2);font-weight:600;letter-spacing:.08em;text-transform:uppercase;}
-.side-foot a{color:var(--ink-45);text-decoration:none;font-size:16px;padding:6px;border-radius:8px;}
+.side-foot a{color:var(--ink-45);text-decoration:none;font-size:16px;padding:6px;border-radius:8px;flex-shrink:0;}
 .side-foot a:hover{color:var(--bad);background:var(--glass);}
+.side-foot a + a{margin-left:2px;}
 
 /* ── MAIN ────────────────────────────────────────────────── */
 main{margin-left:var(--side);padding:28px 34px 60px;min-height:100vh;position:relative;z-index:1;}
@@ -209,6 +218,7 @@ textarea{min-height:110px;resize:vertical;}
     <div class="avatar"><?= h(strtoupper(mb_substr($user['name'] ?? 'A', 0, 1))) ?></div>
     <div class="who"><b><?= h($user['name'] ?? '') ?></b><span>Administrator</span></div>
     <a href="../taskvel-pro.php" title="Back to app">↩</a>
+    <a href="../logout.php" title="Log out">⏻</a>
   </div>
 </aside>
 <main>

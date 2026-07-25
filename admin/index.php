@@ -20,6 +20,20 @@ $newEnquiries = 0;
 try { $newEnquiries = (int)$pdo->query("SELECT COUNT(*) FROM enquiries WHERE status = 'new'")->fetchColumn(); }
 catch (Throwable $e) {}
 
+$totalSubscribers = 0;
+try { $totalSubscribers = (int)$pdo->query('SELECT COUNT(*) FROM newsletter_subscribers')->fetchColumn(); }
+catch (Throwable $e) {}
+
+$newSubscribers7d = 0;
+try { $newSubscribers7d = (int)$pdo->query("SELECT COUNT(*) FROM newsletter_subscribers WHERE created_at >= NOW() - INTERVAL 7 DAY")->fetchColumn(); }
+catch (Throwable $e) {}
+
+$totalContactMessages = $newContactMessages = 0;
+try {
+    $totalContactMessages = (int)$pdo->query('SELECT COUNT(*) FROM contact_messages')->fetchColumn();
+    $newContactMessages   = (int)$pdo->query("SELECT COUNT(*) FROM contact_messages WHERE status = 'new'")->fetchColumn();
+} catch (Throwable $e) {}
+
 // Logins in the last 24h from the audit trail
 $logins24h = (int)$pdo->query("SELECT COUNT(*) FROM security_audit_log
                                 WHERE event = 'login_success' AND created_at >= NOW() - INTERVAL 1 DAY")->fetchColumn();
@@ -94,6 +108,19 @@ admin_header('Dashboard', 'dashboard');
   </div>
 </div>
 
+<div class="grid g4" style="margin-bottom:16px">
+  <div class="card kpi">
+    <div class="lbl">Newsletter subscribers</div>
+    <div class="num" data-count="<?= $totalSubscribers ?>">0</div>
+    <div class="hint"><b>+<?= $newSubscribers7d ?></b> in the last 7 days</div>
+  </div>
+  <div class="card kpi">
+    <div class="lbl">Contact messages</div>
+    <div class="num" data-count="<?= $totalContactMessages ?>">0</div>
+    <div class="hint"><?= $newContactMessages ?> new <a href="contact-messages.php" style="color:var(--gold-2)">unread</a></div>
+  </div>
+</div>
+
 <div class="grid g2">
   <div class="card">
     <div class="lbl" style="font-size:11px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--ink-45)">Signups — last 30 days</div>
@@ -137,6 +164,35 @@ admin_header('Dashboard', 'dashboard');
     <div style="margin-top:12px;text-align:right"><a class="btn ghost sm" href="users.php">All users →</a></div>
   </div>
 </div>
+
+<?php
+$recentMessages = [];
+try {
+    $recentMessages = $pdo->query("SELECT name, email, message, status, created_at FROM contact_messages
+                                    ORDER BY id DESC LIMIT 5")->fetchAll();
+} catch (Throwable $e) {}
+?>
+<?php if ($recentMessages): ?>
+<div class="card" style="margin-top:16px">
+  <div class="lbl" style="font-size:11px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--ink-45);margin-bottom:12px">Recent contact messages</div>
+  <table>
+    <?php foreach ($recentMessages as $m): ?>
+    <tr>
+      <td style="min-width:160px">
+        <b><?= h($m['name']) ?></b>
+        <div class="muted"><?= h($m['email']) ?></div>
+      </td>
+      <td style="max-width:320px" class="muted"><?= h(mb_strimwidth($m['message'], 0, 90, '…')) ?></td>
+      <td>
+        <span class="badge <?= $m['status'] === 'new' ? 'b-bad' : ($m['status'] === 'replied' ? 'b-ok' : 'b-warn') ?>"><?= h(ucfirst($m['status'])) ?></span>
+      </td>
+      <td class="muted" style="white-space:nowrap"><?= time_ago($m['created_at']) ?></td>
+    </tr>
+    <?php endforeach; ?>
+  </table>
+  <div style="margin-top:12px;text-align:right"><a class="btn ghost sm" href="contact-messages.php">All messages →</a></div>
+</div>
+<?php endif; ?>
 
 <div class="card" style="margin-top:16px">
   <div class="lbl" style="font-size:11px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--ink-45);margin-bottom:12px">Recent security activity</div>
