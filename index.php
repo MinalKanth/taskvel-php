@@ -1875,10 +1875,11 @@ a:focus-visible, button:focus-visible, input:focus-visible, textarea:focus-visib
       <div class="footer-col">
         <h5>Stay Updated</h5>
         <p style="font-size:14px; margin-bottom:4px; color: #e0bd57;">Compliance deadlines, in your inbox monthly.</p>
-        <form class="sub-form" onsubmit="event.preventDefault();this.reset();">
-          <input type="email" placeholder="Your email" required>
-          <button type="submit">Join</button>
+        <form class="sub-form" id="newsletterForm">
+          <input type="email" name="email" id="newsletterEmail" placeholder="Your email" required>
+          <button type="submit" id="newsletterBtn">Join</button>
         </form>
+        <div id="newsletterStatus" style="font-size:12.5px; margin-top:8px; display:none;"></div>
       </div>
     </div>
     <div class="footer-bottom">
@@ -2379,6 +2380,41 @@ if(submitBtnEl && !prefersReduced && !isCoarsePointer){
   });
   submitBtnEl.addEventListener('mouseleave', ()=>{ submitBtnEl.style.transform = ''; });
 }
+
+/* ============================= NEWSLETTER SUBSCRIBE ============================= */
+document.getElementById('newsletterForm').addEventListener('submit', async function(e){
+  e.preventDefault();
+  const form = this;
+  const btn = document.getElementById('newsletterBtn');
+  const statusEl = document.getElementById('newsletterStatus');
+  const emailInput = document.getElementById('newsletterEmail');
+  const original = btn.textContent;
+
+  btn.disabled = true;
+  btn.textContent = '...';
+  statusEl.style.display = 'none';
+
+  try {
+    const res = await fetch('api/newsletter-subscribe.php', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email: emailInput.value.trim() })
+    });
+    const data = await res.json();
+
+    statusEl.style.display = 'block';
+    statusEl.style.color = data.success ? '#4ADE80' : '#FCA5A5';
+    statusEl.textContent = data.message;
+    if (data.success) form.reset();
+  } catch (err) {
+    statusEl.style.display = 'block';
+    statusEl.style.color = '#FCA5A5';
+    statusEl.textContent = 'Network error — please try again.';
+  } finally {
+    btn.disabled = false;
+    btn.textContent = original;
+  }
+});
 
 /* ============================= FOOTER: CURSOR-TRACKED AMBIENT GLOW ============================= */
 const footerEl = document.querySelector('footer');

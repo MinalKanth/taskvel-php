@@ -67,8 +67,32 @@ $STATUS_LABELS = ['upcoming' => 'Upcoming', 'ongoing' => 'Happening Now', 'compl
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <title>Events Near You | Samal Consultancy</title>
 <meta name="description" content="Discover curated events near you — with dates, venues, galleries, nearby hotels and direct booking links. Brought to you by Samal Consultancy.">
-<link rel="icon" href="images/favicon.ico" type="image/x-icon">
+<link rel="canonical" href="https://www.samalconsultancy.com/events.php">
+<meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1">
 <meta name="theme-color" content="#0A1128">
+<meta name="author" content="Samal Consultancy">
+
+<!-- Favicon -->
+<link rel="icon" href="images/favicon.ico" type="image/x-icon">
+<link rel="shortcut icon" href="images/favicon.ico" type="image/x-icon">
+<link rel="apple-touch-icon" href="images/favicon.ico">
+
+<!-- Open Graph -->
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="Samal Consultancy">
+<meta property="og:title" content="Events Near You | Samal Consultancy">
+<meta property="og:description" content="Discover curated events near you — dates, venues, galleries, nearby hotels and direct booking links.">
+<meta property="og:url" content="https://www.samalconsultancy.com/events.php">
+<meta property="og:image" content="https://www.samalconsultancy.com/assets/images/og-cover.jpg">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:locale" content="en_IN">
+
+<!-- Twitter -->
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Events Near You | Samal Consultancy">
+<meta name="twitter:description" content="Discover curated events near you — dates, venues, galleries, nearby hotels and direct booking links.">
+<meta name="twitter:image" content="https://www.samalconsultancy.com/assets/images/og-cover.jpg">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@500;600&display=swap" rel="stylesheet">
