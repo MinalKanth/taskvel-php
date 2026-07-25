@@ -582,24 +582,63 @@ footer{border-top:1px solid var(--line);padding:48px 0 30px;}
     <div class="section-head reveal" style="margin-left:auto;margin-right:auto;text-align:center">
       <span class="eyebrow" style="justify-content:center">The setup sequence</span>
       <h2>From spreadsheet to console in one afternoon.</h2>
-      <p style="margin-left:auto;margin-right:auto">Three ordered steps — this really is a sequence, not a feature list, because each one unlocks the next.</p>
+      <p style="margin-left:auto;margin-right:auto">Six ordered steps — this really is a sequence, not a feature list, because each one unlocks the next.</p>
     </div>
     <div class="timeline reveal">
+
       <div class="tl-item">
-        <div class="tl-copy"><h4>01 — Import your list</h4><p>Bring tasks, tags and deadlines over from Taskvel Free or a spreadsheet in one step. Nothing is retyped.</p></div>
+        <div class="tl-copy">
+          <h4>01 — Capture, don't retype</h4>
+          <p>Import tasks, tags and deadlines from Taskvel Free or a spreadsheet in one step. Smart quick-add reads plain English as you type — <code>#tags</code>, <code>!critical/!high/!medium/!low</code>, and dates like "tomorrow", "next monday" or "in 3 days" — and turns it straight into a structured task. Save any task as a reusable template for next time.</p>
+        </div>
         <div class="tl-node">01</div>
         <div class="tl-spacer"></div>
       </div>
+
       <div class="tl-item">
-        <div class="tl-copy"><h4>02 — Invite the team</h4><p>Add people, assign roles and permissions, and watch the ledger reconcile the moment someone else moves a task.</p></div>
+        <div class="tl-copy">
+          <h4>02 — Let it rank itself</h4>
+          <p>Score urgency × impact and Taskvel ranks automatically — no manual sorting. Pin what matters, drag to reorder manually when you need to, bulk-select and clear a batch at once, filter by tag, and switch between List, Today, Pending, Done, the Eisenhower Matrix, and a Weekly Review — all searchable across names, people, tags, steps and remarks.</p>
+        </div>
         <div class="tl-node">02</div>
         <div class="tl-spacer"></div>
       </div>
+
       <div class="tl-item">
-        <div class="tl-copy"><h4>03 — Turn on the tracker</h4><p>Load your GST, EPF and ESIC dates once. Premium escalates only what's actually about to slip.</p></div>
+        <div class="tl-copy">
+          <h4>03 — Invite the team</h4>
+          <p>Add people, assign roles and permissions. Track who a task is waiting on and who it's shared with, open the Teams · Projects · Events hub for a live view across every team, run daily office check-ins, and give managers their own dashboard — the ledger reconciles the moment someone else moves a task.</p>
+        </div>
         <div class="tl-node">03</div>
         <div class="tl-spacer"></div>
       </div>
+
+      <div class="tl-item">
+        <div class="tl-copy">
+          <h4>04 — Focus and track time</h4>
+          <p>Run tasks through a Pomodoro timer (25/5, 50/10, 15/3, or fully custom lengths) that floats as a draggable mini-timer so the rest of the app stays usable while it runs. Track time per task directly, build a daily streak, set a daily task goal, and watch a live productivity score blend completion rate, streak and focus minutes into one number.</p>
+        </div>
+        <div class="tl-node">04</div>
+        <div class="tl-spacer"></div>
+      </div>
+
+      <div class="tl-item">
+        <div class="tl-copy">
+          <h4>05 — Stay ahead of deadlines</h4>
+          <p>Load your GST, EPF and ESIC dates once — priority auto-escalates as a deadline closes in, so only what's actually about to slip gets loud. Set tasks to repeat daily, weekly or monthly (with custom weekday rules), get a one-time daily briefing on what's overdue or due today, in-app and push notifications even when the tab is closed, and jump to any action instantly with the command palette (⌘K) or keyboard shortcuts.</p>
+        </div>
+        <div class="tl-node">05</div>
+        <div class="tl-spacer"></div>
+      </div>
+
+      <div class="tl-item">
+        <div class="tl-copy">
+          <h4>06 — Report, export, restore</h4>
+          <p>Filter by status, date range, person, tag or team-mate, then export to CSV, a print-ready PDF, or a calendar file (.ics) for Google, Apple or Outlook. Pull a time report grouped by tag, a full Weekly Review, or a complete JSON backup you can restore on any device — installable as an app, synced automatically across every device you sign into.</p>
+        </div>
+        <div class="tl-node">06</div>
+      </div>
+
     </div>
   </div>
 </section>
