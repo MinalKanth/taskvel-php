@@ -72,13 +72,35 @@ ini_set('display_errors', '0');
 ini_set('log_errors', '1');
 error_reporting(E_ALL);
 
+// set_exception_handler(function (Throwable $e): void {
+//     error_log('[Taskvel] Uncaught ' . get_class($e) . ': ' . $e->getMessage() . ' in ' . $e->getFile() . ':' . $e->getLine());
+//     if (!headers_sent()) {
+//         http_response_code(500);
+//         header('Content-Type: application/json');
+//     }
+//     echo json_encode(['error' => 'Something went wrong. Please try again.']);
+//     exit;
+// });
 set_exception_handler(function (Throwable $e): void {
     error_log('[Taskvel] Uncaught ' . get_class($e) . ': ' . $e->getMessage() . ' in ' . $e->getFile() . ':' . $e->getLine());
+
+    $isApi = str_starts_with($_SERVER['REQUEST_URI'] ?? '', '/api/');
+
     if (!headers_sent()) {
         http_response_code(500);
-        header('Content-Type: application/json');
     }
-    echo json_encode(['error' => 'Something went wrong. Please try again.']);
+
+    if ($isApi) {
+        if (!headers_sent()) header('Content-Type: application/json');
+        echo json_encode(['error' => 'Something went wrong. Please try again.']);
+    } else {
+        header('Content-Type: text/html; charset=UTF-8');
+        echo '<!DOCTYPE html><html><head><title>Something went wrong</title></head>'
+           . '<body style="font-family:sans-serif;text-align:center;padding:60px 20px;">'
+           . '<h2>Something went wrong</h2>'
+           . '<p>Please try again, or <a href="login.php">return to login</a>.</p>'
+           . '</body></html>';
+    }
     exit;
 });
 
