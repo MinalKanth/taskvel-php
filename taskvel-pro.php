@@ -3898,7 +3898,8 @@ $user = current_user();
         let tasks = [],
             remarks = [],
             notifications = [],
-            focusLog = {}; // focusLog: {'YYYY-MM-DD': minutes}
+            focusLog = {}, // focusLog: {'YYYY-MM-DD': minutes}
+            deletedTasks = {}; // {taskId: deletedAtTimestamp} — tombstones so deletes survive sync merges
         let filter = 'all',
             activeTag = null,
             focusMins = 0;
@@ -3957,6 +3958,8 @@ $user = current_user();
         }
         function bulkDelete() {
             const n = bulkSelected.size;
+            bulkSelected.forEach(id => { deletedTasks[id] = Date.now(); });
+            saveDeleted();
             tasks = tasks.filter(t => !bulkSelected.has(t.id));
             remarks = remarks.filter(r => !bulkSelected.has(r.taskId));
             save(); saveR(); toast(`${n} tasks removed`);
@@ -3985,7 +3988,8 @@ const LS_T      = LS_NS + 'tasks_v1',
       LS_GOAL   = LS_NS + 'goal_v1',
       LS_TPL    = LS_NS + 'templates_v1',
       LS_ONBOARDED       = LS_NS + 'onboarded_v1',
-      LS_GOAL_CELEBRATED = LS_NS + 'goal_celebrated_v1';
+      LS_GOAL_CELEBRATED = LS_NS + 'goal_celebrated_v1',
+      LS_DELETED         = LS_NS + 'deleted_v1';
 // Cosmetic only — safe to stay global across accounts:
 const LS_THEME  = 'taskvel_theme_v1',
       LS_ACCENT = 'taskvel_accent_v1';
@@ -4046,6 +4050,11 @@ const LS_THEME  = 'taskvel_theme_v1',
                 focusLog = {}
             }
             try {
+                deletedTasks = JSON.parse(localStorage.getItem(LS_DELETED)) || {}
+            } catch (e) {
+                deletedTasks = {}
+            }
+            try {
                 streakData = JSON.parse(localStorage.getItem(LS_STREAK)) || { count: 0, lastActiveDate: null, best: 0 };
             } catch (e) {
                 streakData = { count: 0, lastActiveDate: null, best: 0 };
@@ -4085,6 +4094,10 @@ const LS_THEME  = 'taskvel_theme_v1',
             localStorage.setItem(LS_FLOG, JSON.stringify(focusLog));
             schedulePush();
         }
+        function saveDeleted() {
+            localStorage.setItem(LS_DELETED, JSON.stringify(deletedTasks));
+            schedulePush();
+        }
         function saveStreak() {
             localStorage.setItem(LS_STREAK, JSON.stringify(streakData));
             schedulePush();
@@ -4110,9 +4123,25 @@ const LS_THEME  = 'taskvel_theme_v1',
             }
             return [...byId.values()];
         }
+        // Tasks need tombstone-aware merging so a delete on one device can't be
+        // silently resurrected by another device's stale local cache. See mergeTasks().
+        function mergeTasks(localArr, serverArr, tombstones) {
+            const byId = new Map(serverArr.map(x => [x.id, x]));
+            for (const l of localArr) {
+                const r = byId.get(l.id);
+                if (!r || (l.updatedAt || 0) > (r.updatedAt || 0)) byId.set(l.id, l);
+            }
+            return [...byId.values()].filter(t => {
+                const delAt = tombstones[t.id];
+                // Keep the task unless it has a tombstone that is newer than its
+                // last edit (an "undo" bumps updatedAt past the tombstone).
+                return !delAt || delAt < (t.updatedAt || 0);
+            });
+        }
         function gatherState() {
             return {
                 tasks, remarks, notifications, focusLog, streakData,
+                deletedTasks,
                 templates: (typeof templates !== 'undefined' ? templates : []),
                 dailyGoal,
                 theme: localStorage.getItem(LS_THEME),
@@ -4124,7 +4153,21 @@ const LS_THEME  = 'taskvel_theme_v1',
             clearTimeout(_pushTimer);
             _pushTimer = setTimeout(pushStateNow, 600);
         }
+        // Sends any pending change immediately instead of waiting for the debounce
+        // timer. Without this, a change made right before the tab is backgrounded,
+        // the app is switched away from (mobile), or the tab is closed never
+        // reaches the server — the setTimeout in schedulePush() simply never
+        // fires, so the change stays stuck in this device's localStorage forever
+        // and other devices never see it, even after they refresh.
+        function flushPendingPush() {
+            if (_pushTimer === null) return; // nothing pending
+            clearTimeout(_pushTimer);
+            _pushTimer = null;
+            pushStateNow();
+        }
         async function pushStateNow() {
+        clearTimeout(_pushTimer);
+        _pushTimer = null;
         try {
             const res = await Taskvel.state.push(gatherState(), _stateVersion);
             _stateVersion = res.version;
@@ -4141,12 +4184,14 @@ const LS_THEME  = 'taskvel_theme_v1',
             const { state: server, version } = await Taskvel.state.pull();
             _stateVersion = version || 0;
             if (server) {
-                tasks   = mergeById(tasks,   Array.isArray(server.tasks)   ? server.tasks   : []);
+                deletedTasks = { ...(server.deletedTasks || {}), ...deletedTasks };
+                tasks   = mergeTasks(tasks, Array.isArray(server.tasks) ? server.tasks : [], deletedTasks);
                 remarks = mergeById(remarks, Array.isArray(server.remarks) ? server.remarks : []);
                 focusLog = { ...(server.focusLog || {}), ...focusLog };
                 localStorage.setItem(LS_T, JSON.stringify(tasks));
                 localStorage.setItem(LS_R, JSON.stringify(remarks));
                 localStorage.setItem(LS_FLOG, JSON.stringify(focusLog));
+                localStorage.setItem(LS_DELETED, JSON.stringify(deletedTasks));
                 render(); renderTabs();
             }
             await pushStateNow(); // re-push merged state against the new version
@@ -4161,7 +4206,8 @@ const LS_THEME  = 'taskvel_theme_v1',
                     if (tasks.length > 0) schedulePush(); // namespaced keys ⇒ definitely this user's data
                     return;
                 }
-                tasks   = mergeById(tasks,   Array.isArray(state.tasks)   ? state.tasks   : []);
+                deletedTasks = { ...(state.deletedTasks || {}), ...deletedTasks };
+                tasks   = mergeTasks(tasks, Array.isArray(state.tasks) ? state.tasks : [], deletedTasks);
                 remarks = mergeById(remarks, Array.isArray(state.remarks) ? state.remarks : []);
                 notifications = Array.isArray(state.notifications) ? state.notifications : notifications;
                 focusLog = { ...(state.focusLog || {}), ...focusLog };
@@ -4182,6 +4228,7 @@ const LS_THEME  = 'taskvel_theme_v1',
                 localStorage.setItem(LS_NOTIF, JSON.stringify(notifications));
                 localStorage.setItem(LS_FLOG, JSON.stringify(focusLog));
                 localStorage.setItem(LS_STREAK, JSON.stringify(streakData));
+                localStorage.setItem(LS_DELETED, JSON.stringify(deletedTasks));
                 render(); renderTabs(); updateStreakUI(); applyThemeIcon(); updateNotifDot(); renderHistory(); renderGoalBar();
             } catch (e) { /* not logged in yet, or offline — local data keeps working as-is */ }
         }
@@ -5457,13 +5504,17 @@ const LS_THEME  = 'taskvel_theme_v1',
                             const idx = tasks.findIndex(t => t.id === id); if (idx < 0) return;
                             const removedTask = tasks[idx];
                             const removedRemarks = remarks.filter(r => r.taskId === id);
+                            deletedTasks[id] = Date.now();
+                            saveDeleted();
                             const c = document.getElementById('card-' + id);
                             if (c) { c.style.transition = 'all .3s'; c.style.opacity = '0'; c.style.transform = 'translateX(40px) scale(.97)' }
                             setTimeout(() => { tasks = tasks.filter(t => t.id !== id); remarks = remarks.filter(r => r.taskId !== id); save(); saveR(); render(); renderTabs(); }, 260);
                             toast('Task removed', 'Undo', () => {
+                                delete deletedTasks[id];
+                                removedTask.updatedAt = Date.now();
                                 tasks.splice(Math.min(idx, tasks.length), 0, removedTask);
                                 remarks = removedRemarks.concat(remarks);
-                                save(); saveR(); render(); renderTabs(); toast('Task restored');
+                                saveDeleted(); save(); saveR(); render(); renderTabs(); toast('Task restored');
                             }, 4500);
                         }
                         function togglePin(id) { const t = tasks.find(t => t.id === id); if (t) { t.pinned = !t.pinned; touch(t); save(); render(); toast(t.pinned ? 'Pinned to top ★' : 'Unpinned') } }
@@ -6362,8 +6413,17 @@ function stopTimeTracking(id) {
                             // another device shows up without requiring a manual page reload.
                             setInterval(pullStateFromServer, 20000);
                             document.addEventListener('visibilitychange', () => {
-                                if (!document.hidden) pullStateFromServer();
+                                if (document.hidden) {
+                                    // Tab/app backgrounded — flush any debounced task/remark/
+                                    // etc. change immediately so it isn't lost (see flushPendingPush()).
+                                    flushPendingPush();
+                                } else {
+                                    pullStateFromServer();
+                                }
                             });
+                            // Best-effort flush on tab close / navigation / mobile app switch,
+                            // as a second safety net alongside the visibilitychange handler above.
+                            window.addEventListener('pagehide', flushPendingPush);
                         }
                         init();
                         if ('serviceWorker' in navigator) {
