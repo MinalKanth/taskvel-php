@@ -18,6 +18,7 @@ function admin_nav_items(): array
         'events'            => ['events.php',           '✦', 'Events'],
         // 'enquiries'         => ['enquiries.php',        '✉', 'Enquiries'],
         'contact-messages'  => ['contact-messages.php', '☏', 'Contact Messages'],
+        'newsletter'        => ['newsletter.php',        '✎', 'Newsletter'],
         'audit'             => ['audit.php',             '☰', 'Audit log'],
     ];
 }
