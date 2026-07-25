@@ -1,5 +1,6 @@
 <?php
 require_once __DIR__ . '/includes/auth.php';
+require_once __DIR__ . '/includes/pro-shell.php';
 if (!current_user_id()) { header('Location: login.php'); exit; }
 $user = current_user();
 ?>
@@ -8,24 +9,9 @@ $user = current_user();
 <head>
 <meta charset="UTF-8">
 <meta name="csrf-token" content="<?= htmlspecialchars(csrf_token()) ?>">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Daily Check-in · Taskvel</title>
+<?php pro_head('Daily Check-in'); ?>
 <style>
-    :root {
-        --bg:#f6f6f4; --bg-elev:#fff; --bg-sunk:#ededea; --ink:#0a0a0a; --ink2:#3d3d3b; --ink3:#7c7c78;
-        --line:#e6e5e0; --line2:#d4d3cd; --accent:#4f46e5; --accent-soft:rgba(79,70,229,.1); --on-accent:#fff;
-        --good:#059669; --good-soft:rgba(5,150,105,.1); --warn:#d97706; --warn-soft:rgba(217,119,6,.1); --bad:#dc2626;
-        --shadow:0 10px 34px rgba(10,10,10,.08); --r:14px; --ease:cubic-bezier(.22,1,.36,1);
-    }
-    * { box-sizing:border-box; }
-    body { margin:0; font-family:-apple-system,'Segoe UI',Arial,sans-serif; background:var(--bg); color:var(--ink); }
-    .wrap { max-width:640px; margin:0 auto; padding:24px 18px 90px; }
-    .topbar { display:flex; justify-content:space-between; align-items:center; margin-bottom:20px; }
-    .topbar-links { display:flex; gap:14px; align-items:center; }
-    .topbar a.back { color:var(--ink3); text-decoration:none; font-size:13px; font-weight:600; }
-    .topbar a.back:hover { color:var(--accent); }
-    h1 { font-size:22px; font-weight:800; margin:0 0 4px; }
-    .sub { color:var(--ink3); font-size:13.5px; margin-bottom:20px; }
+    
 
     .status-card { background:var(--bg-elev); border:1px solid var(--line); border-radius:var(--r); padding:22px;
         text-align:center; margin-bottom:20px; box-shadow:var(--shadow); }
@@ -34,23 +20,13 @@ $user = current_user();
     .status-card .meta { color:var(--ink3); font-size:13px; }
     .status-card input { width:100%; max-width:320px; padding:11px 13px; border:1px solid var(--line2); border-radius:10px;
         font-size:14px; margin:14px auto 0; display:block; font-family:inherit; }
-    .btn { display:inline-flex; align-items:center; gap:6px; padding:13px 24px; border-radius:12px; border:none;
-        background:var(--accent); color:var(--on-accent); font-weight:700; font-size:14.5px; cursor:pointer;
-        box-shadow:0 8px 20px -8px rgba(79,70,229,.4); transition:transform .2s var(--ease); margin-top:14px; }
-    .btn:hover { transform:translateY(-2px); }
-    .btn.ghost { background:var(--bg-elev); color:var(--ink); border:1px solid var(--line2); box-shadow:none; }
-    .btn.danger { background:var(--bad); }
-    .btn.warn { background:var(--warn); }
-    .btn.sm { padding:8px 14px; font-size:12.5px; margin-top:0; }
-    .btn:disabled { opacity:.5; cursor:not-allowed; transform:none; }
+    
 
     .break-bar { display:flex; gap:8px; align-items:center; justify-content:center; margin-top:12px; flex-wrap:wrap; }
     .break-bar select { padding:8px 10px; border:1px solid var(--line2); border-radius:9px; font-size:13px; }
     .idle-badge { font-size:11px; color:var(--ink3); text-align:center; margin-top:8px; }
 
     section { margin-top:24px; }
-    section h3 { font-size:13px; text-transform:uppercase; letter-spacing:.6px; color:var(--ink3); margin-bottom:12px;
-        display:flex; justify-content:space-between; align-items:center; }
 
     .add-task-row { display:flex; flex-direction:column; gap:8px; background:var(--bg-elev); border:1px solid var(--line);
         border-radius:var(--r); padding:14px; margin-bottom:16px; }
@@ -71,7 +47,6 @@ $user = current_user();
     .task-actions { display:flex; gap:6px; margin-top:10px; flex-wrap:wrap; }
     .live-timer { font-family:monospace; font-size:12px; color:var(--warn); font-weight:700; }
 
-    .empty { text-align:center; padding:30px 20px; color:var(--ink3); font-size:13px; }
 
     .checkout-notes { width:100%; padding:11px 13px; border:1px solid var(--line2); border-radius:10px; font-size:14px;
         font-family:inherit; resize:vertical; min-height:70px; margin-bottom:12px; }
@@ -86,14 +61,9 @@ $user = current_user();
 </head>
 <body>
 <div class="wrap">
-    <div class="topbar">
-        <a class="back" href="taskvel-pro.php">← Back to Taskvel</a>
-        <div class="topbar-links">
-            <a class="back" href="manager.php">📊 Manager dashboard</a>
-            <span style="font-size:12.5px;color:var(--ink3)"><?= htmlspecialchars($user['email']) ?></span>
-        </div>
-    </div>
-    <h1>📍 Daily Check-in</h1>
+    <?php pro_header($user, 'checkin'); ?>
+
+    <h1 class="page-title">📍 Daily Check-in</h1>
     <div class="sub">Optional office mode — check in, log what you work on, report finished tasks to whoever needs to know, and check out with a full summary.</div>
 
     <div id="status-area"></div>
@@ -212,7 +182,7 @@ async function endBreak() {
 function renderTasks() {
     const list = document.getElementById('task-list');
     document.getElementById('task-count').textContent = `(${currentTasks.length})`;
-    if (!currentTasks.length) { list.innerHTML = `<div class="empty">No tasks logged yet today.</div>`; return; }
+    if (!currentTasks.length) { list.innerHTML = `<div class="empty"><span class="ic">📝</span>No tasks logged yet today.</div>`; return; }
     const statusLabel = { pending: 'Pending', in_progress: 'In progress', pending_approval: 'Awaiting approval', done: 'Done' };
     list.innerHTML = currentTasks.map(t => {
         let actions = '';

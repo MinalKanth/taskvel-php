@@ -121,6 +121,8 @@ function pro_head(string $title): void
         .btn.ghost { background:var(--bg-elev); color:var(--ink); border:1px solid var(--line2); box-shadow:none; }
         .btn.ghost:hover { border-color:var(--accent); color:var(--accent); }
         .btn.danger { background:var(--bad); box-shadow:0 8px 22px -8px rgba(220,38,38,.4); }
+        .btn.warn { background:var(--warn); box-shadow:0 8px 22px -8px rgba(217,119,6,.4); }
+        .btn.sm { padding:7px 12px; font-size:11.5px; border-radius:9px; }
         .btn.sm { padding:7px 12px; font-size:11.5px; border-radius:9px; }
 
         .card { background:var(--bg-elev); border:1px solid var(--line); border-radius:var(--r); padding:16px 18px;
@@ -208,7 +210,7 @@ function pro_header(array $user, string $active = 'teams', string $crumbHtml = '
     <div class="pro-nav">
         <a href="taskvel-pro.php" class="<?= $active === 'tasks' ? 'active' : '' ?>">✓ My Tasks</a>
         <a href="teams.php" class="<?= $active === 'teams' ? 'active' : '' ?>">👥 Teams</a>
-        <a href="checkin.php">📍 Check-in</a>
+        <a href="checkin.php" class="<?= $active === 'checkin' ? 'active' : '' ?>">📍 Check-in</a>
     </div>
     <?php if ($crumbHtml !== ''): ?><div class="crumb"><?= $crumbHtml ?></div><?php endif; ?>
     <div class="toast" id="pro-toast"></div>
