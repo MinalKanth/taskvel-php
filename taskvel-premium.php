@@ -835,7 +835,7 @@ footer{border-top:1px solid var(--line);padding:48px 0 30px;}
     <div class="section-head reveal">
       <span class="eyebrow">The instrument panel</span>
       <h2>Everything Free doesn't have room for.</h2>
-      <p>Nine instruments, each doing one job precisely — the difference between a personal to-do list and a system a team can run on.</p>
+      <p>Twelve instruments, each doing one job precisely — the difference between a personal to-do list and a system a team can run on.</p>
     </div>
     <div class="instr-grid reveal" id="instrGrid">
       <div class="instr"><span class="instr-badge">Premium</span><div class="instr-dial">⇄</div><h3>Multi-device sync</h3><p>Start a task on your phone at the client's office, finish it on your desktop that evening. State follows you, not the device.</p></div>
@@ -847,6 +847,9 @@ footer{border-top:1px solid var(--line);padding:48px 0 30px;}
       <div class="instr"><span class="instr-badge">Premium</span><div class="instr-dial">▧</div><h3>Calendar planning</h3><p>Deadlines and sessions laid out against real time, not a flat list pretending every day has 30 hours.</p></div>
       <div class="instr"><span class="instr-badge">Premium</span><div class="instr-dial">🔔</div><h3>Smart notifications</h3><p>Escalates the things that are actually about to slip — and stays quiet about the ones that aren't.</p></div>
       <div class="instr"><span class="instr-badge">Premium</span><div class="instr-dial">⌘</div><h3>Command palette everywhere</h3><p>Every instrument, one keystroke away. Built for people who don't want to hunt through menus.</p></div>
+      <div class="instr"><span class="instr-badge">Premium</span><div class="instr-dial">📍</div><h3>Daily check-in &amp; manager dashboard</h3><p>Check in, log tasks against a report-to email, and check out to an automatic summary — with approvals, break tracking, and a manager dashboard that flags late arrivals and overdue work before anyone has to ask.</p></div>
+      <div class="instr"><span class="instr-badge">Premium</span><div class="instr-dial">⇡</div><h3>Real push, even when it's closed</h3><p>Native OS notifications on desktop and mobile — installable as an app, working offline, alerting your team to assignments and deadlines even with the tab shut.</p></div>
+      <div class="instr"><span class="instr-badge">Premium</span><div class="instr-dial">🛡</div><h3>Audit-grade security</h3><p>CSRF protection, rate limiting, and role checks enforced on every request — plus a full audit log of logins, edits and approvals, so trust isn't a UI promise.</p></div>
     </div>
   </div>
 </section>
@@ -990,6 +993,9 @@ footer{border-top:1px solid var(--line);padding:48px 0 30px;}
       <div class="spec-row"><div class="spec-cell feat">Analytics &amp; focus reports</div><div class="spec-cell val dim">—</div><div class="spec-cell val premium-yes">✓</div></div>
       <div class="spec-row"><div class="spec-cell feat">Compliance &amp; client tracker</div><div class="spec-cell val dim">—</div><div class="spec-cell val premium-yes">✓</div></div>
       <div class="spec-row"><div class="spec-cell feat">Role &amp; permission control</div><div class="spec-cell val dim">—</div><div class="spec-cell val premium-yes">✓</div></div>
+      <div class="spec-row"><div class="spec-cell feat">Daily check-in &amp; manager dashboard</div><div class="spec-cell val dim">—</div><div class="spec-cell val premium-yes">✓</div></div>
+      <div class="spec-row"><div class="spec-cell feat">Real push notifications</div><div class="spec-cell val dim">—</div><div class="spec-cell val premium-yes">✓</div></div>
+      <div class="spec-row"><div class="spec-cell feat">Audit log &amp; rate-limited security</div><div class="spec-cell val dim">—</div><div class="spec-cell val premium-yes">✓</div></div>
       <div class="spec-row"><div class="spec-cell feat">Priority support</div><div class="spec-cell val dim">—</div><div class="spec-cell val premium-yes">✓</div></div>
     </div>
   </div>
@@ -1040,7 +1046,10 @@ footer{border-top:1px solid var(--line);padding:48px 0 30px;}
           <li>Multi-device sync &amp; team collaboration</li>
           <li>Analytics dashboard</li>
           <li>Compliance &amp; client tracker</li>
+          <li>Daily check-in &amp; manager dashboard</li>
+          <li>Real push notifications, even offline</li>
           <li>Role &amp; permission control</li>
+          <li>Audit-grade security &amp; rate limiting</li>
           <li>Priority support</li>
         </ul>
         <a href="register.php" class="btn btn-brass magnetic">Start 14-day free trial →</a>
@@ -1228,7 +1237,7 @@ function renderLedger(id,count){
 renderLedger('ledger-rows'); renderLedger('ledger-rows-2'); renderLedger('ledger-rows-3',3);
 
 /* ═══════════════════════ MARQUEE ═══════════════════════ */
-const marqueeItems=['GST Ready','EPFO Compliant','ESIC Tracked','SOC2-style access control','Multi-device sync','Real-time reconciliation','Role-based permissions','Trusted by 340+ teams'];
+const marqueeItems=['GST Ready','EPFO Compliant','ESIC Tracked','SOC2-style access control','Multi-device sync','Real-time reconciliation','Role-based permissions','Daily check-in & approvals','Real push, even offline','Full audit logging','Trusted by 340+ teams'];
 const track=document.getElementById('marqueeTrack');
 track.innerHTML=[...marqueeItems,...marqueeItems].map(t=>`<span class="marquee-item">${t}</span>`).join('');
 

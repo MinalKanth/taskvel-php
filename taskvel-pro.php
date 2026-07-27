@@ -3846,6 +3846,10 @@ $user = current_user();
                         aria-label="Choose colour theme" title="Colour theme">
                         <span class="tt-icon">◑</span>
                     </button>
+                    <button class="icon-btn" id="mute-toggle" onclick="toggleMute()"
+                        aria-label="Mute or unmute sounds" title="Mute completion chime">
+                        <span class="tt-icon" id="mute-icon">🔊</span>
+                    </button>
                     <button class="icon-btn" id="theme-toggle" onclick="toggleTheme()"
                         aria-label="Toggle light or dark mode" title="Light / dark">
                         <span class="tt-icon" id="tt-icon">☾</span>
@@ -4145,6 +4149,7 @@ $user = current_user();
             </div>
             <button class="add-btn" onclick="openSheet()" aria-label="Add task">+</button>
         </div>
+        <button class="act" id="clear-done-btn" onclick="clearCompleted()" style="display:none;margin-bottom:12px">🧹 Clear all completed</button>
         <div id="bulk-bar"
             style="display:none;align-items:center;gap:8px;margin-bottom:12px;padding:10px 14px;background:var(--accent-soft);border:1px solid var(--accent-glow);border-radius:12px">
             <span id="bulk-count" style="font-size:12.5px;font-weight:600;font-family:'Space Grotesk'"></span>
@@ -4879,6 +4884,10 @@ $user = current_user();
         if (streakData.count > streakData.best) streakData.best = streakData.count;
         saveStreak();
         updateStreakUI();
+        const milestones = [7, 30, 100, 365];
+        if (milestones.includes(streakData.count)) {
+            showCelebration('🔥', `${streakData.count}-day streak!`, `You've shown up ${streakData.count} days in a row. That's discipline.`, 4500);
+        }
     }
 
     function updateStreakUI() {
@@ -5879,6 +5888,19 @@ $user = current_user();
         ['time-report', 'Time Report']
     ];
 
+    function clearCompleted() {
+        const doneIds = tasks.filter(t => t.done).map(t => t.id);
+        if (!doneIds.length) { toast('Nothing completed to clear'); return; }
+        tasks = tasks.filter(t => !t.done);
+        remarks = remarks.filter(r => !doneIds.includes(r.taskId));
+        save();
+        saveR();
+        render();
+        renderTabs();
+        doneIds.forEach(id => deleteTaskOnServer(id));
+        toast(`${doneIds.length} completed task${doneIds.length === 1 ? '' : 's'} cleared`);
+    }
+
     function renderTabs() {
         document.getElementById('tabs').innerHTML = TABS.map(([k, lbl]) => {
             let c = '';
@@ -5903,6 +5925,7 @@ $user = current_user();
         document.getElementById('time-report-view').classList.toggle('active', isTR);
         document.getElementById('matrix-view').classList.toggle('active', isMX);
         document.getElementById('review-view').classList.toggle('active', isRV);
+        document.getElementById('clear-done-btn').style.display = (f === 'done') ? 'inline-flex' : 'none';
         if (isR) renderRemarks();
         else if (isTR) renderTimeReport();
         else if (isMX) renderMatrix();
@@ -6085,7 +6108,9 @@ $user = current_user();
                     <button class="act focus-act" onclick="setFocusTask(${t.id})">◉ Focus</button>
                     ${t.timeTrackingStarted ? `<button class="act" onclick="stopTimeTracking(${t.id})">◼ Stop</button>` : `<button class="act" onclick="startTimeTracking(${t.id})">▶ Track</button>`}
                     ${(!t.done && t.deadline) ? `<button class="act" onclick="snoozeTask(${t.id})">💤 Snooze</button>` : ''}
+                    <button class="act" onclick="duplicateTask(${t.id})">⧉ Duplicate</button>
                     <button class="act" onclick="openEdit(${t.id})">✎ Edit</button>
+                    <button class="act" onclick="copyTaskText(${t.id})">⧉ Copy</button>
                     <button class="act" onclick="openRemark(${t.id})">❝ Remark</button>
                     <button class="act del" onclick="delTask(${t.id})">× Remove</button>
                 </div>
@@ -6112,6 +6137,8 @@ $user = current_user();
         document.getElementById('s-prog').style.width = (tasks.length ? Math.round(done / tasks.length * 100) : 0) +
         '%';
         document.getElementById('s-focus').textContent = focusLog[todayKey()] || 0;
+        const pendingCount = tasks.filter(t => !t.done).length;
+        document.title = pendingCount ? `(${pendingCount}) Taskvel · कार्य, done well.` : 'Taskvel · कार्य, done well.';
         setGreeting();
         renderTagRow();
         renderGoalBar();
@@ -6269,7 +6296,7 @@ $user = current_user();
                 spawnRecurrence(t);
                 save();
             }
-            toast('Task completed ✓');
+            toast('Task completed ✓', 'Undo', () => markUndone(id), 4500);
             celebrateTaskDone(t.name);
             checkDailyGoal();
         }
@@ -6345,6 +6372,31 @@ $user = current_user();
             upsertTaskOnServer(t);
             toast(t.pinned ? 'Pinned to top ★' : 'Unpinned')
         }
+    }
+    function duplicateTask(id) {
+        const t = tasks.find(t => t.id === id);
+        if (!t) return;
+        const clone = {
+            ...t,
+            id: Date.now(),
+            name: t.name + ' (copy)',
+            done: false,
+            doneAt: null,
+            pinned: false,
+            selectedForToday: false,
+            timeSpent: 0,
+            timeTrackingStarted: null,
+            addedOn: new Date().toISOString(),
+            order: Date.now(),
+            updatedAt: Date.now(),
+            steps: (t.steps || []).map(s => ({ ...s, done: false }))
+        };
+        tasks.push(clone);
+        save();
+        upsertTaskOnServer(clone);
+        render();
+        renderTabs();
+        toast('Task duplicated ✓');
     }
     function toggleToday(id) {
         const t = tasks.find(t => t.id === id);
@@ -6694,6 +6746,12 @@ $user = current_user();
         document.getElementById('r-ov').classList.add('open');
         document.getElementById('r-sheet').classList.add('open');
         setTimeout(() => document.getElementById('r-text').focus(), 350);
+    }
+    function copyTaskText(id) {
+        const t = tasks.find(t => t.id === id);
+        if (!t) return;
+        const lines = [t.name, t.deadline ? `Due: ${t.deadline}` : '', ...(t.steps || []).map(s => `- [${s.done ? 'x' : ' '}] ${s.text}`)].filter(Boolean);
+        navigator.clipboard.writeText(lines.join('\n')).then(() => toast('Copied to clipboard ✓'));
     }
 
     function closeRemark() {
@@ -7212,7 +7270,18 @@ $user = current_user();
         document.addEventListener('touchend', end);
     })();
 
+    const LS_MUTE = 'taskvel_muted_v1';
+    function isMuted() {
+        try { return localStorage.getItem(LS_MUTE) === '1'; } catch (e) { return false; }
+    }
+    function toggleMute() {
+        const next = !isMuted();
+        try { localStorage.setItem(LS_MUTE, next ? '1' : '0'); } catch (e) {}
+        document.getElementById('mute-icon').textContent = next ? '🔇' : '🔊';
+        toast(next ? 'Sounds muted' : 'Sounds unmuted');
+    }
     function chime() {
+        if (isMuted()) return;
         try {
             const AC = window.AudioContext || window.webkitAudioContext;
             if (!AC) return;
@@ -7721,6 +7790,7 @@ $user = current_user();
         setTimeout(maybeShowBriefing, 600);
         applyThemeIcon();
         markActiveSwatch();
+        if (isMuted()) document.getElementById('mute-icon').textContent = '🔇';
         sweepDeadlines();
         setInterval(sweepDeadlines, 60 * 60 * 1000);
         updateNotifDot();
