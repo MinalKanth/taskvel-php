@@ -24,6 +24,7 @@
 
 [Overview](#-overview) •
 [Features](#-features) •
+[Every Function, Explained](#-every-function-explained) •
 [Tech Stack](#-tech-stack) •
 [Getting Started](#-getting-started) •
 [Configuration](#-configuration) •
@@ -49,13 +50,11 @@ It's a single, gorgeously-designed application that ranks your work intelligentl
 
 This isn't a to-do list. **It's a system.**
 
-> *"It feels like the app was designed by someone who actually hates cluttered software as much as I do."*
-
 Taskvel ships as three composable layers, each fully optional beyond the first:
 
 | Layer | What it's for |
 |---|---|
-| 🧍 **Personal App** | Smart, single-user task management with auto-ranking, focus timer, streaks, and offline PWA support |
+| 🧍 **Personal App** (`taskvel-pro.php`) | Smart, single-user task management with auto-ranking, focus timer, streaks, and offline PWA support |
 | 👥 **Teams & Projects** | Multi-user collaboration with Kanban boards, assignment, roles, and activity logs |
 | 📍 **Daily Check-in** *(optional)* | A lightweight attendance + task-reporting ritual with manager dashboards, approvals, and email notifications |
 
@@ -63,7 +62,7 @@ Taskvel ships as three composable layers, each fully optional beyond the first:
 
 ## 📸 Screenshots & Preview
 
-> Add your own screenshots or a short demo GIF here to showcase the UI — a hero shot of the dashboard, the focus timer in action, and the Teams Kanban board work best. Suggested spec: `1600×1000px`, PNG or WebP, stored under `docs/screenshots/`.
+> Add your own screenshots or a short demo GIF here — a hero shot of the dashboard, the focus timer in action, and the Teams Kanban board work best. Suggested spec: `1600×1000px`, PNG or WebP, stored under `docs/screenshots/`.
 
 <div align="center">
 
@@ -86,16 +85,17 @@ Taskvel ships as three composable layers, each fully optional beyond the first:
 - Smart Quick-Add with natural-language parsing (`"Call the client tomorrow #urgent !high"` → tag, date & priority, auto-parsed)
 - Urgency × Impact auto-ranking, with deadlines that **auto-escalate priority** as they approach
 - Tags with one-tap filter chips
-- Multi-step subtasks per task
+- Multi-step subtasks per task, each with an optional link
 - Task templates for recurring workflows
 - Resource links & freeform remarks per task
 - Drag-and-drop manual reordering, pin-to-top
-- Bulk select → mass complete or delete
+- Bulk select (right-click a card) → mass complete or delete
+- **Pick-for-Today** — hand-select exactly which tasks (including old overdue ones) show up in the Today tab, instead of relying purely on auto-ranked urgency
 
 **⏱️ Focus & Flow**
-- Custom Pomodoro timer with a **floating, draggable mini-timer** that never blocks your workflow
-- Ambient completion chimes
-- Daily focus history with a 7-day chart
+- Custom Pomodoro timer (25/5, 50/10, 15/3, or fully custom) with a **floating, draggable mini-timer** that never blocks your workflow
+- Ambient completion chimes (Web Audio, no audio files)
+- Daily focus history with a 7-day bar chart
 - Daily task goal with a live progress bar
 - Productivity Score (0–100) blended from streak, focus time & completion rate
 - Fire-streak tracker for daily consistency
@@ -104,32 +104,33 @@ Taskvel ships as three composable layers, each fully optional beyond the first:
 
 **🗺️ See It However You Think**
 - All / Today / Pending / Done smart tabs
-- Eisenhower Priority Matrix view
-- Weekly Review dashboard
+- Eisenhower Priority Matrix view (Do First / Schedule / Quick Wins / Later)
+- Weekly Review dashboard (focus minutes, tasks done, streak, top tags)
 - Time-tracked report grouped by tag
-- Global search across names, notes, tags & remarks
+- Global search across names, people, tags, steps & remarks
 - ⌘K command palette for power users
 
 **🎁 Extras That Feel Premium**
-- CSV, PDF, and full JSON backup exports
+- CSV, PDF, and full JSON backup/restore exports, each filterable by status, date range, person, collaborator, and tag
 - One-click **.ics calendar export** (Google/Apple/Outlook)
-- Snooze a deadline in one tap
-- In-app notification center + daily briefing on first login
-- Native OS notifications + in-app celebration overlays
+- Snooze a deadline by one day in one tap
+- In-app notification center + daily briefing on first login each day
+- Native OS notifications + full-screen celebration overlays with confetti
 - Full offline-first PWA — installs like a native app
-- Onboarding carousel for new users
+- Onboarding carousel for new users, with swipe support
+- Teams · Projects · Events hub widget surfaced right on the dashboard
 
 </td></tr>
 </table>
 
 ### 🎨 Design that doesn't compromise
 
-- **Four hand-tuned visual themes** (Mono / Indigo / Emerald / Amber) × light & dark, with living aurora backgrounds and buttery micro-animations
+- **Five hand-tuned visual themes** (Samal / Mono / Indigo / Emerald / Amber) × light & dark, with living aurora backgrounds and buttery micro-animations
 - 🎉 **Confetti-worthy celebrations** on task completion and finished focus blocks — a genuinely delightful moment, not a boring toast
 
 ### 🌍 True Cross-Device Sync
 
-Start on your laptop at your desk, finish on your phone on the train. Same account, same data, always current — the Personal App uses a full-state blob sync model with a zero data-loss guarantee, so nothing you type is ever left stranded on one device.
+Start on your laptop at your desk, finish on your phone on the train. Same account, same data, always current — the Personal App uses a full-state blob sync model plus a dedicated per-task sync table, with a zero data-loss guarantee, so nothing you type is ever left stranded on one device.
 
 ### 👥 Teams & Shared Projects — built for the whole office
 
@@ -145,10 +146,9 @@ Flip a switch and Taskvel becomes a **real collaborative project tool**:
 | 🎯 Intentional assignment | Managers delegate to anyone; members can self-assign |
 | 📊 Per-person progress strip | See exactly who's completed what, at a glance |
 | 💬 Task-level comments | Discussion stays attached to the work, not lost in chat |
+| 📅 Team events | Shared events with attendees, surfaced on every member's dashboard hub |
 | 📜 Activity log | A running history of who did what, and when |
 | 🔒 Server-enforced security | Every permission check happens in the backend, not just the UI |
-
-**The result:** a manager can create a project, assign five tasks to five different teammates, and watch the whole thing complete in real time — from one dashboard.
 
 ### 📍 Daily Check-in *(optional "office mode")*
 
@@ -193,7 +193,7 @@ Run `sql/migration_06_checkin_advanced.sql` after `migration_05` to unlock:
 
 **Optional integrations:** Slack / Microsoft Teams notifications via simple Incoming Webhook URLs (`config/webhooks.php`) — no OAuth app needed.
 
-> **Intentionally not included:** screenshot/activity capture (technically impossible to do quietly in a browser tab — would require an installed desktop agent, a fundamentally different product with its own privacy/legal implications) and deep Slack/Teams bot integrations (would need per-workspace OAuth registration — a separate project).
+> **Intentionally not included:** screenshot/activity capture (technically impossible to do quietly in a browser tab) and deep Slack/Teams bot integrations (would need per-workspace OAuth registration).
 
 </details>
 
@@ -209,13 +209,208 @@ Taskvel ships with a **complete, dependency-free Web Push implementation** (RFC 
 
 ---
 
+## 📖 Every Function, Explained
+
+Everything below lives in `taskvel-pro.php`'s inline script and reflects the actual, current codebase — grouped the way the code itself is organized, so this doubles as a map for anyone reading the source top to bottom.
+
+### State & persistence
+
+| Function | What it does |
+|---|---|
+| `load()` | Reads tasks, remarks, focus minutes, notifications, focus log, streak data, and daily goal from `localStorage`, and back-fills any field missing from older saved tasks (tags, recur, collab, order, links, `selectedForToday`) without ever destroying existing data. |
+| `save()` / `saveR()` / `saveF()` / `saveNotif()` / `saveFLog()` / `saveStreak()` | Each persists its own slice of state to `localStorage` and schedules a debounced push to the server. |
+| `migrateLegacyKeys()` | One-time migration from old, non-namespaced `localStorage` keys to per-user-namespaced keys (`taskvel_u{ID}_*`), so switching accounts on the same device never leaks data between users. |
+| `touch(t)` | Stamps a task with `updatedAt = Date.now()` — the timestamp every conflict-resolution and merge function relies on to decide which copy of a task is newer. |
+| `mergeById(localArr, serverArr)` | Generic last-write-wins merge by `id`, comparing `updatedAt`, used for remarks and other synced collections. |
+| `gatherState()` | Bundles everything *except* tasks (remarks, notifications, focus log, streak, templates, daily goal, theme, accent) into one JSON blob for server sync. |
+
+### Cross-device sync
+
+| Function | What it does |
+|---|---|
+| `schedulePush()` / `flushPendingPush()` / `pushStateNow()` | Debounce, force-flush, and actually perform the push of `gatherState()` to the server, versioned to detect conflicts. Flushing happens immediately on tab backgrounding or `pagehide` so nothing is lost if the debounce timer never fires. |
+| `resolveConflict()` | On a version conflict, pulls the server's copy, merges remarks and focus logs non-destructively, then re-pushes. |
+| `pullStateFromServer()` | Pulls the shared state blob and repaints every affected part of the UI (remarks, notifications, focus log, streak, goal, theme, accent). |
+| `taskApiPayload(t)` | Shapes a single task into the exact JSON contract the `personal_tasks` API table expects. |
+| `upsertTaskOnServer(t)` / `deleteTaskOnServer(id)` | Create/update or delete one task server-side, independent of the shared-state blob (tasks live in their own table for finer-grained sync). |
+| `loadTasksFromServer()` | Pulls every task from the server and merges by `updatedAt`, so a brand-new device with empty `localStorage` still gets the full task list. |
+| `logoutUser()` | Flushes any pending sync, logs out server-side, wipes every `taskvel_*` key from `localStorage`, and redirects to login — so the next person on the same browser starts clean. |
+
+### Streaks, goals & scoring
+
+| Function | What it does |
+|---|---|
+| `recordActivity()` | Bumps the daily streak counter once per calendar day, resetting it if a day was missed. |
+| `tasksCompletedToday()` | Counts tasks completed today, used by the goal bar and the productivity score. |
+| `computeProductivityScore()` | Blends completion rate (40%), streak length (30%), and today's focus minutes (30%) into one 0–100 number. |
+| `renderGoalBar()` / `setDailyGoal()` / `checkDailyGoal()` | Render the "N / goal tasks" progress strip, let the user change their daily target, and fire a one-time celebration the first time the goal is hit each day. |
+| `score(u, d)` / `rank(s)` / `effRank(t)` / `wasEsc(t)` | Core ranking engine: `score` multiplies urgency × impact weights; `rank` buckets the numeric score into critical/high/medium/low; `effRank` additionally escalates that rank as a deadline approaches; `wasEsc` reports whether escalation actually changed the displayed rank (drives the "Auto-escalated" banner on a card). |
+
+### Today, tabs & filtering
+
+| Function | What it does |
+|---|---|
+| `getTodayList()` | Powers the **Today** tab: if you've hand-picked any task via "+ Today", it shows *only* your picks (regardless of rank, including overdue ones); if nothing is picked, it falls back to the automatic critical/high-priority view. |
+| `toggleToday(id)` | Adds/removes a task from your manual "Today" selection and persists + syncs the change. |
+| `getFiltered()` | The master list builder behind every tab — applies the active tab, tag filter, and search query together. |
+| `setFilter(f)` / `renderTabs()` | Switch between All / Today / Pending / Done / Matrix / Weekly Review / Remarks / Time Report, and keep each tab's live count badge accurate. |
+| `toggleTagFilter(t)` / `renderTagRow()` / `allTags()` | Drive the horizontal tag-chip filter row above the task list. |
+
+### Task lifecycle
+
+| Function | What it does |
+|---|---|
+| `addTask()` | Validates the add form, runs `smartParseTask()` on the raw title, applies any detected tags/urgency/deadline the user didn't set explicitly, then creates and syncs the new task. |
+| `smartParseTask(raw)` | The natural-language engine: strips `#tags`, urgency keywords (`!critical`/`urgent`/`high`/`medium`/`low`), and relative dates (`today`, `tomorrow`, `next monday`, `in 3 days`) out of the typed title and returns them as structured fields. |
+| `openEdit(id)` / `saveEdit()` / `closeEdit()` | Open the edit sheet pre-filled with a task's current fields (including steps, links, tags), save all changes back, and close the sheet. |
+| `toggleStep(id, i)` / `completeTask(t)` | Toggle one subtask; if every subtask becomes done, auto-completes the parent task, fires the celebration, and (if recurring) spawns the next occurrence. |
+| `markDone(id)` / `markUndone(id)` | Manually complete or reopen a task; completing clears its "Today" selection flag, records streak activity, and checks the daily goal. |
+| `snoozeTask(id)` | Pushes a task's deadline forward by exactly one day. |
+| `delTask(id)` | Removes a task with a smooth exit animation and a 4.5-second **Undo** toast that fully restores the task and its remarks if tapped. |
+| `togglePin(id)` | Pins/unpins a task to the top of its list. |
+| `flash(id)` | Brief highlight animation used after completing or restoring a task. |
+| `startTimeTracking(id)` / `stopTimeTracking(id)` | Start/stop a live stopwatch on a task, accumulating into `timeSpent` used by the Time Report tab. |
+
+### Bulk actions
+
+| Function | What it does |
+|---|---|
+| `enterBulkMode(firstId)` / `toggleBulkSelect(id)` / `exitBulkMode()` / `updateBulkBar()` | Right-click any card to enter multi-select mode, toggle additional cards, and show a floating action bar. |
+| `bulkDone()` / `bulkDelete()` | Mark every selected task done, or delete them all at once, then sync each change to the server. |
+
+### Recurrence
+
+| Function | What it does |
+|---|---|
+| `nextDate(dateStr, recur)` | Computes the next daily/weekly/monthly date from a base date. |
+| `spawnRecurrence(t)` | When a recurring task is completed, clones it (steps reset, new deadline) into a fresh open task and notifies the user. |
+| `parseRecurrence(rule, fromDateStr)` | A lightweight `RRULE:`-style parser (FREQ/INTERVAL/BYDAY) for more advanced recurrence patterns beyond the simple daily/weekly/monthly presets. |
+
+### Tags, links & templates
+
+| Function | What it does |
+|---|---|
+| `normalizeTag(t)` | Lowercases, trims, and length-caps a tag before it's stored, keeping the tag list consistent. |
+| `addTagToForm()` / `addTagToEditForm()` / `renderFormTags()` / `renderEditFormTags()` / `removeFormTag(i)` / `removeEditFormTag(i)` | Manage the tag-pill inputs on the add and edit sheets. |
+| `addLinkToEditForm()` / `renderEditLinks()` / `removeEditLink(i)` | Manage resource links (label + URL) attached to a task from the edit sheet. |
+| `saveAsTemplate()` / `renderTemplates()` / `useTemplate(id)` / `deleteTemplate(id)` | Save any task's shape (urgency, impact, tags, recurrence, steps) as a reusable template, then spin up new tasks from it in one click. |
+
+### Remarks
+
+| Function | What it does |
+|---|---|
+| `openRemark(id)` / `closeRemark()` / `addRemark()` / `delRemark(id)` | Attach freeform notes to a specific task (or a general remark not tied to any task) and manage them from the dedicated Remarks tab. |
+| `renderRemarks()` | Renders the full remarks list as its own view, most recent first. |
+
+### Views: Matrix, Weekly Review, Time Report
+
+| Function | What it does |
+|---|---|
+| `renderMatrix()` | Builds the Eisenhower-style 2×2 (Do First / Schedule / Quick Wins / Later) from urgency + impact. |
+| `renderWeeklyReview()` | Summarizes the last 7 days: total focus minutes, tasks completed, current streak, and top tags used. |
+| `renderTimeReport()` | Aggregates tracked time per tag from every task's `timeSpent`. |
+| `formatTime(ms)` | Converts milliseconds into a human "Xd Yh" / "Xh Ym" / "Xm" string, shared by the time report and task cards. |
+
+### Rendering & drag-and-drop
+
+| Function | What it does |
+|---|---|
+| `cardHTML(t, idx)` | Builds the full HTML for a single task card — badges, deadline pill, escalation banner, tags, links, steps, progress bar, remarks, and the action row (Done, +Today, Focus, Track/Stop, Snooze, Edit, Remark, Remove). Shared by the live list and the filtered PDF-export view. |
+| `renderTaskCardsInto(container, taskArr)` | Renders an arbitrary task array into any container — used both for `#list` and for the temporary filtered view during PDF export. |
+| `render()` | The main repaint: updates the stat tiles, greeting, tag row, goal bar, empty/onboarding states, and re-sorts + re-renders the visible task list (pinned → not-done → rank → manual order or score). |
+| `progressClass(t)` | Colour-codes a task's progress bar red/yellow/green based on urgency, deadline proximity, and completion percentage. |
+| `dragStart/Over/Leave/Drop/End` | Full HTML5 drag-and-drop reordering, active only in the default "All" view with no filters, persisting the new order both locally and via `/api/personal_tasks.php?action=reorder`. |
+| `cardMove(e, el)` | Tracks cursor position over a card to drive the subtle radial-glow hover effect. |
+
+### Focus timer (Pomodoro)
+
+| Function | What it does |
+|---|---|
+| `paintTimer()` / `paintMiniTimer()` | Repaint the main ring timer and the floating draggable mini-timer pill in lockstep. |
+| `tick()` | Runs every 250ms while active: credits focus minutes in real time, and on reaching zero, flips between Focus and Break, chimes, notifies, and shows a celebration. |
+| `toggleTimer()` / `resetTimer()` / `cycleMode()` | Start/pause, reset, and cycle through 25/5, 50/10, 15/3, and Custom modes. |
+| `openCustomTimer()` / `closeCustomTimer()` / `saveCustomTimer()` | Configure and persist a custom focus/break length. |
+| `setFocusTask(id)` | Attaches the timer to a specific task and auto-starts it. |
+| `miniTimerClick/Toggle/Stop` + drag handlers | Let the floating mini-timer be clicked (scrolls back to the full timer), paused/resumed, stopped, or dragged anywhere on screen — all without leaving whatever else you're doing in the app. |
+| `chime()` | Generates a two-tone completion sound with the Web Audio API — no audio file dependency. |
+
+### Notifications & briefing
+
+| Function | What it does |
+|---|---|
+| `pushNotification(icon, msg)` / `renderNotifPanel()` / `markNotifsSeen()` / `updateNotifDot()` | Maintain the in-app notification center and its unread-indicator dot. |
+| `sweepDeadlines()` | Runs on load and hourly, generating "due today / due tomorrow / overdue" notifications for open tasks. |
+| `maybeShowBriefing()` / `dismissBriefing()` | Shows a once-per-day modal summarizing overdue/due-today/urgent tasks and streak status on first load. |
+| `notifyOS(title, body)` | Fires a native browser `Notification`, requesting permission lazily on first real use rather than on page load. |
+| `enablePushNotifications()` / `refreshPushButtonState()` | Opt a device into real Web Push (works even with Taskvel closed), and reflect existing subscription state when the panel opens. |
+
+### Celebrations
+
+| Function | What it does |
+|---|---|
+| `showCelebration(icon, title, sub, autoDismissMs)` / `dismissCelebration()` | Full-screen, unmissable completion modal (used for both focus-session and task completions) — deliberately not a toast, since toasts auto-vanish and can be missed. |
+| `fireConfetti()` | A dependency-free canvas confetti burst themed to the active accent colour. |
+| `celebrateTaskDone(taskName)` | Picks a random encouraging message and triggers both the on-screen celebration and an OS notification. |
+
+### Export & backup
+
+| Function | What it does |
+|---|---|
+| `populateExportFilters()` / `getExportDateBounds()` / `onDateRangeChange()` / `getExportFilteredTasks()` / `updateExportSummary()` | Build and apply the export panel's filters — status, date range (today/yesterday/last 7/30/custom), person, collaborator, and tag — with a live "Exporting N of M tasks" summary. |
+| `exportCSV()` | Downloads a CSV of the filtered tasks, with formula-injection protection (`csvEscape`) for cells starting with `= + - @`. |
+| `exportPDF()` | Opens the browser print dialog against either the live list or a temporarily-swapped filtered view, then restores the normal view afterward. |
+| `exportICS()` | Downloads an RFC 5545 calendar file of every filtered task with a deadline, properly escaped (`icsEscape`), ready to import into Google/Apple/Outlook Calendar. |
+| `backupData()` / `restoreData(e)` | Full JSON export of every piece of local state, and a matching restore-from-file flow with validation. |
+
+### Onboarding
+
+| Function | What it does |
+|---|---|
+| `renderOnboardDots()` / `paintOnboardSlide()` / `goToOnboardSlide()` / `onboardNext()` / `onboardBack()` | Drive the 4-slide onboarding carousel shown only to brand-new accounts with zero tasks. |
+| `skipOnboarding()` / `finishOnboarding()` | Dismiss the carousel (and remember that choice), or finish it straight into the add-task sheet. |
+| `initOnboardSwipe()` | Adds touch-swipe navigation between onboarding slides on mobile. |
+
+### Command palette & keyboard
+
+| Function | What it does |
+|---|---|
+| `openCmdk()` / `closeCmdk()` / `filterCmdk()` / `renderCmdkResults()` / `runCmdk(i)` | The `⌘K` / `Ctrl+K` command palette — fuzzy-filters and runs any of ~20 registered actions (add task, toggle theme, exports, jump to any tab, open Teams/Check-in/Manager pages, and more). |
+| Global `keydown` handler | Implements `N` new task, `/` search, `T` toggle theme, `Space` start/pause timer, `↑/↓` keyboard task navigation, `D` mark focused task done, `Delete/Backspace` remove focused task, `Enter` open focused task, `?` shortcut cheat-sheet, and `Esc` to close anything open. |
+| `kbMove(dir)` / `kbAction(action)` / `kbGetCards()` | Support keyboard-only navigation and actions across the visible task list. |
+
+### Theme & appearance
+
+| Function | What it does |
+|---|---|
+| `toggleTheme()` / `applyThemeIcon()` | Switch light/dark and keep the header icon and the mobile browser's `theme-color` meta tag in sync. |
+| `setAccent(name)` / `markActiveSwatch()` | Switch between the five colour themes (Samal, Mono, Indigo, Emerald, Amber) and reflect the active choice in the picker panel. |
+
+### Panels & misc UI
+
+| Function | What it does |
+|---|---|
+| `togglePanel(id)` / `closePanel(id)` / `closeAllPanels()` | Manage the header's dropdown panels (theme, notifications, focus history, export, templates) so only one is open at a time. |
+| `tickClock()` / `setGreeting()` | Keep the live header clock ticking every second, and refresh the time-of-day greeting with an open-task count. |
+| `renderHistory()` / `last7Days()` | Build the 7-day focus-minutes bar chart and today/week/average totals shown in the Focus History panel. |
+| `toast(msg, actionLabel, cb, dur)` / `toastAction()` | The shared bottom toast system, optionally with an action button (e.g. **Undo**). |
+| Teams · Projects · Events hub (`toggleTeamHub`, `loadHub`) | Fetches and renders the user's teams and upcoming team events directly into the personal dashboard, so team activity never requires leaving the page. |
+
+### Initialization
+
+| Function | What it does |
+|---|---|
+| `init()` | The boot sequence: loads local state, renders everything, starts the clock and deadline sweep, pulls the latest server state, registers the periodic 20-second sync poll and visibility-change re-sync, and registers the service worker for offline/PWA support. |
+
+---
+
 ## 🛠️ Tech Stack
 
 ```
 Frontend    →  Vanilla JS — zero framework bloat, buttery-smooth CSS animations
 Backend     →  PHP 8.1+ — clean REST-style JSON APIs
 Database    →  MySQL 8 — relational schema for Teams & Projects
-Sync Model  →  Full-state blob sync for the personal app (zero data-loss guarantee)
+Sync Model  →  Full-state blob sync for shared personal state (zero data-loss guarantee)
+                + a dedicated per-task table (`personal_tasks`) for finer-grained task sync
                 + relational multi-user schema for Teams & Projects
 Auth        →  Secure session-based login, bcrypt password hashing
 PWA         →  Installable, offline-capable, manifest + service worker included
@@ -335,7 +530,7 @@ flowchart TB
     end
 
     subgraph Data["🗄️ MySQL 8"]
-        PERSONAL[(Personal State Blob)]
+        PERSONAL[(Personal State Blob + personal_tasks table)]
         TEAMS[(Teams / Projects Schema)]
         CHECKIN[(Daily Check-in Schema)]
         SECURITY[(Audit Log / Rate Limits)]
@@ -353,7 +548,7 @@ flowchart TB
     CRON --> PERSONAL
 ```
 
-**Sync model:** the Personal App uses a full-state blob sync (zero data-loss guarantee across devices), while Teams & Projects and Daily Check-in use a relational, multi-user schema with server-enforced permission checks on every request.
+**Sync model:** the Personal App uses a full-state blob sync for shared state (remarks, notifications, focus log, streak, templates, theme) plus a dedicated `personal_tasks` table for per-task sync — both with a zero data-loss guarantee across devices. Teams & Projects and Daily Check-in use a relational, multi-user schema with server-enforced permission checks on every request.
 
 ---
 
@@ -362,13 +557,15 @@ flowchart TB
 ```
 taskvel-php/
 ├── api/                        # REST-style JSON endpoints
-│   ├── tasks.php
+│   ├── personal_tasks.php       # Per-user task CRUD + reorder
 │   ├── teams.php
+│   ├── team_events.php
 │   ├── projects.php
 │   ├── project_tasks.php
 │   ├── timer.php
 │   ├── remarks.php
 │   ├── attachments.php
+│   ├── settings.php              # VAPID key, push subscribe, device touch
 │   └── auth.php
 ├── includes/                   # Shared server-side logic
 │   ├── security.php             # clean_str, clean_email, csv_safe, ics_escape, etc.
@@ -390,12 +587,15 @@ taskvel-php/
 │   ├── migration_04_teams_projects.sql
 │   ├── migration_05_daily_checkin.sql
 │   ├── migration_06_checkin_advanced.sql
-│   └── migration_07_security.sql
+│   ├── migration_07_security.sql
+│   └── migration_11_team_events.sql
 ├── js/
 │   └── api-client.js            # Handles CSRF token attachment, API calls
 ├── checkin.php                  # Daily Check-in page
 ├── manager.php                  # Manager Dashboard
-└── taskvel-pro.php                    # Main app entry
+├── teams.php                    # Teams directory
+├── team.php                     # Single team / Kanban board
+└── taskvel-pro.php               # Main personal app entry
 ```
 
 > Exact structure may vary slightly by release — this reflects the modules described in this document.
@@ -440,6 +640,7 @@ These were actual, exploitable issues — not hypothetical hardening:
 - **RBAC** enforced server-side in every Teams/Projects API call
 - **Server-level hardening** — `.htaccess` blocks direct access to `config/`, `includes/`, `sql/`, `cron/`, `scripts/`
 - **Least-privilege data exposure** — `current_user()` only selects the columns the UI needs; password hashes never leak into JSON
+- **CSV/Excel formula injection protection** on the client too — `csvEscape()` in `taskvel-pro.php` neutralizes cells starting with `= + - @` before the file is even downloaded
 
 </details>
 
@@ -477,13 +678,15 @@ Taskvel exposes clean, REST-style JSON endpoints under `api/`. All state-changin
 | Endpoint | Purpose |
 |---|---|
 | `api/auth.php` | Login, logout, registration, session management |
-| `api/tasks.php` | Personal task CRUD, ownership/visibility enforced |
+| `api/personal_tasks.php` | Personal task list/upsert/delete/reorder, ownership enforced |
 | `api/teams.php` | Team creation, invitations, membership |
+| `api/team_events.php` | Team event creation and the "all upcoming events across my teams" feed used by the dashboard hub |
 | `api/projects.php` | Project CRUD within a team |
 | `api/project_tasks.php` | Task assignment and board state within a project |
 | `api/timer.php` | Focus sessions and time logs, scoped to visible tasks |
 | `api/remarks.php` | Notes/remarks attached to tasks |
 | `api/attachments.php` | File uploads with MIME sniffing and safe storage |
+| `api/settings.php` | VAPID public key, push subscription registration, device touch/last-seen |
 
 <details>
 <summary><strong>Example: fetching a task</strong></summary>
@@ -491,18 +694,26 @@ Taskvel exposes clean, REST-style JSON endpoints under `api/`. All state-changin
 <br/>
 
 ```bash
-curl -X GET "https://yourdomain.com/api/tasks.php?action=show&id=42" \
+curl -X GET "https://yourdomain.com/api/personal_tasks.php?action=list" \
   -H "Cookie: PHPSESSID=your-session-id"
 ```
 
 ```json
 {
-  "id": 42,
-  "title": "Call the client",
-  "due_date": "2026-07-08",
-  "priority": "high",
-  "tags": ["urgent"],
-  "status": "pending"
+  "tasks": [
+    {
+      "id": 1721994000000,
+      "name": "Call the client",
+      "deadline": "2026-07-29",
+      "urgency": "high",
+      "damage": "moderate",
+      "rank": "high",
+      "score": 6,
+      "tags": ["urgent"],
+      "done": false,
+      "selectedForToday": true
+    }
+  ]
 }
 ```
 
@@ -517,6 +728,8 @@ curl -X GET "https://yourdomain.com/api/tasks.php?action=show&id=42" \
 Call the client tomorrow #urgent !high
 ```
 → Taskvel parses this into a task titled "Call the client", due tomorrow, tagged `urgent`, priority `high` — no forms required.
+
+**Pick exactly what's on today's plate:** tap **"+ Today"** on any task — including an old, overdue one — and the **Today** tab switches to showing only your hand-picked tasks instead of the automatic urgent-tasks view.
 
 **Command palette:** press `⌘K` (or `Ctrl+K`) anywhere in the app to jump to any task, view, or the Daily Check-in page instantly.
 
@@ -579,11 +792,7 @@ Built with a deliberate, no-framework philosophy — vanilla JS, PHP, and MySQL,
 Questions, bug reports, or feature requests? Open an issue on the repository, or reach out via the maintainer contact listed in the repository settings.
 
 <div align="center">
-<!-- user login 
-minal@user.com
-ChangeMe!123
-minaladmin@user.com
- -->
+
 <br/>
 
 ### Built for one person's flow. Ready for an entire team's grind.
