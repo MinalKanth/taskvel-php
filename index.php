@@ -1249,9 +1249,14 @@ footer .wrap{ position:relative; z-index:2; }
 
 .prod-chip{ transform-style:preserve-3d; }
 
-/* Scroll reveal */
-.reveal{opacity:0; transform:translateY(22px); transition:opacity .8s var(--ease), transform .8s var(--ease);}
-.reveal.in{opacity:1; transform:translateY(0);}
+/* Scroll reveal — 3D perspective rise */
+.reveal{
+  opacity:0; transform:perspective(1000px) translateY(34px) rotateX(8deg);
+  transform-origin:bottom center;
+  transition:opacity .9s var(--ease), transform .9s var(--ease);
+  will-change:transform, opacity;
+}
+.reveal.in{opacity:1; transform:perspective(1000px) translateY(0) rotateX(0deg);}
 .stagger.in > *{transition-delay:calc(var(--i,0) * 70ms);}
 
 /* focus visibility */
@@ -1311,6 +1316,116 @@ a:focus-visible, button:focus-visible, input:focus-visible, textarea:focus-visib
     outline: 2px solid var(--primary);
     outline-offset: 2px;
 }
+
+/* ============================= ANCHOR OFFSET (fixed navbar) ============================= */
+section[id], header[id]{ scroll-margin-top:88px; }
+@media (min-width:901px){ section[id], header[id]{ scroll-margin-top:96px; } }
+
+/* ============================= PAGE-LOAD PRELOADER ============================= */
+.preloader{
+  position:fixed; inset:0; z-index:3000;
+  display:flex; flex-direction:column; align-items:center; justify-content:center; gap:16px;
+  background:linear-gradient(160deg, var(--navy-ink) 0%, var(--teal-deep) 65%, #0F4436 100%);
+  transition:opacity .6s var(--ease), visibility .6s var(--ease);
+}
+.preloader.done{ opacity:0; visibility:hidden; pointer-events:none; }
+.preloader-mark{ animation:plSpin 1.1s linear infinite; }
+@keyframes plSpin{ to{ transform:rotate(360deg); } }
+.pl-arc{ stroke-dasharray:80; stroke-dashoffset:60; transform-origin:center; }
+.preloader-label{
+  font-family:var(--font-eyebrow); font-size:11.5px; letter-spacing:.14em; text-transform:uppercase;
+  color:rgba(250,247,242,0.55);
+}
+@media (prefers-reduced-motion: reduce){
+  .preloader{ transition:none; }
+  .preloader-mark{ animation:none; }
+}
+
+/* ============================= HERO LOAD-IN SEQUENCE ============================= */
+.load-in{
+  opacity:0; transform:translateY(16px);
+  animation:loadInRise .7s var(--ease) forwards;
+  animation-delay:calc(var(--d,0) * 90ms + .15s);
+}
+@keyframes loadInRise{ to{ opacity:1; transform:translateY(0); } }
+@media (prefers-reduced-motion: reduce){
+  .load-in{ opacity:1; transform:none; animation:none; }
+}
+
+/* ============================= SKELETON LOADERS ============================= */
+.ledger-skeleton{
+  height:48px; border-radius:12px;
+  background:linear-gradient(100deg, rgba(255,255,255,0.05) 20%, rgba(255,255,255,0.12) 40%, rgba(255,255,255,0.05) 60%);
+  background-size:200% 100%;
+  animation:skeletonSheen 1.5s ease-in-out infinite;
+}
+@keyframes skeletonSheen{ from{ background-position:120% 0; } to{ background-position:-20% 0; } }
+@media (prefers-reduced-motion: reduce){ .ledger-skeleton{ animation:none; opacity:.5; } }
+
+/* ============================= SCROLL PARALLAX ============================= */
+[data-parallax]{ will-change:transform; }
+[data-depth]{ will-change:transform; }
+
+/* ============================= FORM VALIDATION MICRO-INTERACTIONS ============================= */
+.field-error{
+  display:block; max-height:0; overflow:hidden; opacity:0;
+  color:#FCA5A5; font-size:12px; margin-top:0; padding-left:4px;
+  transition:max-height .3s var(--ease), opacity .3s var(--ease), margin-top .3s var(--ease);
+}
+.field.invalid input, .field.invalid textarea{
+  border-color:#F87171; background:rgba(248,113,113,0.08);
+}
+.field.invalid .field-error{ max-height:24px; opacity:1; margin-top:6px; }
+.field.invalid{ animation:fieldShake .4s var(--ease); }
+@keyframes fieldShake{
+  0%,100%{ transform:translateX(0); }
+  20%{ transform:translateX(-5px); }
+  40%{ transform:translateX(4px); }
+  60%{ transform:translateX(-3px); }
+  80%{ transform:translateX(2px); }
+}
+.field.valid input, .field.valid textarea{ border-color:rgba(74,222,128,0.55); }
+@media (prefers-reduced-motion: reduce){ .field.invalid{ animation:none; } }
+
+/* ============================= GLOBAL AMBIENT SPOTLIGHT ============================= */
+.global-spotlight{
+  position:fixed; inset:0; z-index:1; pointer-events:none;
+  background:radial-gradient(600px circle at var(--sx,50%) var(--sy,20%), rgba(232,199,102,0.05), transparent 70%);
+  transition:opacity .4s ease; opacity:0; mix-blend-mode:screen;
+}
+.global-spotlight.on{opacity:1;}
+
+/* ============================= CUSTOM MAGNETIC CURSOR ============================= */
+.has-custom-cursor, .has-custom-cursor *{cursor:none !important;}
+.cursor-dot, .cursor-ring{
+  position:fixed; top:0; left:0; z-index:4000; pointer-events:none;
+  border-radius:50%; transform:translate(-50%,-50%);
+  opacity:0; transition:opacity .3s ease;
+}
+.has-custom-cursor .cursor-dot, .has-custom-cursor .cursor-ring{opacity:1;}
+.cursor-dot{width:7px;height:7px;background:var(--amber-2); box-shadow:0 0 10px rgba(232,199,102,0.8);}
+.cursor-ring{
+  width:34px;height:34px; border:1.4px solid rgba(232,199,102,0.55);
+  transition:opacity .3s ease, transform .18s ease, width .25s ease, height .25s ease, border-color .25s ease;
+}
+.cursor-ring.hover{
+  width:54px;height:54px; border-color:var(--amber-2); background:rgba(232,199,102,0.08);
+}
+
+/* ============================= PREMIUM GLOW CTA ============================= */
+@property --cang{syntax:'<angle>'; initial-value:0deg; inherits:false;}
+.btn-premium-glow{position:relative;}
+.btn-premium-glow::before{
+  content:''; position:absolute; inset:-2px; border-radius:100px; z-index:-1;
+  background:conic-gradient(from var(--cang), var(--amber-2), transparent 20%, var(--amber) 45%, transparent 70%, var(--amber-2));
+  animation:spinBorder 4s linear infinite;
+  opacity:0; transition:opacity .35s ease;
+}
+.btn-premium-glow:hover::before{opacity:1;}
+@media (prefers-reduced-motion: reduce){ .btn-premium-glow::before{animation:none;} }
+
+/* ============================= EXTRA TILT SURFACES ============================= */
+.value-item, .stat-block, .c-row{ transform-style:preserve-3d; will-change:transform; transition:transform .3s var(--ease); }
 </style>
 
 <script type="application/ld+json">
@@ -1401,6 +1516,22 @@ a:focus-visible, button:focus-visible, input:focus-visible, textarea:focus-visib
 </script>
 </head>
 <body>
+<div class="global-spotlight" id="globalSpotlight" aria-hidden="true"></div>
+<div class="cursor-ring" id="cursorRing" aria-hidden="true"></div>
+<div class="cursor-dot" id="cursorDot" aria-hidden="true"></div>
+
+
+<!-- ============================= PAGE LOAD SEQUENCE ============================= -->
+<div class="preloader" id="preloader" aria-hidden="true">
+  <div class="preloader-mark">
+    <svg viewBox="0 0 44 44" width="44" height="44" fill="none">
+      <circle class="pl-ring" cx="22" cy="22" r="18" stroke="rgba(232,199,102,0.18)" stroke-width="2.5"/>
+      <circle class="pl-arc" cx="22" cy="22" r="18" stroke="url(#plGrad)" stroke-width="2.5" stroke-linecap="round"/>
+      <defs><linearGradient id="plGrad" x1="0" y1="0" x2="44" y2="44"><stop offset="0" stop-color="#E8C766"/><stop offset="1" stop-color="#8FA0E8"/></linearGradient></defs>
+    </svg>
+  </div>
+  <span class="preloader-label">Samal Consultancy</span>
+</div>
 
 <div class="scroll-progress" id="scrollProgress" aria-hidden="true"></div>
 
@@ -1442,37 +1573,41 @@ a:focus-visible, button:focus-visible, input:focus-visible, textarea:focus-visib
 <!-- ============================= HERO ============================= -->
 <header class="hero" id="top">
   <div class="hero-orbs" aria-hidden="true">
-    <span class="orb orb-1"></span>
-    <span class="orb orb-2"></span>
-    <span class="orb orb-3"></span>
+    <span class="orb orb-1" data-depth="0.06"></span>
+    <span class="orb orb-2" data-depth="0.1"></span>
+    <span class="orb orb-3" data-depth="0.14"></span>
   </div>
   <div class="hero-particles" id="heroParticles" aria-hidden="true"></div>
   <div class="cursor-glow" id="cursorGlow" aria-hidden="true"></div>
   <div class="wrap hero-grid">
-    <div class="hero-content reveal in">
-      <div class="est-badge">Est. <b>1993</b> &nbsp;·&nbsp; 30+ Years in Practice</div>
-      <span class="eyebrow">Business Compliance &amp; Advisory</span>
-      <h1>GST, Company &amp; Compliance Consultancy in <em>Nagaon, Tezpur &amp; Assam</em>. Every deadline, met.</h1>
-      <p class="hero-tagline">Providing trusted compliance services since 1993.</p>
-      <p class="lead">Samal Consultancy runs the tax, registration and labour-law compliance behind 70+ businesses across Assam — so nothing slips, nothing lapses, and nothing is left to chance.</p>
-      <div class="hero-actions">
-        <a href="#contact" class="btn btn-gold" data-ripple>Get Free Consultation<span class="btn-shine" aria-hidden="true"></span></a>
+    <div class="hero-content" id="heroContent">
+      <div class="est-badge load-in" style="--d:0">Est. <b>1993</b> &nbsp;·&nbsp; 30+ Years in Practice</div>
+      <span class="eyebrow load-in" style="--d:1">Business Compliance &amp; Advisory</span>
+      <h1 class="load-in" style="--d:2">GST, Company &amp; Compliance Consultancy in <em>Nagaon, Tezpur &amp; Assam</em>. Every deadline, met.</h1>
+      <p class="hero-tagline load-in" style="--d:3">Providing trusted compliance services since 1993.</p>
+      <p class="lead load-in" style="--d:4">Samal Consultancy runs the tax, registration and labour-law compliance behind 70+ businesses across Assam — so nothing slips, nothing lapses, and nothing is left to chance.</p>
+      <div class="hero-actions load-in" style="--d:5">
+        <a href="#contact" class="btn btn-gold btn-premium-glow" data-ripple>Get Free Consultation<span class="btn-shine" aria-hidden="true"></span></a>
         <a href="#services" class="btn btn-ghost" data-ripple>Explore Services<span class="btn-shine" aria-hidden="true"></span></a>
       </div>
-      <div class="trust-row">
+      <div class="trust-row load-in" style="--d:6">
         <div><div class="t-num">70+</div><div class="t-label">Businesses served</div></div>
         <div><div class="t-num">99.2%</div><div class="t-label">On-time filing rate</div></div>
         <div><div class="t-num">30+ yrs</div><div class="t-label">In practice</div></div>
       </div>
     </div>
 
-    <div class="hero-visual reveal in" style="transition-delay:.15s;">
+    <div class="hero-visual load-in" style="--d:3;" data-parallax="0.05">
       <div class="ledger-card">
         <div class="ledger-top">
           <div class="ledger-title"><span class="ledger-dot"></span> Live Compliance Ledger</div>
           <div class="ledger-clock" id="ledgerClock">--:--:--</div>
         </div>
-        <div class="ledger-rows" id="ledgerRows"></div>
+        <div class="ledger-rows" id="ledgerRows">
+          <div class="ledger-skeleton"></div>
+          <div class="ledger-skeleton"></div>
+          <div class="ledger-skeleton"></div>
+        </div>
         <div class="ledger-foot">
           <div><div class="score">100%</div><div class="score-label">Filed before deadline, this cycle</div></div>
           <div style="text-align:right;"><div class="score" style="font-size:13px;color:var(--ivory);">GST · EPFO · ESIC</div><div class="score-label">Auto-reconciled</div></div>
@@ -1491,7 +1626,7 @@ a:focus-visible, button:focus-visible, input:focus-visible, textarea:focus-visib
 <section class="pad" id="about">
   <div class="wrap about-grid">
     <div class="reveal">
-      <div class="about-visual">
+      <div class="about-visual" data-parallax="0.04">
         <span class="quote-mark">"</span>
         <p>We don't sell paperwork. We sell the certainty that your business is standing on solid legal ground.</p>
         <div class="sig">— Subham Kumar Samal, Managing Partner</div>
@@ -1636,7 +1771,7 @@ a:focus-visible, button:focus-visible, input:focus-visible, textarea:focus-visib
     <div class="test-wrap reveal">
       <div class="test-card" data-glare-3d>
         <span class="test-quote-mark">"</span>
-        <div id="testSlides"></div>
+        <div id="testSlides"><p style="color:#8F8B80;font-size:14px;">Loading client stories…</p></div>
       </div>
       <div class="test-dots" id="testDots"></div>
     </div>
@@ -1719,11 +1854,11 @@ a:focus-visible, button:focus-visible, input:focus-visible, textarea:focus-visib
       </div>
       <form class="form-grid" id="contactForm" novalidate>
       <div class="two-col">
-        <div class="field"><input type="text" name="name" placeholder=" " required id="fname"><label>Full name</label></div>
-        <div class="field"><input type="tel" name="phone" placeholder=" " required id="fphone"><label>Phone number</label></div>
+        <div class="field"><input type="text" name="name" placeholder=" " required id="fname"><label>Full name</label><span class="field-error" id="fname-err"></span></div>
+        <div class="field"><input type="tel" name="phone" placeholder=" " required id="fphone" pattern="[0-9+\-\s]{7,15}"><label>Phone number</label><span class="field-error" id="fphone-err"></span></div>
       </div>
-      <div class="field"><input type="email" name="email" placeholder=" " required id="femail"><label>Email address</label></div>
-      <div class="field"><textarea name="message" placeholder=" " required id="fmsg"></textarea><label>What do you need help with?</label></div>
+      <div class="field"><input type="email" name="email" placeholder=" " required id="femail"><label>Email address</label><span class="field-error" id="femail-err"></span></div>
+      <div class="field"><textarea name="message" placeholder=" " required id="fmsg"></textarea><label>What do you need help with?</label><span class="field-error" id="fmsg-err"></span></div>
 
       <!-- honeypot: hidden from real visitors, bots tend to fill every field -->
       <div style="position:absolute;left:-9999px;top:auto;width:1px;height:1px;overflow:hidden;" aria-hidden="true">
@@ -1856,7 +1991,7 @@ a:focus-visible, button:focus-visible, input:focus-visible, textarea:focus-visib
       <span class="eyebrow" style="color:var(--amber-2);">Let's Talk Compliance</span>
       <h3>Ready to hand off your GST, EPFO &amp; ROC filings?</h3>
     </div>
-    <a href="#contact" class="btn btn-gold" data-ripple>Book Free Consultation<span class="btn-shine" aria-hidden="true"></span></a>
+    <a href="#contact" class="btn btn-gold btn-premium-glow" data-ripple>Book Free Consultation<span class="btn-shine" aria-hidden="true"></span></a>
   </div>
 
   <div class="wrap">
@@ -1931,7 +2066,6 @@ a:focus-visible, button:focus-visible, input:focus-visible, textarea:focus-visib
 </div>
 
 
-
 <script>
 /* ============================= DATA ============================= */
 const registryData = [
@@ -1965,19 +2099,64 @@ const testimonials = [
   { text:"A dependable compliance partner for our contracting business — accurate and always ahead of deadlines.", name:"SBB Associates", role:"Contracting", initials:"SB" }
 ];
 
+/* ============================= PAGE-LOAD PRELOADER ============================= */
+const preloaderEl = document.getElementById('preloader');
+function dismissPreloader(){
+  if(!preloaderEl) return;
+  preloaderEl.classList.add('done');
+  setTimeout(()=> preloaderEl.remove(), 700);
+}
+if(document.readyState === 'complete'){ dismissPreloader(); }
+else{
+  window.addEventListener('load', dismissPreloader);
+  // Safety net so a slow/blocked asset never traps the visitor behind the loader
+  setTimeout(dismissPreloader, 2200);
+}
+
 /* ============================= NAVBAR SCROLL ============================= */
 const navbar = document.getElementById('navbar');
 const backToTop = document.getElementById('backToTop');
 const mobileCtaBar = document.getElementById('mobileCtaBar');
 const scrollProgress = document.getElementById('scrollProgress');
-window.addEventListener('scroll', () => {
-  const y = window.scrollY;
+const prefersReduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+const isCoarsePointer = window.matchMedia('(pointer: coarse)').matches;
+
+/* Parallax targets, gathered once */
+const parallaxEls = document.querySelectorAll('[data-parallax]');
+const depthOrbs = document.querySelectorAll('[data-depth]');
+
+let lastKnownScrollY = window.scrollY;
+let ticking = false;
+function onScrollFrame(){
+  const y = lastKnownScrollY;
   navbar.classList.toggle('scrolled', y > 40);
   backToTop.classList.toggle('show', y > 600);
   mobileCtaBar.classList.toggle('show', y > 500);
   const max = document.documentElement.scrollHeight - window.innerHeight;
   scrollProgress.style.width = (max > 0 ? (y / max) * 100 : 0) + '%';
+
+  if(!prefersReduced){
+    parallaxEls.forEach(el=>{
+      const rect = el.getBoundingClientRect();
+      const speed = parseFloat(el.dataset.parallax) || 0.05;
+      const offset = (rect.top - window.innerHeight/2) * speed;
+      el.style.transform = (el.style.transform && el.style.transform.includes('rotate')) ? el.style.transform : `translateY(${offset}px)`;
+      el.style.setProperty('--py-offset', offset + 'px');
+    });
+    depthOrbs.forEach(orb=>{
+      const rect = orb.getBoundingClientRect();
+      const speed = parseFloat(orb.dataset.depth) || 0.08;
+      const offset = (rect.top) * speed;
+      orb.style.transform = `translate3d(0, ${offset}px, 0)`;
+    });
+  }
+  ticking = false;
+}
+window.addEventListener('scroll', ()=>{
+  lastKnownScrollY = window.scrollY;
+  if(!ticking){ requestAnimationFrame(onScrollFrame); ticking = true; }
 }, { passive:true });
+onScrollFrame();
 
 const menuToggle = document.getElementById('menuToggle');
 const navLinks = document.getElementById('navLinks');
@@ -2011,11 +2190,9 @@ document.querySelectorAll('[data-ripple]').forEach(btn=>{
 const heroEl = document.querySelector('.hero');
 const cursorGlow = document.getElementById('cursorGlow');
 const ledgerCard = document.querySelector('.ledger-card');
-const prefersReduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-const isCoarsePointer = window.matchMedia('(pointer: coarse)').matches;
 
 if(heroEl && !prefersReduced && !isCoarsePointer){
-  const heroContentEl = document.querySelector('.hero-content');
+  const heroContentEl = document.getElementById('heroContent');
   const orbEls = document.querySelectorAll('.hero-orbs .orb');
 
   heroEl.addEventListener('mousemove', (e)=>{
@@ -2053,7 +2230,8 @@ if(heroEl && !prefersReduced && !isCoarsePointer){
       const depth = (i + 1) * 14;
       const ox = (px - 0.5) * depth;
       const oy = (py - 0.5) * depth;
-      orb.style.transform = `translate3d(${ox}px, ${oy}px, 0)`;
+      const scrollOffset = orb.style.getPropertyValue('--py-offset') || '0px';
+      orb.style.transform = `translate3d(${ox}px, calc(${oy}px + ${scrollOffset}), 0)`;
     });
   });
 
@@ -2136,7 +2314,8 @@ function renderLedger(){
       <div class="ledger-time">${it.status==='pending'?'ETA 2d':'Just now'}</div>
     </div>`).join('');
 }
-renderLedger();
+/* Small delay lets the skeleton read as an intentional loading state rather than a flash */
+setTimeout(renderLedger, 380);
 function tickClock(){
   const el = document.getElementById('ledgerClock');
   el.textContent = new Date().toLocaleTimeString('en-IN', { hour12:false });
@@ -2241,15 +2420,21 @@ document.getElementById('faqSearch').addEventListener('input', (e)=>{
 /* ============================= TESTIMONIALS ============================= */
 const testSlides = document.getElementById('testSlides');
 const testDots = document.getElementById('testDots');
-testSlides.innerHTML = testimonials.map((t,i)=>`
-  <div class="test-slide ${i===0?'active':''}" data-idx="${i}">
-    <p class="test-text">${t.text}</p>
-    <div class="test-author">
-      <div class="avatar-fallback">${t.initials}</div>
-      <div class="author-meta"><h5>${t.name}</h5><span>${t.role}</span></div>
-    </div>
-  </div>`).join('');
-testDots.innerHTML = testimonials.map((_,i)=>`<button class="test-dot ${i===0?'active':''}" data-idx="${i}"></button>`).join('');
+function renderTestimonials(){
+  testSlides.innerHTML = testimonials.map((t,i)=>`
+    <div class="test-slide ${i===0?'active':''}" data-idx="${i}">
+      <p class="test-text">${t.text}</p>
+      <div class="test-author">
+        <div class="avatar-fallback">${t.initials}</div>
+        <div class="author-meta"><h5>${t.name}</h5><span>${t.role}</span></div>
+      </div>
+    </div>`).join('');
+  testDots.innerHTML = testimonials.map((_,i)=>`<button class="test-dot ${i===0?'active':''}" data-idx="${i}"></button>`).join('');
+  testDots.querySelectorAll('.test-dot').forEach(dot=>{
+    dot.addEventListener('click', ()=> showTest(+dot.dataset.idx));
+  });
+}
+renderTestimonials();
 
 let currentTest = 0;
 function showTest(i){
@@ -2257,9 +2442,6 @@ function showTest(i){
   document.querySelectorAll('.test-dot').forEach((d,idx)=> d.classList.toggle('active', idx===i));
   currentTest = i;
 }
-testDots.querySelectorAll('.test-dot').forEach(dot=>{
-  dot.addEventListener('click', ()=> showTest(+dot.dataset.idx));
-});
 setInterval(()=>{ showTest((currentTest+1) % testimonials.length); }, 5500);
 
 /* Swipe support for testimonials on mobile */
@@ -2336,7 +2518,39 @@ const revealObserver = new IntersectionObserver((entries)=>{
 }, { threshold:0.12 });
 revealEls.forEach(el=>revealObserver.observe(el));
 
-/* ============================= CONTACT FORM ============================= */
+/* ============================= CONTACT FORM VALIDATION + SUBMIT ============================= */
+const validators = {
+  fname: v => v.trim().length >= 2 || 'Please enter your full name.',
+  fphone: v => /^[0-9+\-\s]{7,15}$/.test(v.trim()) || 'Enter a valid phone number.',
+  femail: v => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v.trim()) || 'Enter a valid email address.',
+  fmsg: v => v.trim().length >= 8 || 'Tell us a little more about what you need.'
+};
+function validateField(id){
+  const input = document.getElementById(id);
+  const field = input.closest('.field');
+  const errEl = document.getElementById(id + '-err');
+  const result = validators[id](input.value);
+  field.classList.remove('invalid','valid','animation-none');
+  if(result === true){
+    field.classList.add('valid');
+    errEl.textContent = '';
+    return true;
+  }
+  // restart the shake animation even on repeated invalid submissions
+  void field.offsetWidth;
+  field.classList.add('invalid');
+  errEl.textContent = result;
+  return false;
+}
+['fname','fphone','femail','fmsg'].forEach(id=>{
+  const input = document.getElementById(id);
+  input.addEventListener('blur', ()=> validateField(id));
+  input.addEventListener('input', ()=>{
+    const field = input.closest('.field');
+    if(field.classList.contains('invalid')) validateField(id);
+  });
+});
+
 document.getElementById('contactForm').addEventListener('submit', async function(e){
   e.preventDefault();
   const form = this;
@@ -2346,6 +2560,14 @@ document.getElementById('contactForm').addEventListener('submit', async function
 
   // Honeypot check — if a bot filled the hidden field, quietly stop.
   if (document.getElementById('fwebsite').value.trim() !== '') return;
+
+  const allValid = ['fname','fphone','femail','fmsg'].map(validateField).every(Boolean);
+  if(!allValid){
+    statusEl.style.display = 'block';
+    statusEl.className = 'form-status error';
+    statusEl.textContent = 'Please fix the highlighted fields before sending.';
+    return;
+  }
 
   btn.disabled = true;
   btn.innerHTML = 'Sending…';
@@ -2370,6 +2592,7 @@ document.getElementById('contactForm').addEventListener('submit', async function
       statusEl.className = 'form-status success';
       statusEl.textContent = data.message;
       form.reset();
+      ['fname','fphone','femail','fmsg'].forEach(id=> document.getElementById(id).closest('.field').classList.remove('valid','invalid'));
     } else {
       statusEl.className = 'form-status error';
       statusEl.textContent = data.message || 'Something went wrong. Please try again or call us directly.';
@@ -2457,6 +2680,48 @@ if(footerEl && !prefersReduced && !isCoarsePointer){
 
 /* ============================= FOOTER YEAR ============================= */
 document.getElementById('year').textContent = new Date().getFullYear();
+
+const spotlightEl = document.getElementById('globalSpotlight');
+if(spotlightEl && !prefersReduced && !isCoarsePointer){
+  spotlightEl.classList.add('on');
+  window.addEventListener('mousemove', (e)=>{
+    spotlightEl.style.setProperty('--sx', e.clientX + 'px');
+    spotlightEl.style.setProperty('--sy', e.clientY + 'px');
+  }, { passive:true });
+}
+
+const cursorDot = document.getElementById('cursorDot');
+const cursorRing = document.getElementById('cursorRing');
+if(cursorDot && cursorRing && !prefersReduced && window.matchMedia('(pointer: fine)').matches){
+  document.documentElement.classList.add('has-custom-cursor');
+  let mx=0,my=0, rx=0, ry=0;
+  window.addEventListener('mousemove', (e)=>{
+    mx = e.clientX; my = e.clientY;
+    cursorDot.style.left = mx+'px'; cursorDot.style.top = my+'px';
+  }, { passive:true });
+  function ringLoop(){
+    rx += (mx-rx)*0.18; ry += (my-ry)*0.18;
+    cursorRing.style.left = rx+'px'; cursorRing.style.top = ry+'px';
+    requestAnimationFrame(ringLoop);
+  }
+  ringLoop();
+  document.querySelectorAll('a, button, .chip, .core-card, .prod-card, input, textarea').forEach(el=>{
+    el.addEventListener('mouseenter', ()=> cursorRing.classList.add('hover'));
+    el.addEventListener('mouseleave', ()=> cursorRing.classList.remove('hover'));
+  });
+}
+
+if(!prefersReduced && !isCoarsePointer){
+  document.querySelectorAll('.value-item, .stat-block, .c-row').forEach(el=>{
+    el.addEventListener('mousemove', (e)=>{
+      const r = el.getBoundingClientRect();
+      const px = (e.clientX - r.left) / r.width;
+      const py = (e.clientY - r.top) / r.height;
+      el.style.transform = `rotateY(${(px-0.5)*5}deg) rotateX(${(0.5-py)*5}deg) translateZ(4px)`;
+    });
+    el.addEventListener('mouseleave', ()=>{ el.style.transform = ''; });
+  });
+}
 </script>
 </body>
 </html>
