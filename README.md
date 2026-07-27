@@ -240,7 +240,7 @@ Everything below lives in `taskvel-pro.php`'s inline script and reflects the act
 
 | Function | What it does |
 |---|---|
-| `recordActivity()` | Bumps the daily streak counter once per calendar day, resetting it if a day was missed. |
+| `recordActivity()` | Bumps the daily streak counter once per calendar day, resets it if a day is missed, and automatically celebrates productivity milestones at 7, 30, 100, and 365 consecutive days. |
 | `tasksCompletedToday()` | Counts tasks completed today, used by the goal bar and the productivity score. |
 | `computeProductivityScore()` | Blends completion rate (40%), streak length (30%), and today's focus minutes (30%) into one 0–100 number. |
 | `renderGoalBar()` / `setDailyGoal()` / `checkDailyGoal()` | Render the "N / goal tasks" progress strip, let the user change their daily target, and fire a one-time celebration the first time the goal is hit each day. |
@@ -264,10 +264,13 @@ Everything below lives in `taskvel-pro.php`'s inline script and reflects the act
 | `smartParseTask(raw)` | The natural-language engine: strips `#tags`, urgency keywords (`!critical`/`urgent`/`high`/`medium`/`low`), and relative dates (`today`, `tomorrow`, `next monday`, `in 3 days`) out of the typed title and returns them as structured fields. |
 | `openEdit(id)` / `saveEdit()` / `closeEdit()` | Open the edit sheet pre-filled with a task's current fields (including steps, links, tags), save all changes back, and close the sheet. |
 | `toggleStep(id, i)` / `completeTask(t)` | Toggle one subtask; if every subtask becomes done, auto-completes the parent task, fires the celebration, and (if recurring) spawns the next occurrence. |
-| `markDone(id)` / `markUndone(id)` | Manually complete or reopen a task; completing clears its "Today" selection flag, records streak activity, and checks the daily goal. |
+| `markDone(id)` / `markUndone(id)` | Manually complete or reopen a task. Completing a task now includes a temporary **Undo** action, clears its "Today" selection, records streak activity, checks the daily goal, and syncs the change across devices. |
 | `snoozeTask(id)` | Pushes a task's deadline forward by exactly one day. |
 | `delTask(id)` | Removes a task with a smooth exit animation and a 4.5-second **Undo** toast that fully restores the task and its remarks if tapped. |
 | `togglePin(id)` | Pins/unpins a task to the top of its list. |
+| `duplicateTask(id)` | Instantly creates a copy of an existing task, including subtasks, while resetting completion status and tracking fields. |
+| `clearCompleted()` | Removes all completed tasks and their related remarks in a single action, with automatic server synchronization. |
+| `copyTaskText(id)` *(optional)* | Copies a task, checklist, and due date as plain text for quick sharing. |
 | `flash(id)` | Brief highlight animation used after completing or restoring a task. |
 | `startTimeTracking(id)` / `stopTimeTracking(id)` | Start/stop a live stopwatch on a task, accumulating into `timeSpent` used by the Time Report tab. |
 
@@ -332,7 +335,7 @@ Everything below lives in `taskvel-pro.php`'s inline script and reflects the act
 | `openCustomTimer()` / `closeCustomTimer()` / `saveCustomTimer()` | Configure and persist a custom focus/break length. |
 | `setFocusTask(id)` | Attaches the timer to a specific task and auto-starts it. |
 | `miniTimerClick/Toggle/Stop` + drag handlers | Let the floating mini-timer be clicked (scrolls back to the full timer), paused/resumed, stopped, or dragged anywhere on screen — all without leaving whatever else you're doing in the app. |
-| `chime()` | Generates a two-tone completion sound with the Web Audio API — no audio file dependency. |
+| `toggleMute()` / `isMuted()` / `chime()` | Lets users mute or unmute completion sounds, remembers the preference locally, and generates a lightweight Web Audio completion chime when enabled. |
 
 ### Notifications & briefing
 
