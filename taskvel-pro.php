@@ -4585,6 +4585,7 @@ $user = current_user();
             if (typeof t.collab !== 'string') t.collab = '';
             if (typeof t.order !== 'number') t.order = t.id || 0;
             if (!Array.isArray(t.links)) t.links = [];
+            if (typeof t.selectedForToday !== 'boolean') t.selectedForToday = false;
         });
         try {
             dailyGoal = parseInt(localStorage.getItem(LS_GOAL)) || 5;
@@ -4789,6 +4790,7 @@ $user = current_user();
             links: t.links || [],
             steps: t.steps || [],
             pinned: !!t.pinned,
+            selectedForToday: !!t.selectedForToday,
             done: !!t.done,
             doneAt: t.doneAt || null,
             addedOn: t.addedOn,
@@ -4834,6 +4836,7 @@ $user = current_user();
                 if (typeof t.collab !== 'string') t.collab = '';
                 if (typeof t.order !== 'number') t.order = t.id || 0;
                 if (!Array.isArray(t.links)) t.links = [];
+                if (typeof t.selectedForToday !== 'boolean') t.selectedForToday = false;
             });
             localStorage.setItem(LS_T, JSON.stringify(tasks));
             render();
@@ -5357,6 +5360,7 @@ $user = current_user();
             score: t.score,
             deadline: newDeadline,
             pinned: false,
+            selectedForToday: false,
             recur: t.recur,
             tags: (t.tags || []).slice(),
             steps: (t.steps || []).map(s => ({
@@ -5879,8 +5883,7 @@ $user = current_user();
         document.getElementById('tabs').innerHTML = TABS.map(([k, lbl]) => {
             let c = '';
             if (k === 'all') c = tasks.length;
-            else if (k === 'today') c = tasks.filter(t => !t.done && ['critical', 'high'].includes(effRank(t)))
-                .length;
+            else if (k === 'today') c = getTodayList().length;
             else if (k === 'pending') c = tasks.filter(t => !t.done).length;
             else if (k === 'done') c = tasks.filter(t => t.done).length;
             else if (k === 'remarks') c = remarks.length;
@@ -5910,10 +5913,16 @@ $user = current_user();
     // ════════════════════════════════════════════
     // RENDER TASKS
     // ════════════════════════════════════════════
+    function getTodayList() {
+        const anySelected = tasks.some(t => !t.done && t.selectedForToday);
+        return anySelected
+            ? tasks.filter(t => !t.done && t.selectedForToday)
+            : tasks.filter(t => !t.done && ['critical', 'high'].includes(effRank(t)));
+    }
     function getFiltered() {
         const q = document.getElementById('search').value.trim().toLowerCase();
         let list = tasks.slice();
-        if (filter === 'today') list = list.filter(t => !t.done && ['critical', 'high'].includes(effRank(t)));
+        if (filter === 'today') list = getTodayList();
         else if (filter === 'pending') list = list.filter(t => !t.done);
         else if (filter === 'done') list = list.filter(t => t.done);
         if (activeTag) list = list.filter(t => (t.tags || []).includes(activeTag));
@@ -6072,6 +6081,7 @@ $user = current_user();
                 ${prog}${steps}${rmk}
                 <div class="actions">
                     ${t.done ? `<button class="act" onclick="markUndone(${t.id})">↺ Undo</button>` : `<button class="act done-act" onclick="markDone(${t.id})">✓ Done</button>`}
+                    ${!t.done ? `<button class="act" onclick="toggleToday(${t.id})" title="${t.selectedForToday ? 'Remove from Today' : 'Pick this for Today'}">${t.selectedForToday ? '✓ In Today' : '+ Today'}</button>` : ''}
                     <button class="act focus-act" onclick="setFocusTask(${t.id})">◉ Focus</button>
                     ${t.timeTrackingStarted ? `<button class="act" onclick="stopTimeTracking(${t.id})">◼ Stop</button>` : `<button class="act" onclick="startTimeTracking(${t.id})">▶ Track</button>`}
                     ${(!t.done && t.deadline) ? `<button class="act" onclick="snoozeTask(${t.id})">💤 Snooze</button>` : ''}
@@ -6231,6 +6241,7 @@ $user = current_user();
     function completeTask(t) {
         t.done = true;
         t.doneAt = new Date().toISOString();
+        t.selectedForToday = false;
         touch(t);
         recordActivity();
         toast('All steps done — task complete ✓');
@@ -6246,6 +6257,7 @@ $user = current_user();
         if (t) {
             t.done = true;
             t.doneAt = new Date().toISOString();
+            t.selectedForToday = false;
             t.steps.forEach(s => s.done = true);
             touch(t);
             save();
@@ -6333,6 +6345,17 @@ $user = current_user();
             upsertTaskOnServer(t);
             toast(t.pinned ? 'Pinned to top ★' : 'Unpinned')
         }
+    }
+    function toggleToday(id) {
+        const t = tasks.find(t => t.id === id);
+        if (!t) return;
+        t.selectedForToday = !t.selectedForToday;
+        touch(t);
+        save();
+        render();
+        renderTabs();
+        upsertTaskOnServer(t);
+        toast(t.selectedForToday ? 'Added to Today ✓' : 'Removed from Today');
     }
 
     function flash(id) {
@@ -6515,6 +6538,7 @@ $user = current_user();
                 tags: formTags.slice(),
                 links: [],
                 pinned: false,
+                selectedForToday: false,
                 steps: ['f-s1', 'f-s2', 'f-s3'].map(i => document.getElementById(i).value.trim())
                     .filter(Boolean).map(t => ({
                         text: t,
