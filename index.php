@@ -1426,6 +1426,63 @@ section[id], header[id]{ scroll-margin-top:88px; }
 
 /* ============================= EXTRA TILT SURFACES ============================= */
 .value-item, .stat-block, .c-row{ transform-style:preserve-3d; will-change:transform; transition:transform .3s var(--ease); }
+
+/* ============================= CORE SERVICES: 3D FLIP ============================= */
+.core-card{ perspective:1200px; height:auto; }
+.core-flip{
+  position:relative; width:100%; min-height:230px;
+  transform-style:preserve-3d; transition:transform .7s var(--ease);
+}
+.core-card.flipped .core-flip{ transform:rotateY(180deg); }
+.core-face{
+  backface-visibility:hidden; -webkit-backface-visibility:hidden;
+}
+.core-face.front{ position:relative; }
+.core-face.back{
+  position:absolute; inset:0; transform:rotateY(180deg);
+  display:flex; flex-direction:column; justify-content:center; align-items:flex-start;
+  background:linear-gradient(160deg,var(--teal-deep),var(--navy-ink));
+  border-radius:var(--radius-md); padding:26px; color:var(--ivory);
+}
+.core-face.back h4{color:var(--amber-2); font-size:15px; margin-bottom:10px;}
+.core-face.back p{color:rgba(250,247,242,0.75); font-size:13.5px;}
+.core-flip-hint{
+  position:absolute; top:14px; right:14px; font-size:11px; color:#8F8B80;
+  font-family:var(--font-eyebrow); letter-spacing:.05em; text-transform:uppercase;
+  display:flex; align-items:center; gap:5px; cursor:pointer; z-index:2;
+}
+.core-flip-hint::before{ content:'⟲'; font-size:13px; }
+
+/* ============================= MAGNETIC NAV ============================= */
+.nav-links a{ display:inline-block; transition:transform .25s var(--ease), color .3s ease; }
+.brand-logo, .brand-mark{ transform-style:preserve-3d; transition:transform .35s var(--ease); }
+
+/* ============================= HERO SCROLL DEPTH ============================= */
+.hero{ transform-style:preserve-3d; }
+.hero-grid{ transition:transform .1s linear, opacity .1s linear; will-change:transform, opacity; }
+
+/* ============================= FAQ 3D SPOTLIGHT ============================= */
+.faq-item{ transform-style:preserve-3d; }
+.faq-item::after{
+  content:''; position:absolute; inset:0; border-radius:14px; pointer-events:none; z-index:0;
+  background:radial-gradient(220px circle at var(--qx,50%) var(--qy,0%), rgba(232,199,102,0.10), transparent 60%);
+  opacity:0; transition:opacity .35s ease;
+}
+.faq-item:hover::after{ opacity:1; }
+.faq-q, .faq-a{ position:relative; z-index:1; }
+
+/* ============================= 3D SPINNING BADGE ============================= */
+.est-badge{ perspective:400px; }
+.est-badge b{
+  display:inline-block; transform-style:preserve-3d;
+  animation:coinSpin 5s linear infinite;
+}
+@keyframes coinSpin{
+  0%,100%{ transform:rotateY(0deg); }
+  50%{ transform:rotateY(360deg); }
+}
+@media (prefers-reduced-motion: reduce){ .est-badge b{ animation:none; } }
+
 </style>
 
 <script type="application/ld+json">
@@ -1674,10 +1731,34 @@ section[id], header[id]{ scroll-margin-top:88px; }
       <h2>GST, EPFO/ESIC and company registration — the four pillars businesses across Assam lean on us for most.</h2>
     </div>
     <div class="core-grid stagger reveal">
-      <div class="core-card" style="--i:0" data-glare><span class="core-glare" aria-hidden="true"></span><div class="core-icon">◈</div><h3>GST Registration &amp; Return Filing</h3><p>End-to-end GST — registration, monthly/annual returns, reconciliation and notice handling.</p><a href="#registry" class="core-link">View scope <span class="arrow">→</span></a></div>
-      <div class="core-card" style="--i:1" data-glare><span class="core-glare" aria-hidden="true"></span><div class="core-icon">◆</div><h3>EPFO &amp; ESIC Compliance</h3><p>Registration, monthly ECR filing, UAN activation and employee benefit administration.</p><a href="#registry" class="core-link">View scope <span class="arrow">→</span></a></div>
-      <div class="core-card" style="--i:2" data-glare><span class="core-glare" aria-hidden="true"></span><div class="core-icon">◇</div><h3>Business Registrations</h3><p>Udyam, FSSAI, IEC, Trademark, and Shop &amp; Establishment — set up correctly, first time.</p><a href="#registry" class="core-link">View scope <span class="arrow">→</span></a></div>
-      <div class="core-card" style="--i:3" data-glare><span class="core-glare" aria-hidden="true"></span><div class="core-icon">◉</div><h3>Payroll &amp; Bookkeeping</h3><p>Accurate payroll, statutory deductions and books that are always audit-ready.</p><a href="#registry" class="core-link">View scope <span class="arrow">→</span></a></div>
+      <div class="core-card" style="--i:0" data-glare><span class="core-glare" aria-hidden="true"></span>
+        <div class="core-flip">
+          <span class="core-flip-hint">Flip</span>
+          <div class="core-face front"><div class="core-icon">◈</div><h3>GST Registration &amp; Return Filing</h3><p>End-to-end GST — registration, monthly/annual returns, reconciliation and notice handling.</p><a href="#registry" class="core-link">View scope <span class="arrow">→</span></a></div>
+          <div class="core-face back"><h4>Why it matters</h4><p>Late or incorrect GST filings trigger interest, penalties and blocked e-way bills — we keep every return filed before the deadline, every cycle.</p></div>
+        </div>
+      </div>
+      <div class="core-card" style="--i:1" data-glare><span class="core-glare" aria-hidden="true"></span>
+        <div class="core-flip">
+          <span class="core-flip-hint">Flip</span>
+          <div class="core-face front"><div class="core-icon">◆</div><h3>EPFO &amp; ESIC Compliance</h3><p>Registration, monthly ECR filing, UAN activation and employee benefit administration.</p><a href="#registry" class="core-link">View scope <span class="arrow">→</span></a></div>
+          <div class="core-face back"><h4>Why it matters</h4><p>Missed ECR filings put employee PF and insurance benefits at risk — our team tracks every due date so your workforce stays covered.</p></div>
+        </div>
+      </div>
+      <div class="core-card" style="--i:2" data-glare><span class="core-glare" aria-hidden="true"></span>
+        <div class="core-flip">
+          <span class="core-flip-hint">Flip</span>
+          <div class="core-face front"><div class="core-icon">◇</div><h3>Business Registrations</h3><p>Udyam, FSSAI, IEC, Trademark, and Shop &amp; Establishment — set up correctly, first time.</p><a href="#registry" class="core-link">View scope <span class="arrow">→</span></a></div>
+          <div class="core-face back"><h4>Why it matters</h4><p>A wrong registration category can cost months of rework — we map the right licenses to your business from day one.</p></div>
+        </div>
+      </div>
+      <div class="core-card" style="--i:3" data-glare><span class="core-glare" aria-hidden="true"></span>
+        <div class="core-flip">
+          <span class="core-flip-hint">Flip</span>
+          <div class="core-face front"><div class="core-icon">◉</div><h3>Payroll &amp; Bookkeeping</h3><p>Accurate payroll, statutory deductions and books that are always audit-ready.</p><a href="#registry" class="core-link">View scope <span class="arrow">→</span></a></div>
+          <div class="core-face back"><h4>Why it matters</h4><p>Clean books mean faster loans, smoother audits and no year-end scramble — we reconcile every month, not just at filing time.</p></div>
+        </div>
+      </div>
     </div>
   </div>
 </section>
@@ -2120,6 +2201,7 @@ const mobileCtaBar = document.getElementById('mobileCtaBar');
 const scrollProgress = document.getElementById('scrollProgress');
 const prefersReduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 const isCoarsePointer = window.matchMedia('(pointer: coarse)').matches;
+const heroEl = document.querySelector('.hero');
 
 /* Parallax targets, gathered once */
 const parallaxEls = document.querySelectorAll('[data-parallax]');
@@ -2134,6 +2216,14 @@ function onScrollFrame(){
   mobileCtaBar.classList.toggle('show', y > 500);
   const max = document.documentElement.scrollHeight - window.innerHeight;
   scrollProgress.style.width = (max > 0 ? (y / max) * 100 : 0) + '%';
+  const heroGridEl = document.querySelector('.hero-grid');
+  if(heroGridEl && !prefersReduced){
+    const heroH = heroEl ? heroEl.offsetHeight : window.innerHeight;
+    const p = Math.min(y / heroH, 1);
+    heroGridEl.style.transform = `translateY(${p*60}px) scale(${1 - p*0.06}) rotateX(${p*4}deg)`;
+    heroGridEl.style.opacity = 1 - p*0.7;
+  }
+
 
   if(!prefersReduced){
     parallaxEls.forEach(el=>{
@@ -2187,7 +2277,6 @@ document.querySelectorAll('[data-ripple]').forEach(btn=>{
 });
 
 /* ============================= HERO INTERACTIVITY ============================= */
-const heroEl = document.querySelector('.hero');
 const cursorGlow = document.getElementById('cursorGlow');
 const ledgerCard = document.querySelector('.ledger-card');
 
@@ -2722,6 +2811,49 @@ if(!prefersReduced && !isCoarsePointer){
     el.addEventListener('mouseleave', ()=>{ el.style.transform = ''; });
   });
 }
+
+document.querySelectorAll('.core-card').forEach(card=>{
+  card.addEventListener('click', (e)=>{
+    if(e.target.closest('.core-link')) return;
+    card.classList.toggle('flipped');
+  });
+});
+
+if(!prefersReduced && !isCoarsePointer){
+  document.querySelectorAll('.nav-links a').forEach(link=>{
+    link.addEventListener('mousemove', (e)=>{
+      const r = link.getBoundingClientRect();
+      const mx = e.clientX - r.left - r.width/2;
+      link.style.transform = `translateX(${mx*0.25}px)`;
+    });
+    link.addEventListener('mouseleave', ()=>{ link.style.transform=''; });
+  });
+  const brandEl = document.querySelector('.navbar .brand');
+  if(brandEl){
+    brandEl.addEventListener('mousemove', (e)=>{
+      const r = brandEl.getBoundingClientRect();
+      const px = (e.clientX - r.left) / r.width;
+      const py = (e.clientY - r.top) / r.height;
+      const logo = brandEl.querySelector('.brand-logo, .brand-mark');
+      if(logo) logo.style.transform = `rotateY(${(px-0.5)*24}deg) rotateX(${(0.5-py)*24}deg)`;
+    });
+    brandEl.addEventListener('mouseleave', ()=>{
+      const logo = brandEl.querySelector('.brand-logo, .brand-mark');
+      if(logo) logo.style.transform = '';
+    });
+  }
+}
+
+if(!prefersReduced && !isCoarsePointer){
+  faqList.addEventListener('mousemove', (e)=>{
+    const item = e.target.closest('.faq-item');
+    if(!item) return;
+    const r = item.getBoundingClientRect();
+    item.style.setProperty('--qx', ((e.clientX - r.left)/r.width*100) + '%');
+    item.style.setProperty('--qy', ((e.clientY - r.top)/r.height*100) + '%');
+  });
+}
+
 </script>
 </body>
 </html>
