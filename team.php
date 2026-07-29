@@ -48,6 +48,24 @@ if (!$role) { header('Location: teams.php'); exit; }
     .event-main { min-width:0; flex:1; }
     .proj-tag { font-size:10px; font-family:var(--font-display); font-weight:700; padding:3px 9px; border-radius:999px;
         background:var(--accent-soft); color:var(--accent); }
+
+    /* Team Tasks */
+    .tt-card { display:flex; flex-direction:column; gap:8px; }
+    .tt-top { display:flex; justify-content:space-between; align-items:flex-start; gap:10px; }
+    .tt-title { font-family:var(--font-display); font-weight:700; font-size:14.5px; }
+    .tt-meta { font-size:11.5px; color:var(--ink3); margin-top:3px; display:flex; gap:10px; flex-wrap:wrap; align-items:center; }
+    .tt-pill { font-size:10px; font-family:var(--font-display); font-weight:700; padding:3px 9px; border-radius:999px; text-transform:capitalize; }
+    .tt-pill.pri-low { background:var(--bg-sunk); color:var(--ink3); }
+    .tt-pill.pri-medium { background:var(--accent-soft); color:var(--accent); }
+    .tt-pill.pri-high { background:var(--warn-soft); color:var(--warn); }
+    .tt-pill.pri-urgent { background:var(--bad-soft); color:var(--bad); }
+    .tt-pill.status-todo { background:var(--bg-sunk); color:var(--ink3); }
+    .tt-pill.status-in_progress { background:var(--warn-soft); color:var(--warn); }
+    .tt-pill.status-done { background:var(--good-soft); color:var(--good); }
+    .tt-bar { height:6px; border-radius:4px; background:var(--bg-sunk); overflow:hidden; }
+    .tt-bar i { display:block; height:100%; background:var(--accent); border-radius:4px; }
+    .tt-actions { display:flex; gap:6px; align-items:center; flex-wrap:wrap; }
+    .tt-progress-input { width:70px; }
 </style>
 </head>
 <body>
@@ -60,6 +78,11 @@ if (!$role) { header('Location: teams.php'); exit; }
     <section>
         <h2>📅 Events <button class="btn sm" onclick="openEventModal()">+ New event</button></h2>
         <div class="card-list" id="event-list"></div>
+    </section>
+
+    <section id="team-tasks">
+        <h2>✅ Team Tasks <button class="btn sm" onclick="openAssignTask()">+ Assign task</button></h2>
+        <div class="card-list" id="team-task-list"></div>
     </section>
 
     <section>
@@ -94,6 +117,32 @@ if (!$role) { header('Location: teams.php'); exit; }
         <div class="modal-actions">
             <button class="btn ghost" onclick="closeInvite()">Cancel</button>
             <button class="btn" onclick="submitInvite()">Send invite</button>
+        </div>
+    </div>
+</div>
+
+<!-- Assign team task modal -->
+<div class="modal-overlay" id="tt-overlay" onclick="if(event.target===this)closeAssignTask()">
+    <div class="modal">
+        <h2 id="tt-modal-title">Assign a task</h2>
+        <input type="hidden" id="tt-id" />
+        <div class="fg"><label>Title</label><input type="text" id="tt-title" maxlength="255" placeholder="e.g. Prepare client proposal" /></div>
+        <div class="fg"><label>Description (optional)</label><textarea id="tt-desc" rows="3" placeholder="Any details the assignee needs…"></textarea></div>
+        <div class="row2">
+            <div class="fg"><label>Assign to</label><select id="tt-assignee"></select></div>
+            <div class="fg"><label>Priority</label>
+                <select id="tt-priority">
+                    <option value="low">Low</option>
+                    <option value="medium" selected>Medium</option>
+                    <option value="high">High</option>
+                    <option value="urgent">Urgent</option>
+                </select>
+            </div>
+        </div>
+        <div class="fg"><label>Due date (optional)</label><input type="date" id="tt-due" /></div>
+        <div class="modal-actions">
+            <button class="btn ghost" onclick="closeAssignTask()">Cancel</button>
+            <button class="btn" id="tt-save-btn" onclick="submitAssignTask()">Assign task</button>
         </div>
     </div>
 </div>
@@ -179,6 +228,9 @@ async function loadAll() {
         projects = p;
         renderProjects();
     } catch (e) { document.getElementById('project-list').innerHTML = `<div class="empty">Couldn't load projects.</div>`; }
+
+    // Team tasks (after members, so assignee names/pickers always resolve to real people)
+    loadTeamTasks();
 
     // Events (after members, so attendees always resolve to real people)
     loadEvents();
@@ -345,6 +397,126 @@ async function rsvp(eventId, status) {
 async function deleteEvent(eventId) {
     if (!confirm('Delete this event?')) return;
     try { await Taskvel.request(`/api/team_events.php?action=delete&id=${eventId}`, { method:'DELETE' }); loadEvents(); }
+    catch (e) { toast(e.message); }
+}
+
+// ─────────── Team Tasks (Feature 1: assign tasks directly to team members) ───────────
+let teamTasks = [];
+let editingTeamTaskId = null;
+
+async function loadTeamTasks() {
+    const list = document.getElementById('team-task-list');
+    try {
+        const { tasks } = await Taskvel.request(`/api/team_tasks.php?action=list&team_id=${TEAM_ID}`);
+        teamTasks = tasks;
+        renderTeamTasks();
+    } catch (e) {
+        list.innerHTML = `<div class="empty">Couldn't load team tasks — ${esc(e.message)}.<br><small>If this is a fresh setup, run <b>sql/migration_09_team_tasks.sql</b>.</small></div>`;
+    }
+}
+
+function renderTeamTasks() {
+    const list = document.getElementById('team-task-list');
+    if (!teamTasks.length) {
+        list.innerHTML = `<div class="empty"><span class="ic">✅</span>No team tasks yet. Assign one to get a teammate moving on it.</div>`;
+        return;
+    }
+    list.innerHTML = teamTasks.map(t => {
+        const isAssignee = t.assignee_id == MY_USER_ID;
+        const canEdit = IS_MANAGER;
+        const canDelete = IS_MANAGER || t.created_by == MY_USER_ID;
+        const overdue = t.due_date && t.due_date < new Date().toISOString().slice(0,10) && t.status !== 'done';
+        return `
+        <div class="card tt-card" data-id="${t.id}">
+            <div class="tt-top">
+                <div>
+                    <div class="tt-title">${esc(t.title)}</div>
+                    <div class="tt-meta">
+                        <span class="tt-pill pri-${t.priority}">${t.priority}</span>
+                        <span class="tt-pill status-${t.status}">${t.status.replace('_',' ')}</span>
+                        ${t.assignee_name ? `<span>👤 ${esc(t.assignee_name)}</span>` : `<span>Unassigned</span>`}
+                        ${t.due_date ? `<span style="${overdue ? 'color:var(--bad)' : ''}">📅 ${esc(t.due_date)}</span>` : ''}
+                    </div>
+                    ${t.description ? `<div style="font-size:12.5px;color:var(--ink2);margin-top:6px;line-height:1.5">${esc(t.description)}</div>` : ''}
+                </div>
+            </div>
+            <div class="tt-bar"><i style="width:${t.progress}%"></i></div>
+            <div class="tt-actions">
+                <span style="font-size:11px;color:var(--ink3)">${t.progress}% complete</span>
+                ${isAssignee || canEdit ? `
+                    <select class="role-select" style="padding:5px 7px;font-size:11px" onchange="updateTeamTaskStatus(${t.id}, this.value)">
+                        <option value="todo" ${t.status==='todo'?'selected':''}>To do</option>
+                        <option value="in_progress" ${t.status==='in_progress'?'selected':''}>In progress</option>
+                        <option value="done" ${t.status==='done'?'selected':''}>Done</option>
+                    </select>
+                    <input class="tt-progress-input" type="range" min="0" max="100" value="${t.progress}"
+                        title="Update progress" onchange="updateTeamTaskProgress(${t.id}, this.value)" />
+                ` : ''}
+                ${canEdit ? `<button class="btn ghost sm" onclick="openAssignTask(${escAttr(t)})">Reassign / edit</button>` : ''}
+                ${canDelete ? `<button class="btn ghost sm" style="color:var(--bad)" onclick="deleteTeamTask(${t.id})">Delete</button>` : ''}
+            </div>
+        </div>`;
+    }).join('');
+}
+
+function escAttr(obj) { return JSON.stringify(obj).replace(/'/g, "&#39;").replace(/"/g, '&quot;'); }
+
+function populateAssigneeSelect(selectedId = null) {
+    const sel = document.getElementById('tt-assignee');
+    const options = IS_MANAGER ? members : members.filter(m => m.id == MY_USER_ID);
+    sel.innerHTML = options.map(m => `<option value="${m.id}" ${m.id == (selectedId ?? MY_USER_ID) ? 'selected' : ''}>${esc(m.name)}${m.id == MY_USER_ID ? ' (you)' : ''}</option>`).join('');
+}
+
+function openAssignTask(task = null) {
+    if (typeof task === 'string') task = JSON.parse(task.replace(/&quot;/g, '"').replace(/&#39;/g, "'"));
+    editingTeamTaskId = task ? task.id : null;
+    document.getElementById('tt-modal-title').textContent = task ? 'Edit task' : 'Assign a task';
+    document.getElementById('tt-save-btn').textContent = task ? 'Save changes' : 'Assign task';
+    document.getElementById('tt-title').value = task ? task.title : '';
+    document.getElementById('tt-desc').value = task ? (task.description || '') : '';
+    document.getElementById('tt-priority').value = task ? task.priority : 'medium';
+    document.getElementById('tt-due').value = task ? (task.due_date || '') : '';
+    populateAssigneeSelect(task ? task.assignee_id : MY_USER_ID);
+    document.getElementById('tt-overlay').classList.add('open');
+    document.getElementById('tt-title').focus();
+}
+function closeAssignTask() { document.getElementById('tt-overlay').classList.remove('open'); editingTeamTaskId = null; }
+
+async function submitAssignTask() {
+    const title = document.getElementById('tt-title').value.trim();
+    if (!title) { toast('Give the task a title'); return; }
+    const payload = {
+        team_id: TEAM_ID, title,
+        description: document.getElementById('tt-desc').value.trim(),
+        priority: document.getElementById('tt-priority').value,
+        assignee_id: document.getElementById('tt-assignee').value || null,
+        due_date: document.getElementById('tt-due').value || null,
+    };
+    try {
+        if (editingTeamTaskId) {
+            payload.id = editingTeamTaskId;
+            await Taskvel.request('/api/team_tasks.php?action=update', { method:'POST', body: payload });
+            toast('Task updated ✓');
+        } else {
+            await Taskvel.request('/api/team_tasks.php?action=create', { method:'POST', body: payload });
+            toast('Task assigned ✓');
+        }
+        closeAssignTask();
+        loadTeamTasks();
+    } catch (e) { toast(e.message || 'Could not save task'); }
+}
+
+async function updateTeamTaskStatus(id, status) {
+    try { await Taskvel.request('/api/team_tasks.php?action=update', { method:'POST', body:{ id, status } }); loadTeamTasks(); }
+    catch (e) { toast(e.message); loadTeamTasks(); }
+}
+async function updateTeamTaskProgress(id, progress) {
+    try { await Taskvel.request('/api/team_tasks.php?action=update', { method:'POST', body:{ id, progress: parseInt(progress, 10) } }); loadTeamTasks(); }
+    catch (e) { toast(e.message); loadTeamTasks(); }
+}
+async function deleteTeamTask(id) {
+    if (!confirm('Delete this task?')) return;
+    try { await Taskvel.request(`/api/team_tasks.php?action=delete&id=${id}`, { method:'DELETE' }); loadTeamTasks(); }
     catch (e) { toast(e.message); }
 }
 
