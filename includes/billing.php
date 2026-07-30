@@ -1,93 +1,88 @@
 <?php
-require_once __DIR__ . '/../config/db.php';
+require_once __DIR__ . '/../includes/licensing.php';
+require_once __DIR__ . '/../includes/stripe_client.php';
+require_once __DIR__ . '/../config/stripe.php';
+require_login();
 
-// The account holder's personal Taskvel Pro plan ('free' | 'pro'). Dormant
-// column from migration_02 — this is its first real consumer.
-function user_plan(int $userId): string
-{
-    try {
-        $stmt = db()->prepare('SELECT plan FROM users WHERE id = ?');
-        $stmt->execute([$userId]);
-        return $stmt->fetchColumn() ?: 'free';
-    } catch (Throwable $e) {
-        error_log('[Taskvel] user_plan fallback (is migration_02 applied?): ' . $e->getMessage());
-        return 'free';
-    }
-}
+$uid = current_user_id();
+$pdo = db();
+$method = $_SERVER['REQUEST_METHOD'];
+$action = $_GET['action'] ?? '';
+$in = body();
 
-// A team's effective plan: an explicit team-level upgrade (teams.plan,
-// e.g. a business sponsoring one specific team) takes precedence; otherwise
-// the team inherits its owner's personal plan, so a Pro user's teams are
-// unlimited by default without needing a separate per-team subscription.
-function team_plan(int $teamId): string
-{
-    try {
-        $stmt = db()->prepare(
-            "SELECT t.plan, tm.user_id AS owner_id
-             FROM teams t
-             JOIN team_members tm ON tm.team_id = t.id AND tm.role = 'owner'
-             WHERE t.id = ?"
-        );
-        $stmt->execute([$teamId]);
-        $row = $stmt->fetch();
-        if (!$row) return 'free';
-        if (!empty($row['plan']) && $row['plan'] !== 'free') return $row['plan'];
-        return user_plan((int)$row['owner_id']);
-    } catch (Throwable $e) {
-        // teams.plan column not migrated yet (migration_08_billing.sql) —
-        // treat every team as 'free' instead of throwing.
-        error_log('[Taskvel] team_plan fallback (is migration_08 applied?): ' . $e->getMessage());
-        return 'free';
-    }
-}
+switch ("$method:$action") {
 
-function plan_limits(string $plan): array
-{
-    $defaults = ['max_teams' => 1, 'max_members' => 3, 'max_projects' => 1, 'max_attachment_mb' => 10];
-    try {
-        $stmt = db()->prepare('SELECT * FROM plan_limits WHERE plan = ?');
-        $stmt->execute([$plan]);
-        return ($stmt->fetch() ?: $defaults) + $defaults; // union keeps old rows (pre migration_10) from missing max_teams
-    } catch (Throwable $e) {
-        // plan_limits table not migrated yet — fall back to free-plan defaults.
-        error_log('[Taskvel] plan_limits fallback (is migration_08 applied?): ' . $e->getMessage());
-        return $defaults;
-    }
-}
+    // Personal trial/plan status — powers the billing.php banner/upgrade wall.
+    case 'GET:status':
+        $stmt = $pdo->prepare('SELECT plan, plan_source, trial_ends_at FROM users WHERE id = ?');
+        $stmt->execute([$uid]);
+        $user = $stmt->fetch();
 
-// Called before creating a team — blocks with a clear upgrade message.
-// Limit is keyed off the *creating user's* personal plan (there's no team
-// yet at this point to key it off of).
-function require_team_creation_allowed(int $userId): void
-{
-    $limits = plan_limits(user_plan($userId));
-    $stmt = db()->prepare(
-        "SELECT COUNT(*) FROM teams t
-         JOIN team_members tm ON tm.team_id = t.id AND tm.user_id = ? AND tm.role = 'owner'"
-    );
-    $stmt->execute([$userId]);
-    if ((int)$stmt->fetchColumn() >= $limits['max_teams']) {
-        json_response(['error' => "Free plan allows {$limits['max_teams']} team(s). Upgrade to Taskvel Pro to create more.", 'upgrade_required' => true], 402);
-    }
-}
+        $daysRemaining = null;
+        if ($user['plan_source'] === 'trial' && $user['trial_ends_at']) {
+            $daysRemaining = max(0, (int)ceil((strtotime($user['trial_ends_at']) - time()) / 86400));
+        }
+        $trialExpired = $user['plan_source'] !== 'trial' && $user['plan'] === 'free' && $user['trial_ends_at'] !== null;
 
-// Called before inviting/adding a member — blocks with a clear upgrade message.
-function require_seats_available(int $teamId): void
-{
-    $limits = plan_limits(team_plan($teamId));
-    $stmt = db()->prepare('SELECT COUNT(*) FROM team_members WHERE team_id = ?');
-    $stmt->execute([$teamId]);
-    if ((int)$stmt->fetchColumn() >= $limits['max_members']) {
-        json_response(['error' => "This team is on the free plan (max {$limits['max_members']} members). Upgrade to add more people.", 'upgrade_required' => true], 402);
-    }
-}
+        json_response([
+            'plan' => $user['plan'],
+            'plan_source' => $user['plan_source'],
+            'trial_ends_at' => $user['trial_ends_at'],
+            'days_remaining' => $daysRemaining,
+            'trial_expired' => $trialExpired,
+            'membership' => user_organization_membership($uid),
+        ]);
+        break;
 
-function require_project_slot_available(int $teamId): void
-{
-    $limits = plan_limits(team_plan($teamId));
-    $stmt = db()->prepare('SELECT COUNT(*) FROM projects WHERE team_id = ? AND archived = 0');
-    $stmt->execute([$teamId]);
-    if ((int)$stmt->fetchColumn() >= $limits['max_projects']) {
-        json_response(['error' => "This team is on the free plan (max {$limits['max_projects']} project). Upgrade to add more.", 'upgrade_required' => true], 402);
-    }
+    // Individual "Upgrade to Pro" — one seat, billed to this user directly
+    // (separate from an organization's seat-based billing in Part B).
+    case 'POST:create-checkout-session':
+        if (user_organization_membership($uid)) {
+            json_response(['error' => 'Your account is already licensed through an organization.'], 422);
+        }
+        $base = APP_BASE_URL ?: ((!empty($_SERVER['HTTPS']) ? 'https://' : 'http://') . ($_SERVER['HTTP_HOST'] ?? ''));
+        try {
+            $url = create_stripe_checkout_session(
+                [['price' => STRIPE_PRICE_PRO, 'quantity' => 1]],
+                'subscription',
+                "user:$uid",
+                "$base/billing.php?checkout=success",
+                "$base/billing.php?checkout=cancelled"
+            );
+            json_response(['url' => $url]);
+        } catch (Throwable $e) {
+            json_response(['error' => $e->getMessage()], 502);
+        }
+        break;
+
+    // Organization seat purchase — used both at org creation time (Part B)
+    // and for "add additional seats at any time".
+    case 'POST:create-org-checkout-session':
+        $orgId = (int)($in['org_id'] ?? 0);
+        require_org_admin($orgId);
+        $seats = max(1, (int)($in['seats'] ?? 5));
+
+        $stmt = $pdo->prepare('SELECT billing_cycle FROM organizations WHERE id = ?');
+        $stmt->execute([$orgId]);
+        $cycle = $stmt->fetchColumn();
+        if (!$cycle) json_response(['error' => 'Organization not found'], 404);
+
+        $price = $cycle === 'yearly' ? STRIPE_PRICE_ORG_SEAT_YEARLY : STRIPE_PRICE_ORG_SEAT_MONTHLY;
+        $base = APP_BASE_URL ?: ((!empty($_SERVER['HTTPS']) ? 'https://' : 'http://') . ($_SERVER['HTTP_HOST'] ?? ''));
+        try {
+            $url = create_stripe_checkout_session(
+                [['price' => $price, 'quantity' => $seats]],
+                'subscription',
+                "org:$orgId",
+                "$base/team.php?org_checkout=success",
+                "$base/team.php?org_checkout=cancelled"
+            );
+            json_response(['url' => $url]);
+        } catch (Throwable $e) {
+            json_response(['error' => $e->getMessage()], 502);
+        }
+        break;
+
+    default:
+        json_response(['error' => 'Unknown route'], 404);
 }

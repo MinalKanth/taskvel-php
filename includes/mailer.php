@@ -498,3 +498,105 @@ function send_task_update_email(string $to, string $recipientName, string $updat
 
     return send_mail($to, $subject, $html);
 }
+
+/**
+ * Sent to a brand-new account Taskvel just created on an organization's
+ * behalf (Feature 4, Part B — "Employee Provisioning: New Users").
+ */
+function send_org_onboarding_email(string $to, string $name, string $orgName, string $loginUrl, string $tempPassword): bool
+{
+    $subject = "Welcome to Taskvel Pro — you've been added to $orgName";
+    $safeName = htmlspecialchars($name);
+    $safeOrg = htmlspecialchars($orgName);
+    $safePw = htmlspecialchars($tempPassword);
+
+    $body = <<<HTML
+      <p style="margin:0 0 14px;">Hi {$safeName},</p>
+      <p style="margin:0 0 14px;">Your organization, <strong>{$safeOrg}</strong>, has created a Taskvel Pro account for you.</p>
+      <table role="presentation" cellpadding="0" cellspacing="0" width="100%" style="background-color:#f7f7fb;border-radius:8px;margin:0 0 16px;">
+        <tr><td style="padding:16px 18px;font-family:'Segoe UI',Helvetica,Arial,sans-serif;font-size:14px;">
+          <div style="margin-bottom:8px;"><strong>Login email:</strong> {$to}</div>
+          <div><strong>Temporary password:</strong> <code style="background:#fff;padding:2px 8px;border-radius:4px;">{$safePw}</code></div>
+        </td></tr>
+      </table>
+      <p style="margin:0 0 14px;">For security reasons, we recommend changing your password after your first login. You may continue using the temporary password if you prefer, but updating it is strongly recommended.</p>
+    HTML;
+
+    $html = email_shell(
+        preheader: "$orgName added you to Taskvel Pro",
+        badgeLabel: 'Welcome',
+        heading: 'Welcome to Taskvel Pro 🎉',
+        bodyHtml: $body,
+        ctaLabel: 'Log in now',
+        ctaLink: $loginUrl,
+        footerNote: 'This account was created by an administrator at ' . $orgName . '.',
+        accentFrom: '#6366f1',
+        accentTo: '#8b5cf6'
+    );
+
+    return send_mail($to, $subject, $html);
+}
+
+/**
+ * Sent to an *existing* Taskvel user when an organization assigns them a
+ * seat (Feature 4, Part B — "Existing Users").
+ */
+function send_org_added_email(string $to, string $name, string $orgName, string $link): bool
+{
+    $subject = "You've been added to $orgName on Taskvel Pro";
+    $safeName = htmlspecialchars($name);
+    $safeOrg = htmlspecialchars($orgName);
+
+    $body = <<<HTML
+      <p style="margin:0 0 14px;">Hi {$safeName},</p>
+      <p style="margin:0;"><strong>{$safeOrg}</strong> has added your existing Taskvel account to their organization and upgraded it to Taskvel Pro — no action needed on your part.</p>
+    HTML;
+
+    $html = email_shell(
+        preheader: "$orgName upgraded your account to Taskvel Pro",
+        badgeLabel: 'Organization',
+        heading: "You're now on $orgName's Taskvel Pro plan",
+        bodyHtml: $body,
+        ctaLabel: 'Open Taskvel',
+        ctaLink: $link,
+        footerNote: 'You can see your organization membership anytime from Billing & Plan.',
+        accentFrom: '#6366f1',
+        accentTo: '#8b5cf6'
+    );
+
+    return send_mail($to, $subject, $html);
+}
+
+/**
+ * Feature 4, Part A trial reminders — 7/3/1 days before expiry, and on
+ * expiry itself.
+ */
+function send_trial_reminder_email(string $to, string $name, string $milestone, string $link): bool
+{
+    $safeName = htmlspecialchars($name);
+    $copy = [
+        '7d' => ['subject' => 'Your Taskvel Pro trial ends in 7 days', 'heading' => '7 days left on your trial', 'body' => 'Your 30-day Taskvel Pro trial wraps up in a week. Upgrade any time to keep unlimited teams, seats, and projects.'],
+        '3d' => ['subject' => 'Your Taskvel Pro trial ends in 3 days', 'heading' => '3 days left on your trial', 'body' => 'Just a heads-up — your trial ends in 3 days. Upgrade now so nothing interrupts your teams.'],
+        '1d' => ['subject' => 'Your Taskvel Pro trial ends tomorrow', 'heading' => 'Your trial ends tomorrow', 'body' => 'Last call — your Taskvel Pro trial ends tomorrow. After that, free-plan limits apply until you upgrade.'],
+        'expired' => ['subject' => 'Your Taskvel Pro trial has ended', 'heading' => 'Your trial has ended', 'body' => 'Your 30-day Taskvel Pro trial has ended and your account is now on the free plan. Upgrade any time to get Pro features back.'],
+    ][$milestone];
+
+    $body = <<<HTML
+      <p style="margin:0 0 14px;">Hi {$safeName},</p>
+      <p style="margin:0;">{$copy['body']}</p>
+    HTML;
+
+    $html = email_shell(
+        preheader: $copy['heading'],
+        badgeLabel: 'Trial',
+        heading: $copy['heading'],
+        bodyHtml: $body,
+        ctaLabel: 'Upgrade to Pro',
+        ctaLink: $link,
+        footerNote: 'This is an automated reminder about your Taskvel Pro trial.',
+        accentFrom: '#f59e0b',
+        accentTo: '#ef4444'
+    );
+
+    return send_mail($to, $copy['subject'], $html);
+}

@@ -1,5 +1,8 @@
 <?php
-define('STRIPE_SECRET_KEY', getenv('STRIPE_SECRET_KEY') ?: '');       // sk_live_... / sk_test_...
-define('STRIPE_WEBHOOK_SECRET', getenv('STRIPE_WEBHOOK_SECRET') ?: ''); // whsec_...
-define('STRIPE_PRICE_PRO', getenv('STRIPE_PRICE_PRO') ?: '');          // price_... from Stripe dashboard
+
+define('STRIPE_SECRET_KEY', getenv('STRIPE_SECRET_KEY') ?: '');
+define('STRIPE_PUBLISHABLE_KEY', getenv('STRIPE_PUBLISHABLE_KEY') ?: '');
+define('STRIPE_PUBLISHABLE_KEY', getenv('STRIPE_PUBLISHABLE_KEY') ?: '');
+define('STRIPE_WEBHOOK_SECRET', getenv('STRIPE_WEBHOOK_SECRET') ?: '');
+define('STRIPE_PRICE_PRO', getenv('STRIPE_PRICE_PRO') ?: '');
 define('STRIPE_PRICE_BUSINESS', getenv('STRIPE_PRICE_BUSINESS') ?: '');

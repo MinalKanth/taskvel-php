@@ -136,7 +136,15 @@ function register_user(string $name, string $email, string $password): array
     }
 
     $hash = password_hash($password, PASSWORD_BCRYPT);
-    $stmt = db()->prepare('INSERT INTO users (name, email, password_hash) VALUES (?, ?, ?)');
+    // Every newly registered user gets a 30-day Taskvel Pro trial starting
+    // now (Feature 4). plan_source='trial' is what lets the trial-expiry
+    // cron (cron/send_trial_reminders.php) know it's safe to downgrade this
+    // user later without ever touching a real Stripe subscriber or an
+    // org-seat holder.
+    $stmt = db()->prepare(
+        'INSERT INTO users (name, email, password_hash, plan, plan_source, trial_ends_at)
+         VALUES (?, ?, ?, \'pro\', \'trial\', DATE_ADD(NOW(), INTERVAL 30 DAY))'
+    );
     $stmt->execute([$name, $email, $hash]);
     $userId = (int)db()->lastInsertId();
 

@@ -19,11 +19,14 @@
 ![License](https://img.shields.io/badge/license-MIT-blue?style=for-the-badge)
 ![PHP](https://img.shields.io/badge/PHP-8.1%2B-777bb4?style=for-the-badge&logo=php&logoColor=white)
 ![MySQL](https://img.shields.io/badge/MySQL-8.0%2B-4479A1?style=for-the-badge&logo=mysql&logoColor=white)
+![Billing](https://img.shields.io/badge/billing-Stripe%20ready-635bff?style=for-the-badge&logo=stripe&logoColor=white)
 
 <br/>
 
 [Overview](#-overview) •
 [Features](#-features) •
+[Team Tasks & Progress Updates](#-team-tasks--progress-updates) •
+[Billing & Enterprise Licensing](#-billing--enterprise-licensing) •
 [Every Function, Explained](#-every-function-explained) •
 [Tech Stack](#-tech-stack) •
 [Getting Started](#-getting-started) •
@@ -50,13 +53,14 @@ It's a single, gorgeously-designed application that ranks your work intelligentl
 
 This isn't a to-do list. **It's a system.**
 
-Taskvel ships as three composable layers, each fully optional beyond the first:
+Taskvel ships as four composable layers, each fully optional beyond the first:
 
 | Layer | What it's for |
 |---|---|
 | 🧍 **Personal App** (`taskvel-pro.php`) | Smart, single-user task management with auto-ranking, focus timer, streaks, and offline PWA support |
-| 👥 **Teams & Projects** | Multi-user collaboration with Kanban boards, assignment, roles, and activity logs |
+| 👥 **Teams & Projects** | Multi-user collaboration with Kanban boards, direct task assignment, roles, and activity logs |
 | 📍 **Daily Check-in** *(optional)* | A lightweight attendance + task-reporting ritual with manager dashboards, approvals, and email notifications |
+| 💳 **Billing & Enterprise Licensing** *(optional)* | 30-day Pro trial, individual Stripe upgrade, and seat-based licensing for organizations |
 
 ---
 
@@ -138,17 +142,28 @@ Flip a switch and Taskvel becomes a **real collaborative project tool**:
 
 | Capability | Description |
 |---|---|
-| 🏢 Unlimited teams | Create as many teams as your org needs |
+| 🏢 User-created teams | Any user can create a team and becomes its Owner automatically — Free plan: 2 teams / 5 members per team · Pro: unlimited |
 | 📨 Email invitations | Bring coworkers in with a single email address |
 | 🎚️ Three-tier permissions | Owner → full control · Manager → create/edit/assign/delete · Member → owns assigned work |
 | 📁 Multiple projects per team | Marketing, Engineering, Ops — as many boards as you need |
 | 🗂️ Kanban flow | A clean Todo → In Progress → Done board everyone instantly understands |
 | 🎯 Intentional assignment | Managers delegate to anyone; members can self-assign |
+| ✅ Direct Team Tasks | Assign a task straight to a teammate — due date, priority, status, and progress % — without needing to create a Project first (see [Team Tasks & Progress Updates](#-team-tasks--progress-updates)) |
 | 📊 Per-person progress strip | See exactly who's completed what, at a glance |
 | 💬 Task-level comments | Discussion stays attached to the work, not lost in chat |
 | 📅 Team events | Shared events with attendees, surfaced on every member's dashboard hub |
-| 📜 Activity log | A running history of who did what, and when |
+| 📜 Activity log & full update timeline | A running history of who did what and when, plus a per-task history of every progress update (status, %, notes, attachments) |
 | 🔒 Server-enforced security | Every permission check happens in the backend, not just the UI |
+
+### ✅ Team Tasks & Progress Updates
+
+A lighter-weight sibling to full Projects, for the common case of *"just assign this one thing to someone"* — no board setup required.
+
+- **Assign in one step** — pick a teammate, due date, priority, and status; owners/managers can assign to anyone, members can self-assign
+- **In-app + push notification** the moment a task is assigned or completed
+- **Update Progress** — the assignee (or a manager) posts a status + percentage-complete update with optional notes and file attachments
+- **Full history timeline** per task — every update is kept, not just the latest state, with who posted it, what changed, and any attached files
+- **Email the "senior"** — the task's creator (and the team owner, if different) get notified by email when progress is posted, in addition to the in-app notification; recipients can turn the email off from Billing & Plan without losing in-app alerts
 
 ### 📍 Daily Check-in *(optional "office mode")*
 
@@ -209,7 +224,45 @@ Taskvel ships with a **complete, dependency-free Web Push implementation** (RFC 
 
 ---
 
-## 📖 Every Function, Explained
+## 💳 Billing & Enterprise Licensing
+
+Taskvel Pro is free to try, simple to pay for individually, and scales cleanly to a company-wide seat licensing model — all three live on one `users.plan` field, reconciled by a single `recompute_user_plan()` function so trial, personal Stripe, and org-seat access never step on each other.
+
+### 🎁 30-day free trial
+
+- Every new signup gets **30 days of full Taskvel Pro** automatically, starting the moment their account is created
+- `billing.php` shows days remaining and the exact expiry date
+- Automatic reminders at **7 days, 3 days, 1 day** before expiry, and again **on the day it ends** — both as an in-app notification and an email
+- When the trial ends, the account reverts to the Free plan (2 teams, 5 members per team, 1 project per team) and `billing.php` shows a clear upgrade prompt
+- Existing paid subscribers and organization-licensed accounts never enter the trial flow
+
+### 💰 Individual upgrade
+
+- One click on `billing.php` starts a real Stripe Checkout session for a personal Pro subscription
+- A dedicated webhook (`api/stripe-webhook.php`) reconciles the payment and flips the account to `plan_source = 'stripe'`, which the trial-expiry job will never touch
+
+### 🏢 Enterprise seat-based licensing
+
+For companies, HR teams, and business owners who need to license Taskvel Pro for a whole roster of employees at once:
+
+| Capability | Description |
+|---|---|
+| 🎟️ Seat purchase | Any billing cycle (monthly/yearly) and any seat count, upgradeable at any time |
+| 👤 Employee provisioning | Add employees by email — existing Taskvel users get their account upgraded instantly; brand-new emails get an account auto-created with a secure temporary password |
+| 📧 Onboarding emails | New accounts receive login email + temp password + a reminder to change it; existing users get a simple "you've been added" notice |
+| 📊 Seat dashboard | Total purchased, assigned, and available seats; billing cycle; renewal date; subscription status; recent invites — all on `billing.php` |
+| ⏸️ Suspend / reactivate | Pull someone's Pro access without losing their data or freeing their seat, then bring them back with one click |
+| 🔁 Transfer seats | Move a seat from one employee straight to another, atomically |
+| 🗑️ Remove members | Frees the seat immediately for reassignment |
+| 🔐 Owner/Admin-only | Only an organization's Owner or Admins can purchase, assign, suspend, or remove seats — enforced server-side |
+| 📜 Full audit trail | Every seat assignment, suspension, removal, and transfer is recorded in the security audit log |
+| 🔒 Transactional & oversell-proof | Seat assignment locks the organization row for the duration of the operation, so concurrent invites can never exceed purchased seats |
+
+> **Scope note:** CSV bulk import, SCIM provisioning, SSO, multi-organization membership, and department-wise seat allocation are intentionally not built yet — the schema (`organizations` / `organization_members`) is designed so none of them require a rewrite when you're ready to add them.
+
+---
+
+
 
 Everything below lives in `taskvel-pro.php`'s inline script and reflects the actual, current codebase — grouped the way the code itself is organized, so this doubles as a map for anyone reading the source top to bottom.
 
@@ -452,11 +505,26 @@ mysql -u youruser -p taskvel < sql/migration_06_checkin_advanced.sql
 # 4. Security hardening (hard dependency — always run this)
 mysql -u youruser -p taskvel < sql/migration_07_security.sql
 
-# 5. Team Events — events with team members as attendees (Teams page + Pro hub)
+# 5. Team-level billing plan/seat limits (per-team plan_limits table)
+mysql -u youruser -p taskvel < sql/migration_08_billing.sql
+
+# 6. Team Tasks — direct task assignment inside a Team, without needing a Project first
+mysql -u youruser -p taskvel < sql/migration_09_team_tasks.sql
+
+# 7. Per-user plan limits (Free: 2 teams / 5 members · Pro: unlimited)
+mysql -u youruser -p taskvel < sql/migration_10_user_plan_limits.sql
+
+# 8. Team Events — events with team members as attendees (Teams page + Pro hub)
 mysql -u youruser -p taskvel < sql/migration_11_team_events.sql
 
-# 6. Point your web server's document root at this folder
-# 7. Sign up, log in, and start shipping
+# 9. Task Updates — full progress-update history/timeline + attachments on Team Tasks
+mysql -u youruser -p taskvel < sql/migration_12_task_updates.sql
+
+# 10. 30-day trial + Enterprise seat-based licensing (organizations, seats, billing history)
+mysql -u youruser -p taskvel < sql/migration_13_trial_and_orgs.sql
+
+# 11. Point your web server's document root at this folder
+# 12. Sign up, log in, and start shipping
 ```
 
 ### Enabling Push Notifications (optional, one-time)
@@ -478,7 +546,37 @@ Paste the two printed values into `config/vapid.php`, and set `VAPID_SUBJECT` to
 0 8 * * *  php /path/to/taskvel-php/cron/send_reminders.php
 ```
 
+**Trial reminder cron** (7/3/1-day-before and on-expiry trial notices):
+
+```bash
+# crontab -e
+0 8 * * *  php /path/to/taskvel-php/cron/send_trial_reminders.php
+```
+
 ---
+
+### Enabling Stripe billing (optional, one-time)
+
+Taskvel's Stripe integration (`includes/stripe_client.php`, `api/billing.php`, `api/stripe-webhook.php`) is **dependency-free by design** — it talks to Stripe's REST API directly over `curl`, the same zero-dependency philosophy as the rest of the codebase. **You do not need to install anything to make it work.**
+
+If you'd rather use Stripe's official SDK instead (e.g. for typed responses or easier future maintenance), it's a drop-in swap:
+
+```bash
+composer require stripe/stripe-php
+```
+
+Then set the following environment variables (get the price IDs from your Stripe Dashboard → Products):
+
+```bash
+STRIPE_SECRET_KEY=sk_live_...                  # or sk_test_... while testing
+STRIPE_WEBHOOK_SECRET=whsec_...
+STRIPE_PRICE_PRO=price_...                     # individual "Upgrade to Pro" subscription
+STRIPE_PRICE_ORG_SEAT_MONTHLY=price_...        # per-seat price, billed monthly
+STRIPE_PRICE_ORG_SEAT_YEARLY=price_...         # per-seat price, billed yearly
+APP_BASE_URL=https://yourdomain.com            # used to build Stripe success/cancel redirect URLs
+```
+
+Point your Stripe webhook endpoint at `https://yourdomain.com/api/stripe-webhook.php` and subscribe it to at least `checkout.session.completed` and `customer.subscription.deleted`. Until `STRIPE_SECRET_KEY` is set, the "Upgrade to Pro" and "add seats" buttons fail gracefully with a clear "Stripe is not configured yet" message instead of erroring — every other Taskvel feature works exactly as before.
 
 ## ⚙️ Configuration
 
@@ -487,6 +585,7 @@ Paste the two printed values into `config/vapid.php`, and set `VAPID_SUBJECT` to
 | `config/vapid.php` | Web Push VAPID key pair + subject email |
 | `config/webhooks.php` | Optional `SLACK_WEBHOOK_URL` / `TEAMS_WEBHOOK_URL` for Check-in notifications |
 | `config/workhours.php` | Expected check-in/checkout times and shift length, used for late/early/overtime flags |
+| `config/stripe.php` | `STRIPE_SECRET_KEY`, `STRIPE_WEBHOOK_SECRET`, Pro/org-seat price IDs, `APP_BASE_URL` — see [Enabling Stripe billing](#-getting-started) |
 | Environment variables | `DB_HOST`, `DB_NAME`, `DB_USER`, `DB_PASS`, SMTP credentials for outgoing email |
 
 <details>
@@ -506,9 +605,17 @@ SMTP_USER=notifications@yourdomain.com
 SMTP_PASS=your-smtp-password
 
 VAPID_SUBJECT=mailto:you@yourdomain.com
+
+# Optional — only needed once you enable Stripe billing (see Getting Started)
+STRIPE_SECRET_KEY=sk_test_...
+STRIPE_WEBHOOK_SECRET=whsec_...
+STRIPE_PRICE_PRO=price_...
+STRIPE_PRICE_ORG_SEAT_MONTHLY=price_...
+STRIPE_PRICE_ORG_SEAT_YEARLY=price_...
+APP_BASE_URL=https://yourdomain.com
 ```
 
-Rotate `VAPID_PRIVATE_KEY`, SMTP credentials, and `DB_PASS` through your host's secret manager rather than plain environment variables if your compliance requirements call for it.
+Rotate `VAPID_PRIVATE_KEY`, SMTP credentials, `STRIPE_SECRET_KEY`, and `DB_PASS` through your host's secret manager rather than plain environment variables if your compliance requirements call for it.
 
 </details>
 
@@ -562,27 +669,40 @@ taskvel-php/
 ├── api/                        # REST-style JSON endpoints
 │   ├── personal_tasks.php       # Per-user task CRUD + reorder
 │   ├── teams.php
+│   ├── team_tasks.php           # Direct team task assignment + progress updates + history
 │   ├── team_events.php
 │   ├── projects.php
 │   ├── project_tasks.php
 │   ├── timer.php
 │   ├── remarks.php
-│   ├── attachments.php
-│   ├── settings.php              # VAPID key, push subscribe, device touch
+│   ├── attachments.php           # Personal-task + team-task attachments
+│   ├── organizations.php         # Enterprise seat licensing — create/invite/suspend/remove/transfer
+│   ├── billing.php               # Personal trial status + Stripe Checkout session creation
+│   ├── stripe-webhook.php        # Public — reconciles Stripe payments (team/user/org)
+│   ├── settings.php              # VAPID key, push subscribe, device touch, notification prefs
 │   └── auth.php
 ├── includes/                   # Shared server-side logic
 │   ├── security.php             # clean_str, clean_email, csv_safe, ics_escape, etc.
 │   ├── webpush.php
 │   ├── webhooks.php
+│   ├── notifications.php        # create_notification() — shared in-app notification helper
+│   ├── team_task_updates.php    # Progress-update recipient resolution + notify (in-app + email)
+│   ├── billing.php               # team_plan()/user_plan(), plan_limits(), seat/team-count guards
+│   ├── licensing.php              # Organization seat assignment, recompute_user_plan(), temp passwords
+│   ├── stripe_client.php          # Minimal curl-based Stripe Checkout Session client (no SDK)
+│   ├── mailer.php
+│   ├── pro-shell.php              # Shared header/nav/design tokens for Teams & Billing pages
 │   └── auth.php
 ├── cron/
-│   └── send_reminders.php       # Daily digest job
+│   ├── send_reminders.php       # Daily digest job (personal app deadlines)
+│   └── send_trial_reminders.php # 7/3/1-day-before + on-expiry trial notices
 ├── scripts/
 │   └── generate_vapid_keys.php
 ├── config/
 │   ├── vapid.php
 │   ├── webhooks.php
-│   └── workhours.php
+│   ├── workhours.php
+│   └── stripe.php                # STRIPE_SECRET_KEY, price IDs, APP_BASE_URL
 ├── sql/
 │   ├── schema.sql
 │   ├── migration_02_premium_sync.sql
@@ -591,13 +711,19 @@ taskvel-php/
 │   ├── migration_05_daily_checkin.sql
 │   ├── migration_06_checkin_advanced.sql
 │   ├── migration_07_security.sql
-│   └── migration_11_team_events.sql
+│   ├── migration_08_billing.sql          # Team-level plan/seat limits
+│   ├── migration_09_team_tasks.sql       # Team Tasks + generalized notifications
+│   ├── migration_10_user_plan_limits.sql # Free: 2 teams/5 members · Pro: unlimited
+│   ├── migration_11_team_events.sql
+│   ├── migration_12_task_updates.sql     # Progress-update history + generalized attachments
+│   └── migration_13_trial_and_orgs.sql   # Trial fields + organizations/seats/billing history
 ├── js/
-│   └── api-client.js            # Handles CSRF token attachment, API calls
+│   └── api-client.js            # Handles CSRF token attachment, API calls, file uploads
 ├── checkin.php                  # Daily Check-in page
 ├── manager.php                  # Manager Dashboard
 ├── teams.php                    # Teams directory
-├── team.php                     # Single team / Kanban board
+├── team.php                     # Single team / Kanban board / Team Tasks
+├── billing.php                  # Personal trial status + organization dashboard
 └── taskvel-pro.php               # Main personal app entry
 ```
 
@@ -682,14 +808,18 @@ Taskvel exposes clean, REST-style JSON endpoints under `api/`. All state-changin
 |---|---|
 | `api/auth.php` | Login, logout, registration, session management |
 | `api/personal_tasks.php` | Personal task list/upsert/delete/reorder, ownership enforced |
-| `api/teams.php` | Team creation, invitations, membership |
+| `api/teams.php` | Team creation (with plan-based limits), invitations, membership, roles |
+| `api/team_tasks.php` | Direct team task assignment, progress updates, and full update history/timeline |
 | `api/team_events.php` | Team event creation and the "all upcoming events across my teams" feed used by the dashboard hub |
 | `api/projects.php` | Project CRUD within a team |
 | `api/project_tasks.php` | Task assignment and board state within a project |
 | `api/timer.php` | Focus sessions and time logs, scoped to visible tasks |
 | `api/remarks.php` | Notes/remarks attached to tasks |
-| `api/attachments.php` | File uploads with MIME sniffing and safe storage |
-| `api/settings.php` | VAPID public key, push subscription registration, device touch/last-seen |
+| `api/attachments.php` | File uploads (personal tasks and team-task progress updates) with MIME sniffing and safe storage |
+| `api/organizations.php` | Enterprise seat licensing — create org, dashboard, invite/remove/suspend/reactivate/transfer seats, billing history |
+| `api/billing.php` | Personal trial/plan status and Stripe Checkout session creation (individual + org seats) |
+| `api/stripe-webhook.php` | Public — reconciles completed Stripe payments and cancellations across teams, individuals, and organizations |
+| `api/settings.php` | VAPID public key, push subscription registration, device touch/last-seen, notification preferences |
 
 <details>
 <summary><strong>Example: fetching a task</strong></summary>
@@ -759,6 +889,10 @@ Call the client tomorrow #urgent !high
 - [ ] Configurable SLA-based escalation rules for Teams tasks
 - [ ] Public API tokens for third-party integrations
 - [ ] Real-time updates via WebSockets for Teams boards
+- [ ] Bulk CSV import for organization employee provisioning
+- [ ] SCIM user provisioning and Enterprise SSO
+- [ ] Multiple organizations per user; department-wise seat allocation
+- [ ] Role-based and team-based licensing beyond Owner/Admin/Employee
 
 > Have a feature request? Open an issue — see [Contributing](#-contributing) below.
 
