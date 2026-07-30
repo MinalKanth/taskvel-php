@@ -29,3 +29,4 @@ switch ("$method:$action") {
     default:
         json_response(['error' => 'Unknown route'], 404);
 }
+

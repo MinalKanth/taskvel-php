@@ -452,14 +452,12 @@ function renderTeamTasks() {
                     <input class="tt-progress-input" type="range" min="0" max="100" value="${t.progress}"
                         title="Update progress" onchange="updateTeamTaskProgress(${t.id}, this.value)" />
                 ` : ''}
-                ${canEdit ? `<button class="btn ghost sm" onclick="openAssignTask(${escAttr(t)})">Reassign / edit</button>` : ''}
+                ${canEdit ? `<button class="btn ghost sm" onclick='openAssignTask(${JSON.stringify(t).replace(/'/g,"&#39;")})'>Reassign / edit</button>` : ''}
                 ${canDelete ? `<button class="btn ghost sm" style="color:var(--bad)" onclick="deleteTeamTask(${t.id})">Delete</button>` : ''}
             </div>
         </div>`;
     }).join('');
 }
-
-function escAttr(obj) { return JSON.stringify(obj).replace(/'/g, "&#39;").replace(/"/g, '&quot;'); }
 
 function populateAssigneeSelect(selectedId = null) {
     const sel = document.getElementById('tt-assignee');
@@ -468,7 +466,6 @@ function populateAssigneeSelect(selectedId = null) {
 }
 
 function openAssignTask(task = null) {
-    if (typeof task === 'string') task = JSON.parse(task.replace(/&quot;/g, '"').replace(/&#39;/g, "'"));
     editingTeamTaskId = task ? task.id : null;
     document.getElementById('tt-modal-title').textContent = task ? 'Edit task' : 'Assign a task';
     document.getElementById('tt-save-btn').textContent = task ? 'Save changes' : 'Assign task';
