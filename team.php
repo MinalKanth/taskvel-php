@@ -82,6 +82,10 @@ if (!$role) { header('Location: teams.php'); exit; }
 
     <section id="team-tasks">
         <h2>✅ Team Tasks <button class="btn sm" onclick="openAssignTask()">+ Assign task</button></h2>
+        <label style="display:flex;align-items:center;gap:7px;font-size:12px;color:var(--ink3);margin:6px 0 4px">
+            <input type="checkbox" id="notify-email-toggle" onchange="toggleEmailNotifications(this.checked)" />
+            Email me when someone updates a task I created or manage
+        </label>
         <div class="card-list" id="team-task-list"></div>
     </section>
 
@@ -117,6 +121,48 @@ if (!$role) { header('Location: teams.php'); exit; }
         <div class="modal-actions">
             <button class="btn ghost" onclick="closeInvite()">Cancel</button>
             <button class="btn" onclick="submitInvite()">Send invite</button>
+        </div>
+    </div>
+</div>
+
+<!-- Update Progress modal (Feature 3) -->
+<div class="modal-overlay" id="pu-overlay" onclick="if(event.target===this)closeProgressUpdate()">
+    <div class="modal">
+        <h2>Update progress</h2>
+        <div class="sub" id="pu-task-title" style="margin-bottom:14px"></div>
+        <div class="fg"><label>Status</label>
+            <select id="pu-status">
+                <option value="todo">To do</option>
+                <option value="in_progress">In progress</option>
+                <option value="done">Done</option>
+            </select>
+        </div>
+        <div class="fg">
+            <label>Progress: <span id="pu-progress-label">0%</span></label>
+            <input type="range" min="0" max="100" id="pu-progress" style="width:100%"
+                oninput="document.getElementById('pu-progress-label').textContent = this.value + '%'" />
+        </div>
+        <div class="fg"><label>Notes</label><textarea id="pu-notes" rows="3" placeholder="What's the latest? Any blockers?"></textarea></div>
+        <div class="fg">
+            <label>Attachments (optional)</label>
+            <input type="file" id="pu-file" onchange="uploadPendingAttachment(this)" />
+            <div id="pu-attachments" style="margin-top:6px"></div>
+        </div>
+        <div class="modal-actions">
+            <button class="btn ghost" onclick="closeProgressUpdate()">Cancel</button>
+            <button class="btn" onclick="submitProgressUpdate()">Send update</button>
+        </div>
+    </div>
+</div>
+
+<!-- Task history / timeline modal (Feature 3) -->
+<div class="modal-overlay" id="hist-overlay" onclick="if(event.target===this)closeTaskHistory()">
+    <div class="modal">
+        <h2>Update history</h2>
+        <div class="sub" id="hist-task-title" style="margin-bottom:14px"></div>
+        <div class="card-list" id="hist-list"></div>
+        <div class="modal-actions">
+            <button class="btn ghost" onclick="closeTaskHistory()">Close</button>
         </div>
     </div>
 </div>
@@ -231,9 +277,21 @@ async function loadAll() {
 
     // Team tasks (after members, so assignee names/pickers always resolve to real people)
     loadTeamTasks();
+    loadNotificationPref();
 
     // Events (after members, so attendees always resolve to real people)
     loadEvents();
+}
+
+async function loadNotificationPref() {
+    try {
+        const { notify_task_updates_email } = await Taskvel.settings.getNotificationPrefs();
+        document.getElementById('notify-email-toggle').checked = notify_task_updates_email;
+    } catch (e) { /* non-critical */ }
+}
+async function toggleEmailNotifications(checked) {
+    try { await Taskvel.settings.setNotificationPrefs({ notify_task_updates_email: checked }); toast(checked ? 'Email updates on ✓' : 'Email updates off'); }
+    catch (e) { toast(e.message || 'Could not save preference'); }
 }
 
 function renderMembers() {
@@ -443,15 +501,8 @@ function renderTeamTasks() {
             <div class="tt-bar"><i style="width:${t.progress}%"></i></div>
             <div class="tt-actions">
                 <span style="font-size:11px;color:var(--ink3)">${t.progress}% complete</span>
-                ${isAssignee || canEdit ? `
-                    <select class="role-select" style="padding:5px 7px;font-size:11px" onchange="updateTeamTaskStatus(${t.id}, this.value)">
-                        <option value="todo" ${t.status==='todo'?'selected':''}>To do</option>
-                        <option value="in_progress" ${t.status==='in_progress'?'selected':''}>In progress</option>
-                        <option value="done" ${t.status==='done'?'selected':''}>Done</option>
-                    </select>
-                    <input class="tt-progress-input" type="range" min="0" max="100" value="${t.progress}"
-                        title="Update progress" onchange="updateTeamTaskProgress(${t.id}, this.value)" />
-                ` : ''}
+                ${isAssignee || canEdit ? `<button class="btn sm" onclick='openProgressUpdate(${JSON.stringify(t).replace(/'/g,"&#39;")})'>Update progress</button>` : ''}
+                <button class="btn ghost sm" onclick="openTaskHistory(${t.id}, ${JSON.stringify(esc(t.title))})">History</button>
                 ${canEdit ? `<button class="btn ghost sm" onclick='openAssignTask(${JSON.stringify(t).replace(/'/g,"&#39;")})'>Reassign / edit</button>` : ''}
                 ${canDelete ? `<button class="btn ghost sm" style="color:var(--bad)" onclick="deleteTeamTask(${t.id})">Delete</button>` : ''}
             </div>
@@ -503,14 +554,82 @@ async function submitAssignTask() {
     } catch (e) { toast(e.message || 'Could not save task'); }
 }
 
-async function updateTeamTaskStatus(id, status) {
-    try { await Taskvel.request('/api/team_tasks.php?action=update', { method:'POST', body:{ id, status } }); loadTeamTasks(); }
-    catch (e) { toast(e.message); loadTeamTasks(); }
+// ─────────── Update Progress (Feature 3) ───────────
+let pendingAttachments = []; // [{id, file_name}] staged for the task currently being updated
+let progressTaskId = null;
+
+function openProgressUpdate(task) {
+    progressTaskId = task.id;
+    pendingAttachments = [];
+    document.getElementById('pu-task-title').textContent = task.title;
+    document.getElementById('pu-status').value = task.status;
+    document.getElementById('pu-progress').value = task.progress;
+    document.getElementById('pu-progress-label').textContent = task.progress + '%';
+    document.getElementById('pu-notes').value = '';
+    document.getElementById('pu-file').value = '';
+    renderPendingAttachments();
+    document.getElementById('pu-overlay').classList.add('open');
 }
-async function updateTeamTaskProgress(id, progress) {
-    try { await Taskvel.request('/api/team_tasks.php?action=update', { method:'POST', body:{ id, progress: parseInt(progress, 10) } }); loadTeamTasks(); }
-    catch (e) { toast(e.message); loadTeamTasks(); }
+function closeProgressUpdate() { document.getElementById('pu-overlay').classList.remove('open'); progressTaskId = null; }
+
+function renderPendingAttachments() {
+    document.getElementById('pu-attachments').innerHTML = pendingAttachments.length
+        ? pendingAttachments.map(a => `<span class="tt-pill pri-low">📎 ${esc(a.file_name)}</span>`).join(' ')
+        : '<span style="font-size:11.5px;color:var(--ink3)">No files attached yet.</span>';
 }
+
+async function uploadPendingAttachment(input) {
+    const file = input.files[0];
+    if (!file || !progressTaskId) return;
+    try {
+        const { attachment } = await Taskvel.attachments.upload(file, { teamTaskId: progressTaskId });
+        pendingAttachments.push(attachment);
+        renderPendingAttachments();
+    } catch (e) { toast(e.message || 'Could not attach file'); }
+    input.value = '';
+}
+
+async function submitProgressUpdate() {
+    if (!progressTaskId) return;
+    const payload = {
+        id: progressTaskId,
+        status: document.getElementById('pu-status').value,
+        progress: parseInt(document.getElementById('pu-progress').value, 10),
+        notes: document.getElementById('pu-notes').value.trim(),
+        attachment_ids: pendingAttachments.map(a => a.id),
+    };
+    try {
+        await Taskvel.request('/api/team_tasks.php?action=progress-update', { method: 'POST', body: payload });
+        toast('Progress update sent ✓');
+        closeProgressUpdate();
+        loadTeamTasks();
+    } catch (e) { toast(e.message || 'Could not send update'); }
+}
+
+async function openTaskHistory(taskId, title) {
+    document.getElementById('hist-task-title').textContent = title;
+    document.getElementById('hist-overlay').classList.add('open');
+    const box = document.getElementById('hist-list');
+    box.innerHTML = '<div class="empty">Loading…</div>';
+    try {
+        const { updates } = await Taskvel.request(`/api/team_tasks.php?action=updates&task_id=${taskId}`);
+        if (!updates.length) { box.innerHTML = '<div class="empty">No updates yet.</div>'; return; }
+        box.innerHTML = (await Promise.all(updates.map(async u => {
+            let attachments = [];
+            try { ({ attachments } = await Taskvel.attachments.listForUpdate(u.id)); } catch (e) {}
+            const when = new Date(u.created_at.replace(' ', 'T')).toLocaleString();
+            return `
+            <div class="card" style="padding:12px 14px">
+                <div style="font-size:12.5px;font-weight:700;font-family:var(--font-display)">${esc(u.user_name)}</div>
+                <div style="font-size:11.5px;color:var(--ink3);margin:2px 0 6px">${when} · ${(u.status_to||'').replace('_',' ')} · ${u.progress_to}%</div>
+                ${u.notes ? `<div style="font-size:12.5px;color:var(--ink2);line-height:1.5">${esc(u.notes)}</div>` : ''}
+                ${attachments.length ? `<div style="margin-top:8px">${attachments.map(a => `<a href="${esc(a.file_path)}" target="_blank" class="tt-pill pri-low" style="text-decoration:none">📎 ${esc(a.file_name)}</a>`).join(' ')}</div>` : ''}
+            </div>`;
+        }))).join('');
+    } catch (e) { box.innerHTML = `<div class="empty">Couldn't load history — ${esc(e.message)}.</div>`; }
+}
+function closeTaskHistory() { document.getElementById('hist-overlay').classList.remove('open'); }
+
 async function deleteTeamTask(id) {
     if (!confirm('Delete this task?')) return;
     try { await Taskvel.request(`/api/team_tasks.php?action=delete&id=${id}`, { method:'DELETE' }); loadTeamTasks(); }

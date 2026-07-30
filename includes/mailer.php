@@ -457,3 +457,44 @@ function send_contact_notification_email(string $to, string $name, string $phone
  
     return send_mail($to, $subject, $html);
 }
+/**
+ * Sent to a task's "senior" (creator, or the team owner if the creator is
+ * no longer reachable) when a team task's assignee submits a progress
+ * update. Respects the recipient's notify_task_updates_email preference —
+ * callers should check that before calling this (kept as a plain send
+ * function here so it stays easy to reuse for a future digest/batch mode).
+ */
+function send_task_update_email(string $to, string $recipientName, string $updaterName, string $taskTitle, string $statusTo, int $progressTo, ?string $notes, string $link): bool
+{
+    $subject = "$updaterName updated \"$taskTitle\" — Taskvel";
+    $safeNotes = $notes ? nl2br(htmlspecialchars($notes)) : '<em style="color:#a0a0b0;">No notes added.</em>';
+    $statusLabel = ucwords(str_replace('_', ' ', $statusTo));
+
+    $body = <<<HTML
+      <p style="margin:0 0 14px;"><strong style="color:#141425;">{$updaterName}</strong> posted a progress update on:</p>
+      <table role="presentation" cellpadding="0" cellspacing="0" width="100%" style="background-color:#f7f7fb;border-left:3px solid #6366f1;border-radius:8px;margin:0 0 16px;">
+        <tr>
+          <td style="padding:14px 18px;font-family:'Segoe UI',Helvetica,Arial,sans-serif;">
+            <div style="font-size:15px;font-weight:600;color:#141425;margin-bottom:8px;">📋 {$taskTitle}</div>
+            <div style="font-size:13px;color:#4b4b5c;">Status: <strong>{$statusLabel}</strong> &middot; Progress: <strong>{$progressTo}%</strong></div>
+          </td>
+        </tr>
+      </table>
+      <p style="margin:0 0 6px;font-family:'Segoe UI',Helvetica,Arial,sans-serif;font-weight:700;color:#141425;">Notes:</p>
+      <p style="margin:0;font-family:'Segoe UI',Helvetica,Arial,sans-serif;">{$safeNotes}</p>
+    HTML;
+
+    $html = email_shell(
+        preheader: "$updaterName updated \"$taskTitle\" to $progressTo% complete",
+        badgeLabel: 'Task Update',
+        heading: "Progress update: $statusLabel",
+        bodyHtml: $body,
+        ctaLabel: 'View task',
+        ctaLink: $link,
+        footerNote: 'You\'re receiving this because you created this task or own the team. You can turn off task-update emails anytime in Settings.',
+        accentFrom: '#0ea5a4',
+        accentTo: '#22c55e'
+    );
+
+    return send_mail($to, $subject, $html);
+}

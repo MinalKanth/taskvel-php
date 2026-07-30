@@ -1,5 +1,6 @@
 <?php
 require_once __DIR__ . '/../includes/auth.php';
+require_once __DIR__ . '/../includes/teams.php';
 require_login();
 
 $uid = current_user_id();
@@ -31,13 +32,27 @@ function task_owned_or_editable(PDO $pdo, int $taskId, int $uid): bool
     return (bool)$stmt->fetch();
 }
 
+// A team task's assignee (submitting a progress update) or a team
+// manager/owner may attach files to it.
+function team_task_editable(PDO $pdo, int $teamTaskId, int $uid): bool
+{
+    $stmt = $pdo->prepare('SELECT team_id, assignee_id FROM team_tasks WHERE id = ?');
+    $stmt->execute([$teamTaskId]);
+    $t = $stmt->fetch();
+    if (!$t) return false;
+    return $t['assignee_id'] == $uid || can_manage_team((int)$t['team_id'], $uid);
+}
+
 switch ("$method:$action") {
 
     case 'POST:upload':
         enforce_rate_limit("upload:$uid", 20, 3600); // 20 uploads/hour/user
 
-        $taskId = (int)($_POST['task_id'] ?? 0);
-        if (!task_owned_or_editable($pdo, $taskId, $uid)) json_response(['error' => 'Forbidden'], 403);
+        $taskId = !empty($_POST['task_id']) ? (int)$_POST['task_id'] : null;
+        $teamTaskId = !empty($_POST['team_task_id']) ? (int)$_POST['team_task_id'] : null;
+        if (!$taskId && !$teamTaskId) json_response(['error' => 'task_id or team_task_id is required'], 422);
+        if ($taskId && !task_owned_or_editable($pdo, $taskId, $uid)) json_response(['error' => 'Forbidden'], 403);
+        if ($teamTaskId && !team_task_editable($pdo, $teamTaskId, $uid)) json_response(['error' => 'Forbidden'], 403);
         if (empty($_FILES['file']) || $_FILES['file']['error'] !== UPLOAD_ERR_OK) json_response(['error' => 'No file uploaded'], 422);
 
         $file = $_FILES['file'];
@@ -55,7 +70,8 @@ switch ("$method:$action") {
         }
         $ext = ALLOWED_MIME_EXT[$realMime];
 
-        $dir = __DIR__ . '/../uploads/' . $taskId;
+        $dirKey = $taskId ? "task-$taskId" : "team-task-$teamTaskId";
+        $dir = __DIR__ . '/../uploads/' . $dirKey;
         if (!is_dir($dir)) mkdir($dir, 0755, true);
 
         // Prevent script-execution even if a future ALLOWED_MIME_EXT entry
@@ -76,12 +92,12 @@ switch ("$method:$action") {
 
         if (!move_uploaded_file($file['tmp_name'], $dest)) json_response(['error' => 'Upload failed'], 500);
 
-        $relPath = 'uploads/' . $taskId . '/' . $safeName;
+        $relPath = 'uploads/' . $dirKey . '/' . $safeName;
         $originalName = clean_str($file['name'] ?? 'file', 190);
-        $stmt = $pdo->prepare('INSERT INTO attachments (task_id, uploaded_by, file_name, file_path, file_size, mime_type) VALUES (?, ?, ?, ?, ?, ?)');
-        $stmt->execute([$taskId, $uid, $originalName, $relPath, $file['size'], $realMime]);
+        $stmt = $pdo->prepare('INSERT INTO attachments (task_id, team_task_id, uploaded_by, file_name, file_path, file_size, mime_type) VALUES (?, ?, ?, ?, ?, ?, ?)');
+        $stmt->execute([$taskId, $teamTaskId, $uid, $originalName, $relPath, $file['size'], $realMime]);
 
-        audit_log($uid, 'file_uploaded', ['task_id' => $taskId, 'mime' => $realMime, 'size' => $file['size']]);
+        audit_log($uid, 'file_uploaded', ['task_id' => $taskId, 'team_task_id' => $teamTaskId, 'mime' => $realMime, 'size' => $file['size']]);
 
         json_response(['ok' => true, 'attachment' => [
             'id' => (int)$pdo->lastInsertId(), 'file_name' => $originalName, 'file_path' => $relPath, 'file_size' => $file['size'],
@@ -93,6 +109,18 @@ switch ("$method:$action") {
         if (!task_owned_or_editable($pdo, $taskId, $uid)) json_response(['error' => 'Forbidden'], 403);
         $stmt = $pdo->prepare('SELECT a.* FROM attachments a WHERE a.task_id = ?');
         $stmt->execute([$taskId]);
+        json_response(['attachments' => $stmt->fetchAll()]);
+        break;
+
+    case 'GET:list-for-update':
+        $updateId = (int)($_GET['team_task_update_id'] ?? 0);
+        $stmt = $pdo->prepare('SELECT tt.team_id FROM team_task_updates ttu JOIN team_tasks tt ON tt.id = ttu.team_task_id WHERE ttu.id = ?');
+        $stmt->execute([$updateId]);
+        $teamId = $stmt->fetchColumn();
+        if (!$teamId) json_response(['error' => 'Not found'], 404);
+        require_team_member((int)$teamId);
+        $stmt = $pdo->prepare('SELECT a.* FROM attachments a WHERE a.team_task_update_id = ?');
+        $stmt->execute([$updateId]);
         json_response(['attachments' => $stmt->fetchAll()]);
         break;
 

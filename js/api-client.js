@@ -124,16 +124,29 @@ const Taskvel = (() => {
             devices:      () => request('/api/settings.php?action=devices'),
             pushSubscribe:(subscription, label) => request('/api/settings.php?action=push-subscribe', { method: 'POST', body: { subscription, device_label: label } }),
             vapidPublicKey: () => request('/api/settings.php?action=vapid-public-key'),
+            getNotificationPrefs: () => request('/api/settings.php?action=notification-prefs'),
+            setNotificationPrefs: (prefs) => request('/api/settings.php?action=notification-prefs', { method: 'POST', body: prefs }),
         },
 
         attachments: {
             list:   (taskId) => request(`/api/attachments.php?action=list&task_id=${taskId}`),
+            listForUpdate: (updateId) => request(`/api/attachments.php?action=list-for-update&team_task_update_id=${updateId}`),
             remove: (id) => request(`/api/attachments.php?action=delete&id=${id}`, { method: 'DELETE' }),
-            upload: async (taskId, file) => {
+            // taskId: personal task id. teamTaskId: team_tasks id (Feature 3 progress-update attachments).
+            upload: async (file, { taskId, teamTaskId } = {}) => {
                 const fd = new FormData();
-                fd.append('task_id', taskId);
+                if (taskId) fd.append('task_id', taskId);
+                if (teamTaskId) fd.append('team_task_id', teamTaskId);
                 fd.append('file', file);
-                const res = await fetch(base + '/api/attachments.php?action=upload', { method: 'POST', body: fd, credentials: 'same-origin' });
+                // BUG FIX: this call previously never sent X-CSRF-Token, so it would
+                // have been rejected by require_login()->require_csrf() on any POST —
+                // every other mutating request in this client already sends it (see
+                // request() above); uploads need the same header, just via FormData
+                // instead of a JSON body.
+                const res = await fetch(base + '/api/attachments.php?action=upload', {
+                    method: 'POST', body: fd, credentials: 'same-origin',
+                    headers: { 'X-CSRF-Token': csrfToken() },
+                });
                 const data = await res.json();
                 if (!res.ok) throw new Error(data.error || 'Upload failed');
                 return data;

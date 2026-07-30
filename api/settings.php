@@ -71,6 +71,20 @@ switch ("$method:$action") {
         json_response(['devices' => $stmt->fetchAll()]);
         break;
 
+    // Feature 3: let a user opt out of "seniors receive email notifications"
+    // for team-task progress updates without affecting in-app notifications.
+    case 'GET:notification-prefs':
+        $stmt = $pdo->prepare('SELECT COALESCE(notify_task_updates_email, 1) AS notify_task_updates_email FROM users WHERE id = ?');
+        $stmt->execute([$uid]);
+        json_response(['notify_task_updates_email' => (bool)$stmt->fetchColumn()]);
+        break;
+
+    case 'POST:notification-prefs':
+        $enabled = !empty($in['notify_task_updates_email']) ? 1 : 0;
+        $pdo->prepare('UPDATE users SET notify_task_updates_email = ? WHERE id = ?')->execute([$enabled, $uid]);
+        json_response(['ok' => true]);
+        break;
+
     default:
         json_response(['error' => 'Unknown route'], 404);
 }
