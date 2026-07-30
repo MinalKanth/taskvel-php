@@ -24,6 +24,7 @@ $user = current_user();
     <h1 class="page-title">👥 Teams</h1>
     <div class="sub">Create a team so managers and teammates can share projects, assign tasks, and plan events together — all inside Taskvel Pro.</div>
     <button class="btn" onclick="openCreateTeam()">+ Create a team</button>
+    <div class="sub" id="team-limit-note" style="margin-top:8px"></div>
 
     <div class="card-list" id="team-list" style="margin-top:22px"></div>
 </div>
@@ -75,6 +76,15 @@ async function loadTeams() {
 }
 function openCreateTeam() { document.getElementById('ct-overlay').classList.add('open'); document.getElementById('ct-name').focus(); }
 function closeCreateTeam() { document.getElementById('ct-overlay').classList.remove('open'); document.getElementById('ct-name').value=''; }
+async function loadLimits() {
+    try {
+        const { plan, teams_owned, max_teams } = await Taskvel.request('/api/teams.php?action=limits');
+        const note = document.getElementById('team-limit-note');
+        if (plan === 'pro') { note.textContent = ''; return; }
+        note.textContent = `Free plan: ${teams_owned}/${max_teams} teams created.`;
+    } catch (e) { /* non-critical */ }
+}
+
 async function submitCreateTeam() {
     const name = document.getElementById('ct-name').value.trim();
     if (!name) return;
@@ -82,9 +92,14 @@ async function submitCreateTeam() {
         const res = await Taskvel.request('/api/teams.php?action=create', { method:'POST', body:{ name } });
         closeCreateTeam();
         window.location.href = 'team.php?id=' + res.team_id;
-    } catch (e) { toast(e.message || 'Could not create team'); }
+    } catch (e) {
+        if ((e.message || '').includes('Upgrade')) {
+            if (confirm(e.message + '\n\nGo to billing now?')) window.location.href = 'billing.php';
+        } else { toast(e.message || 'Could not create team'); }
+    }
 }
 loadTeams();
+loadLimits();
 </script>
 </body>
 </html>

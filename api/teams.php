@@ -3,54 +3,6 @@ require_once __DIR__ . '/../includes/teams.php';
 require_once __DIR__ . '/../includes/billing.php';
 require_login();
 
-// ────────────────────────────────────────────────────────────
-// BILLING FALLBACKS — used only if includes/billing.php doesn't
-// already define these. Adjust FREE limits as needed.
-// ────────────────────────────────────────────────────────────
-if (!function_exists('require_team_creation_allowed')) {
-    function require_team_creation_allowed(int $uid): void
-    {
-        $freeTeamLimit = 1; // free plan: max teams a user can own
-        try {
-            $stmt = db()->prepare(
-                "SELECT COUNT(*) FROM teams t
-                 JOIN team_members tm ON tm.team_id = t.id AND tm.user_id = ? AND tm.role = 'owner'
-                 WHERE COALESCE(t.plan, 'free') = 'free'"
-            );
-            $stmt->execute([$uid]);
-        } catch (Throwable $e) {
-            // Billing migration (teams.plan) not applied yet — count all owned teams instead
-            // so team creation never 500s because of a missing optional column.
-            $stmt = db()->prepare(
-                "SELECT COUNT(*) FROM teams t
-                 JOIN team_members tm ON tm.team_id = t.id AND tm.user_id = ? AND tm.role = 'owner'"
-            );
-            $stmt->execute([$uid]);
-        }
-        if ((int)$stmt->fetchColumn() >= $freeTeamLimit) {
-            json_response(['error' => "Free plan allows $freeTeamLimit team. Upgrade to create more teams."], 402);
-        }
-    }
-}
-
-if (!function_exists('require_seats_available')) {
-    function require_seats_available(int $teamId): void
-    {
-        $freeSeatLimit = 3; // free plan: max members per team
-        $pdo = db();
-        $stmt = $pdo->prepare('SELECT COALESCE(plan, "free") AS plan FROM teams WHERE id = ?');
-        $stmt->execute([$teamId]);
-        $plan = $stmt->fetchColumn();
-        if ($plan !== 'free') return; // paid plans: unlimited seats
-
-        $stmt = $pdo->prepare('SELECT COUNT(*) FROM team_members WHERE team_id = ?');
-        $stmt->execute([$teamId]);
-        if ((int)$stmt->fetchColumn() >= $freeSeatLimit) {
-            json_response(['error' => "Free plan allows $freeSeatLimit members per team. Upgrade to add more seats."], 402);
-        }
-    }
-}
-
 $uid = current_user_id();
 $pdo = db();
 $method = $_SERVER['REQUEST_METHOD'];
@@ -70,6 +22,22 @@ switch ("$method:$action") {
                                ORDER BY t.created_at DESC');
         $stmt->execute([$uid]);
         json_response(['teams' => $stmt->fetchAll()]);
+        break;
+
+    // Current user's team-creation usage against their plan — lets the UI
+    // show "2/2 teams used" before they hit the hard block.
+    case 'GET:limits':
+        $limits = plan_limits(user_plan($uid));
+        $stmt = $pdo->prepare(
+            "SELECT COUNT(*) FROM teams t
+             JOIN team_members tm ON tm.team_id = t.id AND tm.user_id = ? AND tm.role = 'owner'"
+        );
+        $stmt->execute([$uid]);
+        json_response([
+            'plan' => user_plan($uid),
+            'teams_owned' => (int)$stmt->fetchColumn(),
+            'max_teams' => (int)$limits['max_teams'],
+        ]);
         break;
 
     case 'POST:create':
@@ -162,9 +130,11 @@ switch ("$method:$action") {
         $targetUserId = (int)($in['user_id'] ?? 0);
         require_team_manager($teamId);
         if (team_role($teamId, $targetUserId) === 'owner') json_response(['error' => 'Cannot remove the team owner'], 403);
-        // Unassign their tasks in this team's projects rather than leaving dangling references.
+        // Unassign their tasks (both project tasks and direct team tasks) rather than leaving dangling references.
         $pdo->prepare('UPDATE project_tasks pt JOIN projects p ON p.id = pt.project_id
                        SET pt.assignee_id = NULL WHERE p.team_id = ? AND pt.assignee_id = ?')
+            ->execute([$teamId, $targetUserId]);
+        $pdo->prepare('UPDATE team_tasks SET assignee_id = NULL WHERE team_id = ? AND assignee_id = ?')
             ->execute([$teamId, $targetUserId]);
         $pdo->prepare('DELETE FROM team_members WHERE team_id = ? AND user_id = ?')
             ->execute([$teamId, $targetUserId]);
@@ -176,6 +146,8 @@ switch ("$method:$action") {
         if (team_role($teamId, $uid) === 'owner') json_response(['error' => 'Transfer ownership before leaving, or delete the team instead'], 403);
         $pdo->prepare('UPDATE project_tasks pt JOIN projects p ON p.id = pt.project_id
                        SET pt.assignee_id = NULL WHERE p.team_id = ? AND pt.assignee_id = ?')
+            ->execute([$teamId, $uid]);
+        $pdo->prepare('UPDATE team_tasks SET assignee_id = NULL WHERE team_id = ? AND assignee_id = ?')
             ->execute([$teamId, $uid]);
         $pdo->prepare('DELETE FROM team_members WHERE team_id = ? AND user_id = ?')->execute([$teamId, $uid]);
         json_response(['ok' => true]);
