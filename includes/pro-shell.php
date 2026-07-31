@@ -75,7 +75,15 @@ function pro_head(string $title): void
         .aurora .a2 { width:420px; height:420px; bottom:-160px; left:-140px; background:rgba(15,68,54,.10); }
         :root[data-theme="dark"] .aurora .a2 { background:rgba(143,160,232,.10); }
 
-        .wrap { max-width:900px; margin:0 auto; padding:22px 18px 90px; }
+        .wrap { max-width:560px; margin:0 auto; padding:22px 18px 90px; }
+
+            @media (min-width: 720px) {
+                .wrap { max-width:660px; padding:22px 24px 90px; }
+            }
+
+            @media (min-width: 980px) {
+                .wrap { max-width:760px; }
+            }
 
         /* ═══════ HEADER ═══════ */
         .pro-header { display:flex; justify-content:space-between; align-items:center; gap:12px; flex-wrap:wrap; margin-bottom:8px; }
@@ -230,5 +238,16 @@ function pro_header(array $user, string $active = 'teams', string $crumbHtml = '
             clearTimeout(el._t); el._t = setTimeout(() => el.classList.remove('show'), 2600);
         }
     </script>
+    <?php
+}
+
+function pro_footer(array $user): void
+{
+    ?>
+    <div class="foot">
+        <div class="n">Taskvel</div>
+        <div class="d">Focus · Rank · Ship</div>
+        <div class="k">Signed in as <b><?= htmlspecialchars($user['email']) ?></b> · <a href="#" onclick="logoutUser();return false;" style="color:var(--accent);font-weight:600">Log out</a></div>
+    </div>
     <?php
 }

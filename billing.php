@@ -11,6 +11,9 @@ $user = current_user();
 <meta name="csrf-token" content="<?= htmlspecialchars(csrf_token()) ?>">
 <?php pro_head('Billing & Plan'); ?>
 <style>
+    .btn-spinner { display:inline-block; width:13px; height:13px; border:2px solid rgba(255,255,255,.5); border-top-color:#fff; border-radius:50%; animation:btnspin .7s linear infinite; margin-right:2px; vertical-align:-2px; }
+    .btn.ghost .btn-spinner { border-color:var(--line2); border-top-color:var(--ink2); }
+    @keyframes btnspin { to { transform:rotate(360deg); } }
     .plan-card { padding:22px 24px; border-radius:16px; background:var(--bg-elev); border:1px solid var(--line); margin-bottom:20px; }
     .plan-card.trial { border-color:var(--accent); }
     .plan-card.expired { border-color:var(--bad); background:var(--bad-soft); }
@@ -37,7 +40,7 @@ $user = current_user();
 </div>
 
 <!-- Create organization modal -->
-<div class="modal-overlay" id="org-overlay" onclick="if(event.target===this)closeCreateOrg()">
+<div class="modal-overlay" id="org-overlay" onclick="if(event.target===this && !orgActionInFlight)closeCreateOrg()">
     <div class="modal">
         <h2>Set up your organization</h2>
         <div class="fg"><label>Organization name</label><input type="text" id="org-name" maxlength="150" placeholder="e.g. Acme Inc." /></div>
@@ -55,7 +58,7 @@ $user = current_user();
 </div>
 
 <!-- Invite employee modal -->
-<div class="modal-overlay" id="invite-overlay" onclick="if(event.target===this)closeInvite()">
+<div class="modal-overlay" id="invite-overlay" onclick="if(event.target===this && !orgActionInFlight)closeInvite()">
     <div class="modal">
         <h2>Add an employee</h2>
         <div class="fg"><label>Email</label><input type="email" id="invite-email" placeholder="name@company.com" /></div>
@@ -74,6 +77,7 @@ $user = current_user();
 <script>
 const MY_USER_ID = <?= (int)current_user_id() ?>;
 let currentOrg = null;
+let orgActionInFlight = false;
 
 async function loadBillingPage() {
     await loadPlanStatus();
@@ -190,8 +194,17 @@ async function loadOrgMembers(orgId) {
 function openCreateOrg() { document.getElementById('org-overlay').classList.add('open'); }
 function closeCreateOrg() { document.getElementById('org-overlay').classList.remove('open'); }
 async function submitCreateOrg() {
+    if (orgActionInFlight) return;
     const name = document.getElementById('org-name').value.trim();
     if (!name) { toast('Give your organization a name'); return; }
+    const btn = document.querySelector('#org-overlay .modal-actions .btn:not(.ghost)');
+    const cancelBtn = document.querySelector('#org-overlay .modal-actions .btn.ghost');
+    const originalHTML = btn.innerHTML;
+    orgActionInFlight = true;
+    btn.disabled = true;
+    cancelBtn.disabled = true;
+    btn.innerHTML = '<span class="btn-spinner"></span> Creating organization…';
+    btn.style.cursor = 'wait';
     try {
         await Taskvel.request('/api/organizations.php?action=create', { method:'POST', body:{
             name, seats: parseInt(document.getElementById('org-seats').value, 10) || 5,
@@ -199,23 +212,49 @@ async function submitCreateOrg() {
         }});
         toast('Organization created ✓');
         closeCreateOrg();
-        loadOrgSection();
-    } catch (e) { toast(e.message || 'Could not create organization'); }
+    } catch (e) {
+        toast(e.message || 'Could not create organization');
+    } finally {
+        orgActionInFlight = false;
+        btn.disabled = false;
+        cancelBtn.disabled = false;
+        btn.innerHTML = originalHTML;
+        btn.style.cursor = '';
+        await loadOrgSection();
+    }
 }
 
 function openInvite() { document.getElementById('invite-overlay').classList.add('open'); }
 function closeInvite() { document.getElementById('invite-overlay').classList.remove('open'); }
 async function submitInvite() {
+    if (orgActionInFlight) return;
     const email = document.getElementById('invite-email').value.trim();
     if (!email) { toast('Enter an email address'); return; }
+    const btn = document.querySelector('#invite-overlay .modal-actions .btn:not(.ghost)');
+    const cancelBtn = document.querySelector('#invite-overlay .modal-actions .btn.ghost');
+    const originalHTML = btn.innerHTML;
+    orgActionInFlight = true;
+    btn.disabled = true;
+    cancelBtn.disabled = true;
+    btn.innerHTML = '<span class="btn-spinner"></span> Adding employee…';
+    btn.style.cursor = 'wait';
     try {
         const res = await Taskvel.request('/api/organizations.php?action=invite', { method:'POST', body:{
             org_id: currentOrg.organization_id, email, role: document.getElementById('invite-role').value,
         }});
         toast(res.is_new_user ? 'Account created and invited ✓' : 'Added to your organization ✓');
         closeInvite();
-        loadOrgSection();
-    } catch (e) { toast(e.message || 'Could not add employee'); }
+    } catch (e) {
+    toast(e.message || 'Could not add employee');
+        if ((e.message || '').toLowerCase().includes('already a member')) closeInvite();
+    } finally {
+        orgActionInFlight = false;
+        btn.disabled = false;
+        cancelBtn.disabled = false;
+        btn.innerHTML = originalHTML;
+        btn.style.cursor = '';
+        await loadOrgSection();
+    }
 }
 
 async function addSeats() {

@@ -113,12 +113,14 @@ switch ("$method:$action") {
 
         $loginUrl = (!empty($_SERVER['HTTPS']) ? 'https://' : 'http://') . ($_SERVER['HTTP_HOST'] ?? '') . '/login.php';
         try {
-            if ($result['is_new_user']) {
-                send_org_onboarding_email($email, $result['name'], $orgName, $loginUrl, $result['temp_password']);
-            } else {
-                send_org_added_email($email, $result['name'], $orgName, $loginUrl);
-            }
-        } catch (Throwable $e) { /* the seat is already assigned — email delivery is best-effort */ }
+    if ($result['is_new_user']) {
+        send_org_onboarding_email($email, $result['name'], $orgName, $loginUrl, $result['temp_password']);
+    } else {
+        send_org_added_email($email, $result['name'], $orgName, $loginUrl);
+    }
+} catch (Throwable $e) {
+    error_log('[org-invite] Email send failed for ' . $email . ': ' . $e->getMessage());
+}
 
         json_response(['ok' => true, 'user_id' => $result['user_id'], 'is_new_user' => $result['is_new_user']]);
         break;
