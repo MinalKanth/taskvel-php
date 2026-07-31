@@ -567,13 +567,7 @@ composer require stripe/stripe-php
 
 Then set the following environment variables (get the price IDs from your Stripe Dashboard → Products):
 
-```bash
-STRIPE_SECRET_KEY=sk_live_...                  # or sk_test_... while testing
-STRIPE_WEBHOOK_SECRET=whsec_...
-STRIPE_PRICE_PRO=price_...                     # individual "Upgrade to Pro" subscription
-STRIPE_PRICE_ORG_SEAT_MONTHLY=price_...        # per-seat price, billed monthly
-STRIPE_PRICE_ORG_SEAT_YEARLY=price_...         # per-seat price, billed yearly
-APP_BASE_URL=https://yourdomain.com            # used to build Stripe success/cancel redirect URLs
+
 ```
 
 Point your Stripe webhook endpoint at `https://yourdomain.com/api/stripe-webhook.php` and subscribe it to at least `checkout.session.completed` and `customer.subscription.deleted`. Until `STRIPE_SECRET_KEY` is set, the "Upgrade to Pro" and "add seats" buttons fail gracefully with a clear "Stripe is not configured yet" message instead of erroring — every other Taskvel feature works exactly as before.
