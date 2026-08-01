@@ -102,6 +102,20 @@ switch ("$method:$action") {
         json_response(['workday' => $workday]);
         break;
 
+    // Lets someone who already checked out resume the same workday — e.g.
+    // they stepped out, came back, and want to log more tasks or extend
+    // their day. Keeps the original checkin_at and all existing tasks;
+    // just clears checkout_at so the UI treats the day as open again.
+    case 'POST:reopen':
+        $workday = get_todays_workday($pdo, $uid, $today);
+        if (!$workday) json_response(['error' => 'You have not checked in today'], 422);
+        if (!$workday['checkout_at']) json_response(['ok' => true, 'workday' => $workday]); // already open, idempotent
+        $pdo->prepare('UPDATE workdays SET checkout_at = NULL WHERE id = ?')->execute([$workday['id']]);
+        audit_log($uid, 'workday_reopened', ['workday_id' => $workday['id']]);
+        $workday = get_todays_workday($pdo, $uid, $today);
+        json_response(['ok' => true, 'workday' => $workday]);
+        break;
+
     case 'POST:add-task':
         enforce_rate_limit("workday-add:$uid", 100, 3600);
         $workday = get_todays_workday($pdo, $uid, $today);

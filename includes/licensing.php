@@ -16,10 +16,16 @@ function recompute_user_plan(int $userId): void
 {
     $pdo = db();
 
-    // An active (non-suspended) seat in any organization always wins —
+    // An active (non-suspended) seat in a *paid* organization always wins —
     // an org is paying for this account, so it takes precedence over an
-    // expiring trial.
-    $stmt = $pdo->prepare("SELECT 1 FROM organization_members WHERE user_id = ? AND status = 'active' LIMIT 1");
+    // expiring trial. Must join organizations and check plan_status here —
+    // an org created but never checked out through Stripe has plan_status
+    // 'pending' and must NOT grant Pro to its members.
+    $stmt = $pdo->prepare(
+        "SELECT 1 FROM organization_members om
+         JOIN organizations o ON o.id = om.organization_id
+         WHERE om.user_id = ? AND om.status = 'active' AND o.plan_status = 'active' LIMIT 1"
+    );
     $stmt->execute([$userId]);
     if ($stmt->fetchColumn()) {
         $pdo->prepare("UPDATE users SET plan = 'pro', plan_source = 'org_seat' WHERE id = ?")->execute([$userId]);

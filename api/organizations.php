@@ -30,9 +30,13 @@ switch ("$method:$action") {
         $seats = max(1, (int)($in['seats'] ?? 5));
 
         $pdo->beginTransaction();
-        $pdo->prepare('INSERT INTO organizations (name, owner_user_id, billing_cycle, seats_purchased, renewal_date)
-                       VALUES (?, ?, ?, ?, DATE_ADD(CURDATE(), INTERVAL 1 ' . ($billingCycle === 'yearly' ? 'YEAR' : 'MONTH') . '))')
-            ->execute([$name, $uid, $billingCycle, $seats]);
+        // seats_purchased starts at 0 — the stripe webhook's org:<id>:seats:<n>
+        // handler adds the paid seat count once checkout.session.completed
+        // fires (same additive path used for "add more seats" later, so we
+        // never double-count by also setting seats here).
+        $pdo->prepare('INSERT INTO organizations (name, owner_user_id, billing_cycle, seats_purchased, plan_status, renewal_date)
+                       VALUES (?, ?, ?, 0, \'pending\', DATE_ADD(CURDATE(), INTERVAL 1 ' . ($billingCycle === 'yearly' ? 'YEAR' : 'MONTH') . '))')
+            ->execute([$name, $uid, $billingCycle]);
         $orgId = (int)$pdo->lastInsertId();
         $pdo->prepare('INSERT INTO organization_members (organization_id, user_id, role, joined_at) VALUES (?, ?, \'owner\', NOW())')
             ->execute([$orgId, $uid]);
@@ -47,7 +51,7 @@ switch ("$method:$action") {
         recompute_user_plan($uid);
         audit_log($uid, 'org_created', ['organization_id' => $orgId, 'seats' => $seats]);
 
-        json_response(['ok' => true, 'organization_id' => $orgId]);
+        json_response(['ok' => true, 'organization_id' => $orgId, 'seats' => $seats]);
         break;
 
     // Dashboard: seats purchased/assigned/available, plan, renewal, status,

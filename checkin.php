@@ -180,6 +180,7 @@ function renderStatus() {
                 <div class="big-icon">🌙</div>
                 <h2>Day complete</h2>
                 <div class="meta">Checked in ${fmtTime(currentWorkday.checkin_at)} · Checked out ${fmtTime(currentWorkday.checkout_at)}</div>
+                <button class="btn sm ghost" style="margin-top:12px" onclick="reopenDay()">🔁 Check in again</button>
             </div>`;
         return;
     }
@@ -214,6 +215,12 @@ async function startBreak() {
 async function endBreak() {
     await Taskvel.request('/api/workday.php?action=break-end', { method: 'POST' });
     load();
+}
+async function reopenDay() {
+    try {
+        await Taskvel.request('/api/workday.php?action=reopen', { method: 'POST' });
+        load();
+    } catch (e) { alert(e.message || 'Could not check in again'); }
 }
 
 function renderTasks() {

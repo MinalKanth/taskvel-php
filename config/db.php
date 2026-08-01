@@ -1,5 +1,34 @@
 <?php
 // ------------------------------------------------------------
+// Load .env into getenv()/$_ENV before any config constant reads it.
+// Every config/*.php file in this app calls getenv(), so this must run
+// first — db.php is required earliest by nearly every entry point,
+// which is why the loader lives here rather than in each file.
+// ------------------------------------------------------------
+(function () {
+    static $loaded = false;
+    if ($loaded) return;
+    $loaded = true;
+    $envFile = __DIR__ . '/../.env';
+    if (!is_file($envFile)) return;
+    foreach (file($envFile, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES) as $line) {
+        $line = trim($line);
+        if ($line === '' || str_starts_with($line, '#')) continue;
+        if (!str_contains($line, '=')) continue;
+        [$key, $value] = explode('=', $line, 2);
+        $key = trim($key);
+        $value = trim($value);
+        // Strip matching surrounding quotes, e.g. KEY="value with spaces"
+        if (strlen($value) >= 2 && (($value[0] === '"' && str_ends_with($value, '"')) || ($value[0] === "'" && str_ends_with($value, "'")))) {
+            $value = substr($value, 1, -1);
+        }
+        if ($key === '') continue;
+        putenv("$key=$value");
+        $_ENV[$key] = $value;
+    }
+})();
+
+// ------------------------------------------------------------
 // Database connection (PDO, MySQL)
 // Update these 4 values for your hosting environment.
 // ------------------------------------------------------------

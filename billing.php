@@ -206,12 +206,19 @@ async function submitCreateOrg() {
     btn.innerHTML = '<span class="btn-spinner"></span> Creating organization…';
     btn.style.cursor = 'wait';
     try {
-        await Taskvel.request('/api/organizations.php?action=create', { method:'POST', body:{
+        const created = await Taskvel.request('/api/organizations.php?action=create', { method:'POST', body:{
             name, seats: parseInt(document.getElementById('org-seats').value, 10) || 5,
             billing_cycle: document.getElementById('org-cycle').value,
         }});
-        toast('Organization created ✓');
-        closeCreateOrg();
+        // Org is created in 'pending' state with 0 seats and grants no Pro
+        // access yet — send the owner straight to Stripe to pay for the
+        // seats they just requested. plan_status flips to 'active' (and
+        // seats_purchased is set) by the webhook once payment completes.
+        const { url } = await Taskvel.request('/api/billing.php?action=create-org-checkout-session', {
+            method: 'POST', body: { org_id: created.organization_id, seats: created.seats },
+        });
+        window.location.href = url;
+        return; // leaving the page — skip the finally's loadOrgSection()
     } catch (e) {
         toast(e.message || 'Could not create organization');
     } finally {
