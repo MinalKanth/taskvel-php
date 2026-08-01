@@ -866,16 +866,13 @@ section{position:relative;}
 
 .faq-item{
   position:relative;
-  transition:background .35s ease, border-color .35s ease, box-shadow .35s ease, transform .3s var(--ease);
+  transition:background .35s ease, border-color .35s ease, box-shadow .35s ease;
   border-radius:14px;
-  perspective:1400px;
 }
 .faq-flip{
   position:relative; width:100%;
-  transform-style:preserve-3d;
-  transition:transform .7s var(--ease);
 }
-.faq-item.open .faq-flip{ transform:rotateX(-8deg); }
+.faq-item.open .faq-flip{ transform:none; }
 .faq-a-panel{
   transform-style:preserve-3d;
   transform-origin:top center;
@@ -904,7 +901,6 @@ section{position:relative;}
 .faq-item:hover{
   background:rgba(255,255,255,0.6);
   box-shadow:var(--shadow-sm);
-  transform:translateY(-2px) translateZ(10px) rotateX(1.5deg);
 }
 .faq-item.open{
   background:var(--ivory);
@@ -1793,14 +1789,62 @@ section[id], header[id]{ scroll-margin-top:88px; }
   @keyframes processSpin{ from{transform:rotateX(0) rotateY(0);} to{transform:rotateX(360deg) rotateY(360deg);} }
 }
 
-.faq-item{ transform-style:preserve-3d; }
 .faq-item.open{
   box-shadow:
     0 1px 0 rgba(28,28,26,0.04),
     0 8px 0 -4px rgba(28,28,26,0.03),
     0 16px 24px -12px rgba(10,17,40,0.15);
-  transform:translateZ(6px);
 }
+
+/* ============================= HOW IT WORKS v2 — 3D FLIP STEPPER ============================= */
+.hiw-track{position:relative; display:grid; grid-template-columns:1fr; gap:26px; margin-top:20px; perspective:1600px;}
+@media (min-width:900px){ .hiw-track{grid-template-columns:repeat(5,1fr); gap:20px;} }
+.hiw-line{display:none;}
+@media (min-width:900px){
+  .hiw-line{display:block; position:absolute; top:54px; left:6%; right:6%; height:2px; z-index:0; background:var(--line); overflow:hidden; border-radius:2px;}
+  .hiw-line-fill{position:absolute; inset:0; width:0%; border-radius:2px; background:linear-gradient(90deg,var(--amber),var(--amber-2),var(--teal-2)); box-shadow:0 0 14px rgba(232,199,102,0.6); transition:width 1.2s var(--ease);}
+}
+.hiw-card{position:relative; z-index:1; height:230px; cursor:pointer; perspective:1200px;}
+.hiw-inner{position:relative; width:100%; height:100%; transform-style:preserve-3d; transition:transform .7s var(--ease);}
+.hiw-card.flipped .hiw-inner{transform:rotateY(180deg);}
+.hiw-face{position:absolute; inset:0; backface-visibility:hidden; -webkit-backface-visibility:hidden; border-radius:var(--radius-md); padding:26px 22px; display:flex; flex-direction:column;}
+.hiw-front{background:var(--ivory); border:1px solid var(--line); box-shadow:var(--shadow-sm); transition:transform .4s var(--ease), box-shadow .4s var(--ease), border-color .3s ease;}
+.hiw-card:not(.flipped):hover .hiw-front{transform:translateY(-6px); box-shadow:var(--shadow-lg); border-color:transparent;}
+.hiw-num{font-family:var(--font-display); font-weight:700; font-size:13px; color:var(--amber); position:absolute; top:20px; right:22px;}
+.hiw-icon{width:56px; height:56px; border-radius:16px; margin-bottom:18px; display:flex; align-items:center; justify-content:center; font-size:22px; background:linear-gradient(145deg,var(--teal-deep),var(--navy-ink)); color:var(--teal-2); box-shadow:0 14px 26px -14px rgba(10,17,40,0.5); transition:transform .45s var(--ease);}
+.hiw-card:hover .hiw-icon{transform:rotate(-8deg) scale(1.08);}
+.hiw-front h4{font-size:17px; margin-bottom:8px;}
+.hiw-front p{font-size:13.5px;}
+.hiw-flip-hint{margin-top:auto; font-size:11px; color:#8F8B80; font-family:var(--font-eyebrow); letter-spacing:.05em; text-transform:uppercase; display:flex; align-items:center; gap:5px;}
+.hiw-flip-hint::before{content:'⟲'; font-size:13px;}
+.hiw-back{transform:rotateY(180deg); background:linear-gradient(160deg,var(--teal-deep),var(--navy-ink)); color:var(--ivory); justify-content:center; box-shadow:var(--shadow-lg);}
+.hiw-back h5{color:var(--amber-2); font-size:14px; margin-bottom:10px; font-family:var(--font-display);}
+.hiw-back p{color:rgba(250,247,242,0.78); font-size:13px; line-height:1.6;}
+@media (prefers-reduced-motion: reduce){ .hiw-inner{transition:opacity .3s ease;} .hiw-card.flipped .hiw-inner{transform:none;} }
+
+/* ============================= INDUSTRIES v2 — 3D GLOW GRID ============================= */
+.ind-grid{display:grid; grid-template-columns:repeat(2,1fr); gap:18px; perspective:1400px;}
+@media (min-width:640px){ .ind-grid{grid-template-columns:repeat(3,1fr); gap:22px;} }
+@media (min-width:1024px){ .ind-grid{grid-template-columns:repeat(6,1fr);} }
+.ind-card{position:relative; overflow:hidden; border-radius:var(--radius-md); padding:28px 20px; min-height:200px; display:flex; flex-direction:column; justify-content:flex-end; color:var(--ivory); transform-style:preserve-3d; will-change:transform; transition:transform .45s var(--ease), box-shadow .45s var(--ease); border:1px solid rgba(255,255,255,0.08);}
+.ind-card:nth-child(6n+1){background:linear-gradient(160deg,var(--teal-deep),var(--navy-ink));}
+.ind-card:nth-child(6n+2){background:linear-gradient(160deg,var(--amber-deep),#5c4409);}
+.ind-card:nth-child(6n+3){background:linear-gradient(160deg,var(--navy-2),var(--navy-ink));}
+.ind-card:nth-child(6n+4){background:linear-gradient(160deg,#3a2f6b,var(--navy-ink));}
+.ind-card:nth-child(6n+5){background:linear-gradient(160deg,var(--teal-deep),#0b1330);}
+.ind-card:nth-child(6n+6){background:linear-gradient(160deg,var(--amber-deep),var(--navy-ink));}
+.ind-card::before{content:''; position:absolute; inset:0; z-index:0; pointer-events:none; background:radial-gradient(220px circle at var(--mx,50%) var(--my,20%), rgba(255,255,255,0.16), transparent 60%); opacity:0; transition:opacity .4s ease;}
+.ind-card:hover::before{opacity:1;}
+.ind-card:hover{box-shadow:0 30px 60px -22px rgba(10,17,40,0.55);}
+.ind-card > *{position:relative; z-index:1;}
+.ind-icon{width:44px; height:44px; border-radius:12px; margin-bottom:14px; display:flex; align-items:center; justify-content:center; font-size:19px; background:rgba(255,255,255,0.12); border:1px solid rgba(255,255,255,0.18); transition:transform .4s var(--ease);}
+.ind-card:hover .ind-icon{transform:translateZ(20px) rotate(-8deg) scale(1.1);}
+.ind-card h4{color:var(--ivory); font-size:16.5px; margin-bottom:6px; transition:transform .4s var(--ease);}
+.ind-card:hover h4{transform:translateZ(14px);}
+.ind-desc{font-size:12.5px; color:rgba(250,247,242,0.65); line-height:1.5; max-height:0; opacity:0; overflow:hidden; transition:max-height .4s var(--ease), opacity .4s ease;}
+.ind-card:hover .ind-desc{max-height:80px; opacity:1;}
+
+
 </style>
 
 <script type="application/ld+json">
@@ -2124,22 +2168,15 @@ section[id], header[id]{ scroll-margin-top:88px; }
 </section>
 
 <!-- ============================= PROCESS ============================= -->
+<!-- ============================= PROCESS ============================= -->
 <section class="pad process-strip" id="process">
   <div class="wrap">
     <div class="section-head reveal">
       <span class="eyebrow">How It Works</span>
-      <h2>Five steps from onboarding to ongoing peace of mind.</h2>
+      <h2>Five steps from onboarding to ongoing peace of mind. Tap a card to flip it.</h2>
     </div>
-    <div class="process-track stagger reveal">
-    <div class="process-orb-track"><div class="process-orb" id="processOrb">
-      <span class="face f1"></span><span class="face f2"></span><span class="face f3"></span>
-      <span class="face f4"></span><span class="face f5"></span><span class="face f6"></span>
-    </div></div>
-      <div class="process-step" style="--i:0"><div class="step-badge">01</div><h4>Share Details</h4><p>Tell us your business type and compliance needs.</p></div>
-      <div class="process-step" style="--i:1"><div class="step-badge">02</div><h4>Upload Documents</h4><p>Securely share the required documents on our portal.</p></div>
-      <div class="process-step" style="--i:2"><div class="step-badge">03</div><h4>Compliance Check</h4><p>Our experts prepare and cross-verify every filing.</p></div>
-      <div class="process-step" style="--i:3"><div class="step-badge">04</div><h4>Filing &amp; Reporting</h4><p>We file digitally and send you the acknowledgement.</p></div>
-      <div class="process-step" style="--i:4"><div class="step-badge">05</div><h4>Ongoing Support</h4><p>We track renewals and handle regulatory queries.</p></div>
+    <div class="hiw-track reveal" id="hiwTrack">
+      <div class="hiw-line" aria-hidden="true"><div class="hiw-line-fill" id="hiwLineFill"></div></div>
     </div>
   </div>
 </section>
@@ -2151,12 +2188,7 @@ section[id], header[id]{ scroll-margin-top:88px; }
       <span class="eyebrow">Industries We Serve</span>
       <h2>Compliance experience across the sectors that build Assam's economy.</h2>
     </div>
-    <div class="industry-scroll reveal">
-      <div class="industry-card"><div class="n">01</div><h4>Manufacturers</h4></div>
-      <div class="industry-card"><div class="n">02</div><h4>Hospitals</h4></div>
-      <div class="industry-card"><div class="n">03</div><h4>Hotels</h4></div>
-      <div class="industry-card"><div class="n">04</div><h4>Contractors</h4></div>
-    </div>
+    <div class="ind-grid reveal" id="indGrid"></div>
   </div>
 </section>
 
@@ -3026,7 +3058,77 @@ if(!prefersReduced && !isCoarsePointer){
     cell.addEventListener('mouseleave', ()=>{ cell.style.transform = ''; });
   });
 }
+/* ============================= HOW IT WORKS v2 ============================= */
+const hiwData = [
+  { icon:'✎', title:'Share Details', desc:'Tell us your business type and compliance needs.', back:'A 10-minute conversation gives us everything we need to map the right filings to your business — no guesswork, no generic checklists.' },
+  { icon:'⇪', title:'Upload Documents', desc:'Securely share the required documents on our portal.', back:'Encrypted upload, checklist-guided so you never miss a document — nothing sits unprotected in an inbox.' },
+  { icon:'⌕', title:'Compliance Check', desc:'Our experts prepare and cross-verify every filing.', back:'Every filing is reviewed by a second set of eyes before it goes out — catching errors before they become penalties.' },
+  { icon:'⇧', title:'Filing & Reporting', desc:'We file digitally and send you the acknowledgement.', back:'You get the acknowledgement the same day we file — full visibility, zero chasing.' },
+  { icon:'◷', title:'Ongoing Support', desc:'We track renewals and handle regulatory queries.', back:'Your compliance calendar runs quietly in the background — renewals, due dates and notices, handled before they turn urgent.' }
+];
+const hiwTrack = document.getElementById('hiwTrack');
+hiwTrack.insertAdjacentHTML('beforeend', hiwData.map((s,i)=>`
+  <div class="hiw-card" style="--i:${i}" data-idx="${i}">
+    <div class="hiw-inner">
+      <div class="hiw-face hiw-front">
+        <span class="hiw-num">0${i+1}</span>
+        <div class="hiw-icon">${s.icon}</div>
+        <h4>${s.title}</h4><p>${s.desc}</p>
+        <span class="hiw-flip-hint">Flip</span>
+      </div>
+      <div class="hiw-face hiw-back"><h5>${s.title}</h5><p>${s.back}</p></div>
+    </div>
+  </div>`).join(''));
 
+hiwTrack.querySelectorAll('.hiw-card').forEach(card=>{
+  card.addEventListener('click', ()=> card.classList.toggle('flipped'));
+});
+if(!prefersReduced && !isCoarsePointer){
+  hiwTrack.querySelectorAll('.hiw-card').forEach(card=>{
+    const inner = card.querySelector('.hiw-inner');
+    card.addEventListener('mousemove', (e)=>{
+      if(card.classList.contains('flipped')) return;
+      const r = card.getBoundingClientRect();
+      const px = (e.clientX-r.left)/r.width, py = (e.clientY-r.top)/r.height;
+      inner.style.transform = `rotateY(${(px-0.5)*10}deg) rotateX(${(0.5-py)*10}deg)`;
+    });
+    card.addEventListener('mouseleave', ()=>{ if(!card.classList.contains('flipped')) inner.style.transform=''; });
+  });
+}
+const hiwLineFill = document.getElementById('hiwLineFill');
+if(hiwLineFill){
+  new IntersectionObserver((entries)=>{
+    entries.forEach(e=>{ if(e.isIntersecting){ hiwLineFill.style.width='100%'; } });
+  },{threshold:0.3}).observe(hiwTrack);
+}
+
+/* ============================= INDUSTRIES v2 ============================= */
+const industriesData = [
+  { icon:'⚙', title:'Manufacturers', desc:'Factory registrations, labour compliance & export documentation.' },
+  { icon:'✚', title:'Hospitals', desc:'Biomedical licensing, staff PF/ESIC & regulatory renewals.' },
+  { icon:'◈', title:'Hotels', desc:'FSSAI, trade licenses & payroll for seasonal staff.' },
+  { icon:'⚒', title:'Contractors', desc:'Labour licensing, CLRA compliance & tender documentation.' },
+  { icon:'🛍', title:'Retail & Traders', desc:'GST, Udyam registration & day-to-day bookkeeping.' },
+  { icon:'🚀', title:'Startups', desc:'Company incorporation, Startup India & early-stage compliance.' }
+];
+const indGrid = document.getElementById('indGrid');
+indGrid.innerHTML = industriesData.map((it,i)=>`
+  <div class="ind-card" style="--i:${i}">
+    <div class="ind-icon">${it.icon}</div>
+    <h4>${it.title}</h4>
+    <p class="ind-desc">${it.desc}</p>
+  </div>`).join('');
+if(!prefersReduced && !isCoarsePointer){
+  indGrid.querySelectorAll('.ind-card').forEach(card=>{
+    card.addEventListener('mousemove', (e)=>{
+      const r = card.getBoundingClientRect();
+      const px = (e.clientX-r.left)/r.width, py=(e.clientY-r.top)/r.height;
+      card.style.setProperty('--mx',(px*100)+'%'); card.style.setProperty('--my',(py*100)+'%');
+      card.style.transform = `translateY(-6px) rotateY(${(px-0.5)*10}deg) rotateX(${(0.5-py)*10}deg)`;
+    });
+    card.addEventListener('mouseleave', ()=>{ card.style.transform=''; });
+  });
+}
 /* ============================= INDUSTRY / AREA CARDS: 3D TILT ============================= */
 if(!prefersReduced && !isCoarsePointer){
   document.querySelectorAll('.industry-card').forEach(card=>{
@@ -3612,33 +3714,7 @@ document.querySelectorAll('.btn-gold[data-ripple]').forEach(btn=>{
   });
 })();
 
-(function initProcessOrb(){
-  const orb = document.getElementById('processOrb');
-  const track = document.querySelector('.process-track');
-  if(!orb || !track || window.innerWidth < 900) return;
-  const steps = track.querySelectorAll('.process-step');
-  function moveOrb(){
-    const badges = track.querySelectorAll('.step-badge');
-    let target = badges[0];
-    const trackRect = track.getBoundingClientRect();
-    const viewportCenter = window.innerHeight/2;
-    let closestDist = Infinity;
-    badges.forEach(b=>{
-      const r = b.getBoundingClientRect();
-      const d = Math.abs(r.top - viewportCenter);
-      if(d < closestDist){ closestDist = d; target = b; }
-    });
-    const tRect = target.getBoundingClientRect();
-    orb.style.left = (tRect.left - trackRect.left + tRect.width/2 - 10) + 'px';
-    orb.classList.add('show');
-  }
-  const orbObserver = new IntersectionObserver((entries)=>{
-    entries.forEach(e=> e.isIntersecting ? window.addEventListener('scroll', moveOrb) : null);
-  },{threshold:0.1});
-  orbObserver.observe(track);
-  window.addEventListener('scroll', moveOrb, {passive:true});
-  moveOrb();
-})();
+
 
 (function initGyroTilt(){
   if(!isCoarsePointer || prefersReduced || !ledgerCard) return;
