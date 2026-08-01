@@ -49,6 +49,44 @@ switch ("$method:$action") {
         json_response(['workday' => $workday, 'tasks' => $tasks, 'breaks' => $breaks]);
         break;
 
+    // Who this user could send their end-of-day report to: the
+    // owner/manager(s) of every team they belong to, plus every teammate
+    // on those teams — used to populate the "Send report to" picker at
+    // checkout. Gracefully returns empty lists if the Teams module's
+    // tables aren't installed, since Daily Check-in works standalone.
+    case 'GET:report-contacts':
+        $managers = [];
+        $teamMembers = [];
+        try {
+            $stmt = $pdo->prepare(
+                "SELECT DISTINCT u.id, u.name, u.email, t.name AS team_name
+                 FROM team_members me
+                 JOIN team_members tm ON tm.team_id = me.team_id AND tm.role IN ('owner','manager') AND tm.user_id != ?
+                 JOIN users u ON u.id = tm.user_id
+                 JOIN teams t ON t.id = me.team_id
+                 WHERE me.user_id = ?
+                 ORDER BY t.name, u.name"
+            );
+            $stmt->execute([$uid, $uid]);
+            $managers = $stmt->fetchAll();
+
+            $stmt = $pdo->prepare(
+                "SELECT DISTINCT u.id, u.name, u.email, t.name AS team_name
+                 FROM team_members me
+                 JOIN team_members tm ON tm.team_id = me.team_id AND tm.user_id != ?
+                 JOIN users u ON u.id = tm.user_id
+                 JOIN teams t ON t.id = me.team_id
+                 WHERE me.user_id = ?
+                 ORDER BY t.name, u.name"
+            );
+            $stmt->execute([$uid, $uid]);
+            $teamMembers = $stmt->fetchAll();
+        } catch (Throwable $e) {
+            // Teams tables not installed — Daily Check-in still works with custom emails only.
+        }
+        json_response(['managers' => $managers, 'team_members' => $teamMembers]);
+        break;
+
     case 'POST:checkin':
         $existing = get_todays_workday($pdo, $uid, $today);
         if ($existing) json_response(['workday' => $existing, 'already' => true]);
@@ -247,35 +285,64 @@ switch ("$method:$action") {
             'overtime_seconds' => $overtimeSeconds, 'overtime_text' => $overtimeSeconds > 0 ? fmt_duration($overtimeSeconds) : null,
         ];
 
-        $reportEmails = array_values(array_unique(array_filter(
-            array_merge([$workday['report_to_email']], array_map(fn($t) => $t['report_to_email'], $tasks))
-        )));
+        // ── Build the recipient list ─────────────────────────────────
+        // 1) Legacy per-day/per-task report-to emails (unchanged, kept
+        //    for backward compatibility with existing check-ins).
+        $legacyEmails = array_filter(array_merge([$workday['report_to_email']], array_map(fn($t) => $t['report_to_email'], $tasks)));
+
+        // 2) A manager picked from the checkout screen. Must actually be an
+        //    owner/manager on a team this user belongs to — never trust an
+        //    arbitrary user_id from the client.
+        $managerEmail = null;
+        $managerUserId = !empty($in['manager_user_id']) ? (int)$in['manager_user_id'] : null;
+        if ($managerUserId) {
+            $stmt = $pdo->prepare(
+                "SELECT u.email FROM team_members me
+                 JOIN team_members tm ON tm.team_id = me.team_id AND tm.user_id = ? AND tm.role IN ('owner','manager')
+                 JOIN users u ON u.id = tm.user_id
+                 WHERE me.user_id = ? LIMIT 1"
+            );
+            $stmt->execute([$managerUserId, $uid]);
+            $managerEmail = $stmt->fetchColumn() ?: null;
+        }
+
+        // 3) Any number of teammates picked from the checkout screen. Same
+        //    must-share-a-team-with-me rule applies to every id.
+        $teamMemberEmails = [];
+        $teamMemberIds = array_values(array_unique(array_filter(array_map('intval', $in['team_member_user_ids'] ?? []))));
+        if ($teamMemberIds) {
+            $placeholders = implode(',', array_fill(0, count($teamMemberIds), '?'));
+            $stmt = $pdo->prepare(
+                "SELECT DISTINCT u.email FROM team_members me
+                 JOIN team_members tm ON tm.team_id = me.team_id AND tm.user_id IN ($placeholders)
+                 JOIN users u ON u.id = tm.user_id
+                 WHERE me.user_id = ?"
+            );
+            $stmt->execute(array_merge($teamMemberIds, [$uid]));
+            $teamMemberEmails = array_column($stmt->fetchAll(), 'email');
+        }
+
+        // 4) Any custom, non-Taskvel email addresses typed in directly.
+        $customEmails = [];
+        foreach (($in['custom_emails'] ?? []) as $raw) {
+            $email = clean_email($raw);
+            if ($email !== '' && filter_var($email, FILTER_VALIDATE_EMAIL)) $customEmails[] = $email;
+        }
+
+        $reportEmails = array_values(array_unique(array_merge($legacyEmails, array_filter([$managerEmail]), $teamMemberEmails, $customEmails)));
+
         if ($reportEmails) {
             $userName = user_name($pdo, $uid);
-            $rows = '';
-            foreach ($tasks as $t) {
-                $statusLabel = ['pending' => 'Pending', 'in_progress' => 'In progress', 'pending_approval' => 'Awaiting approval', 'done' => 'Done'][$t['status']];
-                $durText = $t['duration_seconds'] ? fmt_duration((int)$t['duration_seconds']) : '—';
-                $rows .= "<tr><td style=\"padding:6px 10px;border-bottom:1px solid #eee\">{$t['title']}</td>"
-                       . "<td style=\"padding:6px 10px;border-bottom:1px solid #eee\">$statusLabel</td>"
-                       . "<td style=\"padding:6px 10px;border-bottom:1px solid #eee\">$durText</td></tr>";
-            }
-            $notesHtml = $notes ? "<p style=\"margin-top:14px\"><strong>Notes:</strong> " . nl2br(htmlspecialchars($notes)) . "</p>" : '';
-            $overtimeHtml = $overtimeSeconds > 0 ? " · overtime <strong>{$summary['overtime_text']}</strong>" : '';
-            $subject = "Daily summary for $userName — $today";
-            $html = "<div style=\"font-family:Arial,sans-serif;max-width:560px;margin:auto;padding:24px;border:1px solid #eee;border-radius:12px\">"
-                  . "<h2 style=\"margin:0 0 6px\">📋 Daily summary — $userName</h2>"
-                  . "<p style=\"color:#666;margin:0 0 18px\">$today</p>"
-                  . "<p><strong>{$summary['done']}</strong> done · <strong>{$summary['pending_approval']}</strong> awaiting approval · <strong>{$summary['in_progress']}</strong> in progress · <strong>{$summary['pending']}</strong> pending"
-                  . "<br>Worked <strong>{$summary['worked_text']}</strong> · Break time <strong>{$summary['break_text']}</strong>$overtimeHtml</p>"
-                  . "<table style=\"width:100%;border-collapse:collapse;margin-top:14px;font-size:14px\">"
-                  . "<tr style=\"text-align:left;color:#888;font-size:12px;text-transform:uppercase\"><th style=\"padding:6px 10px\">Task</th><th style=\"padding:6px 10px\">Status</th><th style=\"padding:6px 10px\">Time</th></tr>"
-                  . $rows . "</table>$notesHtml</div>";
+            $link = (!empty($_SERVER['HTTPS']) ? 'https://' : 'http://') . ($_SERVER['HTTP_HOST'] ?? '') . '/manager.php';
             foreach ($reportEmails as $email) {
-                try { send_mail($email, $subject, $html); } catch (Throwable $e) {}
+                try { send_daily_report_email($email, $userName, $today, $summary, $tasks, $notes, $link); } catch (Throwable $e) {}
             }
             notify_chat('Day checked out', "$userName checked out — {$summary['done']} done, {$summary['worked_text']} worked");
             $pdo->prepare('UPDATE workdays SET summary_sent = 1 WHERE id = ?')->execute([$workday['id']]);
+            audit_log($uid, 'daily_report_sent', [
+                'workday_id' => $workday['id'], 'recipient_count' => count($reportEmails),
+                'manager_included' => (bool)$managerEmail, 'team_members_included' => count($teamMemberEmails), 'custom_emails_included' => count($customEmails),
+            ]);
         }
 
         json_response(['ok' => true, 'summary' => $summary, 'notified' => $reportEmails]);

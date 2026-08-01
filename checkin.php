@@ -57,6 +57,24 @@ $user = current_user();
     .summary-stat .num { font-size:20px; font-weight:700; font-family:monospace; }
     .summary-stat .lbl { font-size:9px; color:var(--ink3); text-transform:uppercase; letter-spacing:.5px; margin-top:3px; }
     .notified-line { font-size:12px; color:var(--ink3); margin-top:14px; padding-top:14px; border-top:1px solid var(--line); }
+
+    /* Send end-of-day report to */
+    .report-card { background:var(--bg-elev); border:1px solid var(--line); border-radius:var(--r); padding:16px; margin-bottom:16px; }
+    .report-card label { font-size:12px; font-weight:700; color:var(--ink2); display:block; margin:12px 0 6px; }
+    .report-card label:first-child { margin-top:0; }
+    .report-card select { width:100%; padding:10px 12px; border:1px solid var(--line2); border-radius:9px; font-size:13.5px; font-family:inherit; }
+    .team-member-list { display:flex; flex-wrap:wrap; gap:8px; }
+    .team-member-chip { display:flex; align-items:center; gap:6px; padding:7px 12px; border:1px solid var(--line2); border-radius:999px;
+        font-size:12.5px; cursor:pointer; user-select:none; transition:background .15s,border-color .15s; }
+    .team-member-chip.checked { background:var(--accent-soft); border-color:var(--accent); color:var(--accent); }
+    .team-member-chip input { margin:0; }
+    .custom-email-row { display:flex; gap:8px; }
+    .custom-email-row input { flex:1; padding:10px 12px; border:1px solid var(--line2); border-radius:9px; font-size:13.5px; font-family:inherit; }
+    .custom-email-chips { display:flex; flex-wrap:wrap; gap:6px; margin-top:8px; }
+    .custom-email-chip { display:flex; align-items:center; gap:6px; background:var(--bg-sunk); border-radius:999px; padding:6px 8px 6px 12px; font-size:12.5px; }
+    .custom-email-chip button { border:none; background:var(--line2); color:var(--ink2); width:18px; height:18px; border-radius:50%;
+        cursor:pointer; font-size:11px; line-height:1; display:flex; align-items:center; justify-content:center; }
+    .report-hint { font-size:11px; color:var(--ink3); margin-top:8px; }
 </style>
 </head>
 <body>
@@ -88,6 +106,24 @@ $user = current_user();
             <h3>End of day notes (optional)</h3>
             <textarea class="checkout-notes" id="checkout-notes" placeholder="Anything worth mentioning — accomplishments, blockers, plans for tomorrow…"></textarea>
         </section>
+        <section>
+            <h3>📤 Send end-of-day report to</h3>
+            <div class="report-card">
+                <label for="report-manager">Manager</label>
+                <select id="report-manager"><option value="">— None —</option></select>
+
+                <label>Teammates</label>
+                <div class="team-member-list" id="report-team-members"><span class="report-hint">No teams found — join a team to loop in teammates here.</span></div>
+
+                <label>Custom email addresses</label>
+                <div class="custom-email-row">
+                    <input type="email" id="report-custom-email-input" placeholder="anyone@company.com" onkeydown="if(event.key==='Enter'||event.key===','){event.preventDefault();addCustomEmailChip();}" />
+                    <button type="button" class="btn sm ghost" onclick="addCustomEmailChip()">Add</button>
+                </div>
+                <div class="custom-email-chips" id="custom-email-chips"></div>
+                <div class="report-hint">Pick a manager, any number of teammates, and/or type in any other email — everyone selected gets the same report when you check out.</div>
+            </div>
+        </section>
         <button class="btn danger" id="checkout-btn" onclick="checkOut()">🚪 Check out for the day</button>
     </div>
     <div id="summary-area"></div>
@@ -118,6 +154,7 @@ async function load() {
         renderTasks();
         startLiveTimer();
         startIdleWatch();
+        loadReportContacts();
     } else if (workday && workday.checkout_at) {
         document.getElementById('task-area').style.display = 'none';
         renderCheckedOutSummary();
@@ -270,12 +307,54 @@ async function deleteTask(id) {
     load();
 }
 
+// ─────────── Send end-of-day report to (manager / teammates / custom emails) ───────────
+let customEmailChips = [];
+
+async function loadReportContacts() {
+    try {
+        const { managers, team_members } = await Taskvel.request('/api/workday.php?action=report-contacts');
+        const managerSelect = document.getElementById('report-manager');
+        managerSelect.innerHTML = '<option value="">— None —</option>' +
+            managers.map(m => `<option value="${m.id}">${esc(m.name)} (${esc(m.team_name)})</option>`).join('');
+
+        const list = document.getElementById('report-team-members');
+        list.innerHTML = team_members.length ? team_members.map(m => `
+            <label class="team-member-chip">
+                <input type="checkbox" value="${m.id}" onchange="this.closest('.team-member-chip').classList.toggle('checked', this.checked)" />
+                ${esc(m.name)} <span style="color:var(--ink3);font-size:11px">· ${esc(m.team_name)}</span>
+            </label>`).join('') : '<span class="report-hint">No teams found — join a team to loop in teammates here.</span>';
+    } catch (e) { /* Daily Check-in still works standalone without Teams */ }
+}
+
+function addCustomEmailChip() {
+    const input = document.getElementById('report-custom-email-input');
+    const email = input.value.trim().replace(/,$/, '');
+    if (!email) return;
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) { alert('That doesn\'t look like a valid email address'); return; }
+    if (!customEmailChips.includes(email)) customEmailChips.push(email);
+    input.value = '';
+    renderCustomEmailChips();
+}
+function removeCustomEmailChip(email) {
+    customEmailChips = customEmailChips.filter(e => e !== email);
+    renderCustomEmailChips();
+}
+function renderCustomEmailChips() {
+    document.getElementById('custom-email-chips').innerHTML = customEmailChips.map(email => `
+        <span class="custom-email-chip">${esc(email)} <button type="button" onclick="removeCustomEmailChip('${email.replace(/'/g,"\\'")}')">×</button></span>`).join('');
+}
+
 async function checkOut() {
     const stillOpen = currentTasks.filter(t => t.status !== 'done').length;
     if (stillOpen && !confirm(`${stillOpen} task(s) aren't fully done yet. Check out anyway?`)) return;
     const notes = document.getElementById('checkout-notes').value.trim();
+    const managerUserId = document.getElementById('report-manager').value || null;
+    const teamMemberUserIds = Array.from(document.querySelectorAll('#report-team-members input:checked')).map(el => parseInt(el.value, 10));
     try {
-        const res = await Taskvel.request('/api/workday.php?action=checkout', { method: 'POST', body: { notes } });
+        const res = await Taskvel.request('/api/workday.php?action=checkout', {
+            method: 'POST',
+            body: { notes, manager_user_id: managerUserId, team_member_user_ids: teamMemberUserIds, custom_emails: customEmailChips },
+        });
         clearInterval(liveTimerHandle);
         load();
         renderSummary(res.summary, res.notified);

@@ -1,6 +1,5 @@
 <?php
 require_once __DIR__ . '/../config/db.php';
-require_once __DIR__ . '/../config/mail.php';
 
 /**
  * Sends an HTML email.
@@ -600,4 +599,88 @@ function send_trial_reminder_email(string $to, string $name, string $milestone, 
     );
 
     return send_mail($to, $copy['subject'], $html);
+}
+
+/**
+ * The "send my end-of-day report" email — sent to a manager, any number of
+ * teammates, and/or arbitrary custom addresses selected at checkout.
+ * Deliberately built on the same email_shell() design system as every other
+ * Taskvel email (Task Update, Welcome, etc.) rather than the older ad-hoc
+ * inline-HTML the daily Check-in summary used previously, so it reads as
+ * part of one consistent, premium product rather than a bolted-on extra.
+ */
+function send_daily_report_email(string $to, string $userName, string $dateLabel, array $summary, array $tasks, ?string $notes, string $link): bool
+{
+    $subject = "$userName's daily report — $dateLabel";
+
+    $rows = '';
+    foreach ($tasks as $t) {
+        $statusLabel = ['pending' => 'Pending', 'in_progress' => 'In progress', 'pending_approval' => 'Awaiting approval', 'done' => 'Done'][$t['status']] ?? ucfirst($t['status']);
+        $dotColor = ['pending' => '#a0a0b0', 'in_progress' => '#f59e0b', 'pending_approval' => '#6366f1', 'done' => '#22c55e'][$t['status']] ?? '#a0a0b0';
+        $durText = $t['duration_seconds'] ? gmdate('H\h i\m', (int)$t['duration_seconds']) : '—';
+        $safeTitle = htmlspecialchars($t['title']);
+        $rows .= <<<HTML
+          <tr>
+            <td style="padding:10px 8px;border-bottom:1px solid #eee;font-family:'Segoe UI',Helvetica,Arial,sans-serif;font-size:13.5px;">
+              <span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:{$dotColor};margin-right:8px;"></span>{$safeTitle}
+            </td>
+            <td style="padding:10px 8px;border-bottom:1px solid #eee;font-family:'Segoe UI',Helvetica,Arial,sans-serif;font-size:13px;color:#4b4b5c;">{$statusLabel}</td>
+            <td style="padding:10px 8px;border-bottom:1px solid #eee;font-family:'Segoe UI',Helvetica,Arial,sans-serif;font-size:13px;color:#4b4b5c;text-align:right;">{$durText}</td>
+          </tr>
+        HTML;
+    }
+    if ($rows === '') {
+        $rows = '<tr><td colspan="3" style="padding:14px 8px;color:#a0a0b0;font-family:\'Segoe UI\',Helvetica,Arial,sans-serif;font-size:13px;">No tasks logged today.</td></tr>';
+    }
+
+    $overtimeChip = $summary['overtime_text']
+        ? "<span style=\"background:#fef3c7;color:#92400e;font-size:11px;font-weight:700;padding:3px 10px;border-radius:999px;margin-left:6px;\">+{$summary['overtime_text']} overtime</span>"
+        : '';
+    $notesHtml = $notes
+        ? '<p style="margin:16px 0 0;font-family:\'Segoe UI\',Helvetica,Arial,sans-serif;font-size:13.5px;"><strong>Notes:</strong> ' . nl2br(htmlspecialchars($notes)) . '</p>'
+        : '';
+
+    $body = <<<HTML
+      <table role="presentation" cellpadding="0" cellspacing="0" width="100%" style="margin:0 0 18px;">
+        <tr>
+          <td style="text-align:center;padding:10px;background:#f7f7fb;border-radius:10px;">
+            <div style="font-family:'Segoe UI',Helvetica,Arial,sans-serif;font-size:22px;font-weight:800;color:#141425;">{$summary['done']}</div>
+            <div style="font-family:'Segoe UI',Helvetica,Arial,sans-serif;font-size:11px;color:#8a8a9a;text-transform:uppercase;letter-spacing:.03em;">Completed</div>
+          </td>
+          <td style="width:10px;"></td>
+          <td style="text-align:center;padding:10px;background:#f7f7fb;border-radius:10px;">
+            <div style="font-family:'Segoe UI',Helvetica,Arial,sans-serif;font-size:22px;font-weight:800;color:#141425;">{$summary['worked_text']}</div>
+            <div style="font-family:'Segoe UI',Helvetica,Arial,sans-serif;font-size:11px;color:#8a8a9a;text-transform:uppercase;letter-spacing:.03em;">Worked{$overtimeChip}</div>
+          </td>
+          <td style="width:10px;"></td>
+          <td style="text-align:center;padding:10px;background:#f7f7fb;border-radius:10px;">
+            <div style="font-family:'Segoe UI',Helvetica,Arial,sans-serif;font-size:22px;font-weight:800;color:#141425;">{$summary['pending_approval']}</div>
+            <div style="font-family:'Segoe UI',Helvetica,Arial,sans-serif;font-size:11px;color:#8a8a9a;text-transform:uppercase;letter-spacing:.03em;">Awaiting approval</div>
+          </td>
+        </tr>
+      </table>
+      <table role="presentation" cellpadding="0" cellspacing="0" width="100%">
+        <tr style="text-align:left;">
+          <th style="padding:8px;font-family:'Segoe UI',Helvetica,Arial,sans-serif;font-size:11px;color:#8a8a9a;text-transform:uppercase;letter-spacing:.03em;border-bottom:2px solid #eee;">Task</th>
+          <th style="padding:8px;font-family:'Segoe UI',Helvetica,Arial,sans-serif;font-size:11px;color:#8a8a9a;text-transform:uppercase;letter-spacing:.03em;border-bottom:2px solid #eee;">Status</th>
+          <th style="padding:8px;font-family:'Segoe UI',Helvetica,Arial,sans-serif;font-size:11px;color:#8a8a9a;text-transform:uppercase;letter-spacing:.03em;border-bottom:2px solid #eee;text-align:right;">Time</th>
+        </tr>
+        {$rows}
+      </table>
+      {$notesHtml}
+    HTML;
+
+    $html = email_shell(
+        preheader: "{$summary['done']} done · {$summary['worked_text']} worked — {$userName}'s report for {$dateLabel}",
+        badgeLabel: 'Daily Report',
+        heading: "{$userName}'s report — {$dateLabel}",
+        bodyHtml: $body,
+        ctaLabel: 'Open Manager Dashboard',
+        ctaLink: $link,
+        footerNote: "Sent from Taskvel's Daily Check-in — {$userName} chose to send you this end-of-day report.",
+        accentFrom: '#6366f1',
+        accentTo: '#22c55e'
+    );
+
+    return send_mail($to, $subject, $html);
 }
