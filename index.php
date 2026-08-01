@@ -1820,9 +1820,10 @@ section[id], header[id]{ scroll-margin-top:88px; }
 
 .coverflow-wrap{ perspective:1400px; text-align:center; }
 .coverflow-stage{
-  position:relative; height:340px; display:flex; align-items:center; justify-content:center;
+  position:relative; min-height:340px; height:auto; display:flex; align-items:center; justify-content:center; padding:10px 0;
 }
-@media (min-width:640px){ .coverflow-stage{height:300px;} }
+@media (min-width:640px){ .coverflow-stage{min-height:300px;} }
+@media (max-width:480px){ .coverflow-stage{min-height:420px;} }
 .cf-card{
   position:absolute; width:min(560px,86vw);
   background:linear-gradient(160deg, rgba(255,255,255,0.6), rgba(255,255,255,0.2));
@@ -1932,7 +1933,7 @@ section[id], header[id]{ scroll-margin-top:88px; }
 
 /* Prevent any horizontal scroll from 3D-transformed elements */
 html, body{ max-width:100%; overflow-x:hidden; }
-.coverflow-stage{ overflow:hidden; }
+.coverflow-stage{ overflow-x:hidden; overflow-y:visible; }
 
 @media (hover: none), (pointer: coarse){
   /* Kill hover-driven transforms that get stuck after a tap on touch devices */
@@ -2751,7 +2752,7 @@ function onScrollFrame(){
   const max = document.documentElement.scrollHeight - window.innerHeight;
   scrollProgress.style.width = (max > 0 ? (y / max) * 100 : 0) + '%';
   const heroGridEl = document.querySelector('.hero-grid');
-  if(heroGridEl && !prefersReduced){
+  if(heroGridEl && !prefersReduced && !isCoarsePointer){
     const heroH = heroEl ? heroEl.offsetHeight : window.innerHeight;
     const p = Math.min(y / heroH, 1);
     heroGridEl.style.transform = `translateY(${p*60}px) scale(${1 - p*0.06}) rotateX(${p*4}deg)`;
@@ -2759,7 +2760,7 @@ function onScrollFrame(){
   }
 
 
-  if(!prefersReduced){
+  if(!prefersReduced && !isCoarsePointer){
     parallaxEls.forEach(el=>{
       const rect = el.getBoundingClientRect();
       const speed = parseFloat(el.dataset.parallax) || 0.05;
@@ -3721,7 +3722,7 @@ document.querySelectorAll('.btn-gold[data-ripple]').forEach(btn=>{
 /* ============================= 3D PARTICLE NETWORK (Three.js) ============================= */
 (function initHero3D(){
   const canvas = document.getElementById('hero3d');
-  if(!canvas || typeof THREE === 'undefined' || prefersReduced) return;
+  if(!canvas || typeof THREE === 'undefined' || prefersReduced || isCoarsePointer) return;
 
   const renderer = new THREE.WebGLRenderer({ canvas, alpha:true, antialias:true });
   const scene = new THREE.Scene();
@@ -3843,7 +3844,7 @@ document.querySelectorAll('.btn-gold[data-ripple]').forEach(btn=>{
 
 (function initAreaGlobe(){
   const canvas = document.getElementById('areaGlobe');
-  if(!canvas || typeof THREE === 'undefined' || prefersReduced) return;
+  if(!canvas || typeof THREE === 'undefined' || prefersReduced || isCoarsePointer) return;
 
   const size = canvas.parentElement.offsetWidth < 640 ? 170 : 220;
   const renderer = new THREE.WebGLRenderer({ canvas, alpha:true, antialias:true });
