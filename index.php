@@ -1207,6 +1207,90 @@ footer .wrap{ position:relative; z-index:2; }
 .prod-grid.deck-in .prod-card:nth-child(3){ animation:deckFromRight .8s var(--ease) forwards; animation-delay:.24s; }
 .prod-grid:not(.deck-in) .prod-card{ opacity:0; }
 
+
+/* ============================= PRODUCTS SECTION — EXTRA 3D FX ============================= */
+.products-band{ perspective:1800px; }
+.products-band-spotlight{
+  position:absolute; inset:0; z-index:0; pointer-events:none;
+  background:radial-gradient(560px circle at var(--psx,50%) var(--psy,30%), rgba(232,199,102,0.10), transparent 60%);
+  opacity:0; transition:opacity .5s ease;
+}
+.products-band-spotlight.on{ opacity:1; }
+
+.prod-particles{ position:absolute; inset:0; z-index:0; pointer-events:none; overflow:hidden; }
+.prod-particle{
+  position:absolute; border-radius:50%; filter:blur(.5px);
+  animation-name:prodParticleDrift; animation-timing-function:ease-in-out; animation-iteration-count:infinite;
+}
+@keyframes prodParticleDrift{
+  0%{ transform:translate3d(0,0,0) scale(1); opacity:.25; }
+  50%{ transform:translate3d(14px,-30px,0) scale(1.5); opacity:.75; }
+  100%{ transform:translate3d(0,0,0) scale(1); opacity:.25; }
+}
+@media (prefers-reduced-motion: reduce){ .prod-particle{ animation:none; } }
+
+/* Deeper card lift + longer shadow throw on hover */
+.prod-card{ transition:transform .5s var(--ease), box-shadow .5s var(--ease), border-color .4s ease; }
+.prod-card:hover{ transform:translateY(-10px) scale(1.015); }
+
+/* Pulsing glow ring behind badges */
+.prod-badge{ position:relative; }
+.prod-badge::after{
+  content:''; position:absolute; inset:-6px; border-radius:100px; z-index:-1;
+  border:1px solid currentColor; opacity:0; animation:badgePulse 2.4s ease-out infinite;
+}
+.prod-badge.gold::after{ border-color:var(--amber-2); }
+.prod-badge.free::after{ border-color:#4ADE80; }
+.prod-badge.soon-badge::after{ border-color:var(--teal-2); }
+@keyframes badgePulse{
+  0%{ opacity:.55; transform:scale(0.9); }
+  100%{ opacity:0; transform:scale(1.35); }
+}
+@media (prefers-reduced-motion: reduce){ .prod-badge::after{ animation:none; display:none; } }
+
+/* Premium card: stronger pulsing outer glow */
+.prod-card.premium{ position:relative; }
+.prod-card.premium::after{
+  content:''; position:absolute; inset:-14px; z-index:-1; border-radius:32px; pointer-events:none;
+  background:radial-gradient(closest-side, rgba(201,162,39,0.30), transparent 75%);
+  opacity:.5; animation:premiumBreathe 3.6s ease-in-out infinite;
+}
+@keyframes premiumBreathe{
+  0%,100%{ opacity:.35; transform:scale(0.98); }
+  50%{ opacity:.7; transform:scale(1.04); }
+}
+@media (prefers-reduced-motion: reduce){ .prod-card.premium::after{ animation:none; } }
+
+/* Icon: subtle continuous 3D wobble on top of existing float */
+.prod-icon{ animation:iconFloat 4.5s ease-in-out infinite, iconWobble 7s ease-in-out infinite; }
+@keyframes iconWobble{
+  0%,100%{ transform:translateZ(30px) rotateZ(0deg); }
+  50%{ transform:translateZ(30px) rotateZ(-4deg); }
+}
+
+/* Card title: gradient sweep underline reveal on hover */
+.prod-card h3{ position:relative; display:inline-block; }
+.prod-card h3::after{
+  content:''; position:absolute; left:0; bottom:-4px; height:2px; width:0%;
+  background:linear-gradient(90deg,var(--amber-2),var(--teal-2));
+  transition:width .5s var(--ease);
+}
+.prod-card:hover h3::after{ width:100%; }
+
+/* Section heading: extra depth on hover of whole grid */
+.products-band .section-head h2{ text-shadow:0 0 30px rgba(232,199,102,0.0); transition:text-shadow .6s ease; }
+.products-band:hover .section-head h2{ text-shadow:0 0 30px rgba(232,199,102,0.18); }
+
+/* Feature list items: slide-in stagger on card hover */
+.prod-feats li{ transition:transform .35s var(--ease), color .3s ease; }
+.prod-card:hover .prod-feats li:nth-child(1){ transition-delay:.02s; }
+.prod-card:hover .prod-feats li:nth-child(2){ transition-delay:.06s; }
+.prod-card:hover .prod-feats li:nth-child(3){ transition-delay:.10s; }
+.prod-card:hover .prod-feats li:nth-child(4){ transition-delay:.14s; }
+.prod-card:hover .prod-feats li:nth-child(5){ transition-delay:.18s; }
+.prod-card:hover .prod-feats li:nth-child(6){ transition-delay:.22s; }
+.prod-card:hover .prod-feats li{ transform:translateX(4px) translateZ(6px); }
+
 @keyframes deckFromLeft{
   from{ opacity:0; transform:translateX(-70px) rotateY(35deg) rotateZ(-4deg) scale(.9); }
   to{ opacity:1; transform:translateX(0) rotateY(0) rotateZ(0) scale(1); }
@@ -1844,7 +1928,81 @@ section[id], header[id]{ scroll-margin-top:88px; }
 .ind-desc{font-size:12.5px; color:rgba(250,247,242,0.65); line-height:1.5; max-height:0; opacity:0; overflow:hidden; transition:max-height .4s var(--ease), opacity .4s ease;}
 .ind-card:hover .ind-desc{max-height:80px; opacity:1;}
 
+/* ============================= MOBILE-FIRST FIXES ============================= */
 
+/* Prevent any horizontal scroll from 3D-transformed elements */
+html, body{ max-width:100%; overflow-x:hidden; }
+.coverflow-stage{ overflow:hidden; }
+
+@media (hover: none), (pointer: coarse){
+  /* Kill hover-driven transforms that get stuck after a tap on touch devices */
+  .core-card:hover, .core-card:active,
+  .why-cell:hover, .why-cell:active,
+  .industry-card:hover, .industry-card:active,
+  .prod-card:hover,
+  .ind-card:hover,
+  .hiw-card:not(.flipped):hover .hiw-front,
+  .test-card:hover,
+  .cf-card:hover{
+    transform:none !important;
+  }
+
+  /* Industries: always show the description text since :hover can't reveal it on touch */
+  .ind-desc{
+    max-height:80px; opacity:1; margin-top:2px;
+  }
+  .ind-card::before{ display:none; } /* glare layer needs a cursor position we'll never get */
+
+  /* Turn off cursor-tracked glare/spotlight layers — they rely on mousemove, which never fires on touch */
+  .core-glare, .prod-glare, .prod-shine, .test-card::before,
+  .contact-panel::before, footer::before, .products-band-spotlight,
+  .global-spotlight, .lens-grid, .lens-ring, .cursor-dot, .cursor-ring{
+    display:none !important;
+  }
+}
+
+/* How It Works: let the card grow to fit wrapped text instead of clipping at 230px */
+@media (max-width:640px){
+  .hiw-card{ height:auto; }
+  .hiw-inner{ height:auto; }
+  .hiw-face.hiw-front{ position:relative; min-height:230px; }
+  .hiw-face.hiw-back{ min-height:230px; }
+}
+
+/* Tighter spacing + type scale on very small phones */
+@media (max-width:380px){
+  .pad{ padding:48px 0; }
+  .section-head h2{ font-size:22px; }
+  .hero-content h1{ font-size:30px; }
+  .prod-card, .core-card{ padding-left:18px; padding-right:18px; }
+  .ind-card{ padding:22px 16px; min-height:170px; }
+  .hiw-face{ padding:22px 18px; }
+}
+
+/* ============================= FAQ: FIX DISAPPEARING ANSWER ON MOBILE ============================= */
+@media (hover: none), (pointer: coarse), (max-width:900px){
+  .faq-a-panel{
+    /* Ditch the 3D flip on mobile — rotateX without backface-visibility
+       causes the panel to render its backface (invisible) mid-transition
+       on many mobile browsers, making the answer flash and disappear. */
+    transform:none !important;
+    transform-origin:initial;
+    max-height:0;
+    opacity:0;
+    transition:max-height .4s var(--ease), opacity .35s ease;
+  }
+  .faq-item.open .faq-a-panel{
+    transform:none !important;
+    max-height:600px;
+    opacity:1;
+    transition:max-height .45s var(--ease), opacity .4s ease .05s;
+  }
+  .faq-a-panel p{
+    opacity:1 !important;
+    transform:none !important;
+    transition:none !important;
+  }
+}
 </style>
 
 <script type="application/ld+json">
@@ -2323,6 +2481,8 @@ section[id], header[id]{ scroll-margin-top:88px; }
 <section class="pad products-band" id="products">
   <span class="orb p-orb-1" aria-hidden="true"></span>
   <span class="orb p-orb-2" aria-hidden="true"></span>
+  <div class="products-band-spotlight" id="productsSpotlight" aria-hidden="true"></div>
+  <div class="prod-particles" id="prodParticles" aria-hidden="true"></div>
   <div class="wrap">
     <div class="section-head center reveal">
       <span class="eyebrow">Built In-House</span>
@@ -2810,6 +2970,52 @@ if(!prefersReduced && !isCoarsePointer){
       btn.style.transform = `translate(${mx*0.15}px, ${my*0.3}px)`;
     });
     btn.addEventListener('mouseleave', ()=>{ btn.style.transform=''; });
+  });
+}
+
+/* ============================= PRODUCTS SECTION — EXTRA 3D FX ============================= */
+const productsBandEl = document.getElementById('products');
+const productsSpotlightEl = document.getElementById('productsSpotlight');
+if(productsBandEl && productsSpotlightEl && !prefersReduced && !isCoarsePointer){
+  productsSpotlightEl.classList.add('on');
+  productsBandEl.addEventListener('mousemove', (e)=>{
+    const r = productsBandEl.getBoundingClientRect();
+    const px = ((e.clientX - r.left) / r.width) * 100;
+    const py = ((e.clientY - r.top) / r.height) * 100;
+    productsSpotlightEl.style.setProperty('--psx', px + '%');
+    productsSpotlightEl.style.setProperty('--psy', py + '%');
+  });
+}
+
+/* Ambient floating particles inside the products band */
+const prodParticlesEl = document.getElementById('prodParticles');
+if(prodParticlesEl && !prefersReduced){
+  const pColors = ['rgba(232,199,102,0.9)','rgba(143,160,232,0.85)','rgba(255,255,255,0.6)'];
+  let html = '';
+  for(let i=0;i<22;i++){
+    const size = Math.random()*3.5+2;
+    const left = Math.random()*100;
+    const top = Math.random()*100;
+    const dur = Math.random()*7+7;
+    const delay = Math.random()*7;
+    const color = pColors[i % pColors.length];
+    html += `<span class="prod-particle" style="width:${size}px;height:${size}px;left:${left}%;top:${top}%;background:radial-gradient(circle, ${color}, transparent);animation-duration:${dur}s;animation-delay:${delay}s;"></span>`;
+  }
+  prodParticlesEl.innerHTML = html;
+}
+
+/* Extra icon parallax based on card tilt (adds to existing tilt effect) */
+if(!prefersReduced && !isCoarsePointer){
+  document.querySelectorAll('.prod-card[data-tilt]').forEach(card=>{
+    const icon = card.querySelector('.prod-icon');
+    card.addEventListener('mousemove', (e)=>{
+      if(!icon) return;
+      const r = card.getBoundingClientRect();
+      const px = (e.clientX - r.left) / r.width - 0.5;
+      const py = (e.clientY - r.top) / r.height - 0.5;
+      icon.style.transform = `translateZ(46px) translate(${px*10}px, ${py*10}px) rotate(${px*10}deg)`;
+    });
+    card.addEventListener('mouseleave', ()=>{ if(icon) icon.style.transform = ''; });
   });
 }
 
