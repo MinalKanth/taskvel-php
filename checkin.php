@@ -129,7 +129,7 @@ $user = current_user();
     <div id="summary-area"></div>
 </div>
 
-<script src="js/api-client.js"></script>
+<script src="js/api-client.js?v=2"></script>
 <script>
 function esc(s) { return (s || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
 function fmtTime(iso) { return new Date(iso.replace(' ', 'T')).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }); }

@@ -73,7 +73,7 @@ $user = current_user();
     </div>
 </div>
 
-<script src="js/api-client.js"></script>
+<script src="js/api-client.js?v=2"></script>
 <script>
 const MY_USER_ID = <?= (int)current_user_id() ?>;
 let currentOrg = null;

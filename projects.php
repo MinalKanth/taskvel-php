@@ -114,7 +114,7 @@ $isManager = ($role === 'owner' || $role === 'manager');
     </div>
 </div>
 
-<script src="js/api-client.js"></script>
+<script src="js/api-client.js?v=2"></script>
 <script>
 const PROJECT_ID = <?= (int)$projectId ?>;
 const TEAM_ID = <?= (int)$teamId ?>;

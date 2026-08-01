@@ -233,7 +233,7 @@ if (!$role) { header('Location: teams.php'); exit; }
     </div>
 </div>
 
-<script src="js/api-client.js"></script>
+<script src="js/api-client.js?v=2"></script>
 <script>
 const TEAM_ID = <?= (int)$teamId ?>;
 const MY_ROLE = '<?= htmlspecialchars($role) ?>';

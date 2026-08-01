@@ -4367,7 +4367,7 @@ $user = current_user();
         </div>
     </div>
 
-    <script src="js/api-client.js"></script>
+    <script src="js/api-client.js?v=2"></script>
     <script>
     const TV_UID = <?= (int)current_user_id() ?>;
     // ════════════════════════════════════════════
