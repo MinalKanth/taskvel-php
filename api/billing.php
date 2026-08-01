@@ -73,9 +73,12 @@ switch ("$method:$action") {
             $url = create_stripe_checkout_session(
                 [['price' => $price, 'quantity' => $seats]],
                 'subscription',
-                "org:$orgId",
-                "$base/team.php?org_checkout=success",
-                "$base/team.php?org_checkout=cancelled"
+                // Seat count is encoded here (not just "org:$orgId") so the
+                // webhook can apply the exact quantity purchased without a
+                // second round-trip to Stripe's API to fetch line items.
+                "org:$orgId:seats:$seats",
+                "$base/billing.php?org_checkout=success",
+                "$base/billing.php?org_checkout=cancelled"
             );
             json_response(['url' => $url]);
         } catch (Throwable $e) {

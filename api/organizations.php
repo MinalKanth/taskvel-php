@@ -112,17 +112,19 @@ switch ("$method:$action") {
         if (!$result['ok']) json_response(['error' => $result['error']], 422);
 
         $loginUrl = (!empty($_SERVER['HTTPS']) ? 'https://' : 'http://') . ($_SERVER['HTTP_HOST'] ?? '') . '/login.php';
+        $emailSent = false;
         try {
-    if ($result['is_new_user']) {
-        send_org_onboarding_email($email, $result['name'], $orgName, $loginUrl, $result['temp_password']);
-    } else {
-        send_org_added_email($email, $result['name'], $orgName, $loginUrl);
-    }
-} catch (Throwable $e) {
-    error_log('[org-invite] Email send failed for ' . $email . ': ' . $e->getMessage());
-}
+            if ($result['is_new_user']) {
+                $emailSent = send_org_onboarding_email($email, $result['name'], $orgName, $loginUrl, $result['temp_password']);
+            } else {
+                $emailSent = send_org_added_email($email, $result['name'], $orgName, $loginUrl);
+            }
+            if (!$emailSent) error_log("[org-invite] send_mail() returned false for $email — check SMTP_HOST/SMTP_PORT/SMTP_USER/SMTP_PASS in config/db.php and your PHP error log for the specific SMTP step that failed.");
+        } catch (Throwable $e) {
+            error_log('[org-invite] Email send threw for ' . $email . ': ' . $e->getMessage());
+        }
 
-        json_response(['ok' => true, 'user_id' => $result['user_id'], 'is_new_user' => $result['is_new_user']]);
+        json_response(['ok' => true, 'user_id' => $result['user_id'], 'is_new_user' => $result['is_new_user'], 'email_sent' => $emailSent]);
         break;
 
     // "Add additional seats at any time."

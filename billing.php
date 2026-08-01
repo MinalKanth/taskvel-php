@@ -242,7 +242,11 @@ async function submitInvite() {
         const res = await Taskvel.request('/api/organizations.php?action=invite', { method:'POST', body:{
             org_id: currentOrg.organization_id, email, role: document.getElementById('invite-role').value,
         }});
-        toast(res.is_new_user ? 'Account created and invited ✓' : 'Added to your organization ✓');
+        if (res.email_sent) {
+            toast(res.is_new_user ? 'Account created and invited ✓' : 'Added to your organization ✓');
+        } else {
+            toast(`Seat assigned, but the ${res.is_new_user ? 'onboarding email with their temporary password' : 'notification email'} could not be sent — check your SMTP settings in config/db.php.`);
+        }
         closeInvite();
     } catch (e) {
     toast(e.message || 'Could not add employee');
@@ -258,13 +262,14 @@ async function submitInvite() {
 }
 
 async function addSeats() {
-    const n = prompt('How many additional seats?', '5');
-    if (!n || isNaN(n)) return;
+    const n = prompt('How many additional seats would you like to purchase?', '5');
+    if (!n || isNaN(n) || parseInt(n, 10) < 1) return;
     try {
-        await Taskvel.request('/api/organizations.php?action=add-seats', { method:'POST', body:{ org_id: currentOrg.organization_id, seats: parseInt(n, 10) } });
-        toast('Seats added ✓');
-        loadOrgSection();
-    } catch (e) { toast(e.message || 'Could not add seats'); }
+        const { url } = await Taskvel.request('/api/billing.php?action=create-org-checkout-session', {
+            method: 'POST', body: { org_id: currentOrg.organization_id, seats: parseInt(n, 10) },
+        });
+        window.location.href = url; // Stripe Checkout — seats are added by the webhook once payment completes
+    } catch (e) { toast(e.message || 'Could not start checkout — is Stripe configured?'); }
 }
 async function suspendMember(orgId, userId) {
     try { await Taskvel.request('/api/organizations.php?action=suspend-member', { method:'POST', body:{ org_id: orgId, user_id: userId } }); loadOrgMembers(orgId); }

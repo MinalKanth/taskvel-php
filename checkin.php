@@ -356,7 +356,7 @@ async function checkOut() {
             body: { notes, manager_user_id: managerUserId, team_member_user_ids: teamMemberUserIds, custom_emails: customEmailChips },
         });
         clearInterval(liveTimerHandle);
-        load();
+        await load();
         renderSummary(res.summary, res.notified);
     } catch (e) { alert(e.message || 'Could not check out'); }
 }

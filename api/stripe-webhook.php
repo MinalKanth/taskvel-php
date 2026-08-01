@@ -30,12 +30,24 @@ if ($event['type'] === 'checkout.session.completed') {
     if (str_starts_with($ref, 'org:')) {
         // Feature 4, Part B — organization seat purchase (either the
         // initial purchase at org-creation time, or "add seats").
-        $orgId = (int)substr($ref, 4);
-        $pdo->prepare('UPDATE organizations SET stripe_customer_id = ?, stripe_subscription_id = ?, plan_status = "active" WHERE id = ?')
-            ->execute([$session['customer'], $session['subscription'], $orgId]);
+        // client_reference_id is "org:<id>:seats:<n>" — parsed here rather
+        // than re-fetching the session's line items from Stripe's API.
+        [, $orgId, , $seatsPurchasedNow] = array_pad(explode(':', $ref), 4, null);
+        $orgId = (int)$orgId;
+        $seatsPurchasedNow = max(0, (int)$seatsPurchasedNow);
+
+        if ($seatsPurchasedNow > 0) {
+            $pdo->prepare('UPDATE organizations SET seats_purchased = seats_purchased + ?, stripe_customer_id = ?, stripe_subscription_id = ?, plan_status = "active" WHERE id = ?')
+                ->execute([$seatsPurchasedNow, $session['customer'], $session['subscription'], $orgId]);
+        } else {
+            // Fallback for older links without an encoded seat count — at
+            // least keep the subscription/billing status correct.
+            $pdo->prepare('UPDATE organizations SET stripe_customer_id = ?, stripe_subscription_id = ?, plan_status = "active" WHERE id = ?')
+                ->execute([$session['customer'], $session['subscription'], $orgId]);
+        }
         $pdo->prepare('INSERT INTO organization_billing_history (organization_id, description, seats, billing_cycle, amount_cents, currency, stripe_invoice_id)
-                       SELECT id, "Payment confirmed", seats_purchased, billing_cycle, ?, ?, ? FROM organizations WHERE id = ?')
-            ->execute([$session['amount_total'] ?? null, $session['currency'] ?? 'usd', $session['id'] ?? null, $orgId]);
+                       SELECT id, "Payment confirmed", ?, billing_cycle, ?, ?, ? FROM organizations WHERE id = ?')
+            ->execute([$seatsPurchasedNow ?: null, $session['amount_total'] ?? null, $session['currency'] ?? 'usd', $session['id'] ?? null, $orgId]);
     } elseif (str_starts_with($ref, 'user:')) {
         // Feature 4, Part A — individual "Upgrade to Pro" (bypasses/ends
         // any trial; plan_source='stripe' so recompute_user_plan() never
