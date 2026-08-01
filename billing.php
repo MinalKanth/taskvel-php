@@ -1,6 +1,7 @@
 <?php
 require_once __DIR__ . '/includes/auth.php';
 require_once __DIR__ . '/includes/pro-shell.php';
+require_once __DIR__ . '/config/stripe.php';
 if (!current_user_id()) { header('Location: login.php'); exit; }
 $user = current_user();
 ?>
@@ -53,6 +54,24 @@ $user = current_user();
         <div class="modal-actions">
             <button class="btn ghost" onclick="closeCreateOrg()">Cancel</button>
             <button class="btn" onclick="submitCreateOrg()">Create organization</button>
+        </div>
+    </div>
+</div>
+
+<!-- Business bundle modal -->
+<div class="modal-overlay" id="biz-overlay" onclick="if(event.target===this)closeBusinessBundle()">
+    <div class="modal">
+        <h2>Taskvel Business</h2>
+        <div class="sub" style="margin-bottom:12px">A flat-rate bundle of <?= BUSINESS_BUNDLE_SEATS ?> seats — simpler than buying seats one at a time if you're onboarding a full team at once.</div>
+        <div class="fg"><label>Billing</label>
+            <select id="biz-cycle">
+                <option value="monthly">Monthly — ₹<?= number_format(STRIPE_PRICE_BUSINESS_MONTHLY, 0) ?></option>
+                <option value="yearly">Yearly — ₹<?= number_format(STRIPE_PRICE_BUSINESS_YEARLY, 0) ?> (2 months free)</option>
+            </select>
+        </div>
+        <div class="modal-actions">
+            <button class="btn ghost" onclick="closeBusinessBundle()">Cancel</button>
+            <button class="btn" onclick="submitBusinessBundle()">Continue to payment</button>
         </div>
     </div>
 </div>
@@ -166,6 +185,7 @@ function renderOrgDashboard(dash) {
             <div class="seat-stat"><b>${seats.available}</b>Available</div>
         </div>
         <button class="btn ghost sm" onclick="addSeats()">+ Add more seats</button>
+        <button class="btn ghost sm" onclick="openBusinessBundle()">🏢 Business — <?= BUSINESS_BUNDLE_SEATS ?> seats bundled</button>
         <h4 style="margin:20px 0 6px;font-family:var(--font-display)">Members</h4>
         <div id="org-members"></div>
     </div>`;
@@ -276,6 +296,17 @@ async function addSeats() {
             method: 'POST', body: { org_id: currentOrg.organization_id, seats: parseInt(n, 10) },
         });
         window.location.href = url; // Stripe Checkout — seats are added by the webhook once payment completes
+    } catch (e) { toast(e.message || 'Could not start checkout — is Stripe configured?'); }
+}
+
+function openBusinessBundle() { document.getElementById('biz-overlay').classList.add('open'); }
+function closeBusinessBundle() { document.getElementById('biz-overlay').classList.remove('open'); }
+async function submitBusinessBundle() {
+    try {
+        const { url } = await Taskvel.request('/api/billing.php?action=create-business-checkout-session', {
+            method: 'POST', body: { org_id: currentOrg.organization_id, billing_cycle: document.getElementById('biz-cycle').value },
+        });
+        window.location.href = url;
     } catch (e) { toast(e.message || 'Could not start checkout — is Stripe configured?'); }
 }
 async function suspendMember(orgId, userId) {

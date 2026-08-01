@@ -43,7 +43,7 @@ switch ("$method:$action") {
         $base = APP_BASE_URL ?: ((!empty($_SERVER['HTTPS']) ? 'https://' : 'http://') . ($_SERVER['HTTP_HOST'] ?? ''));
         try {
             $url = create_stripe_checkout_session(
-                [['amount' => STRIPE_PRICE_PRO, 'product_name' => 'Taskvel Pro (Monthly)', 'interval' => 'month', 'quantity' => 1]],
+                [['price' => STRIPE_PRICE_PRO, 'quantity' => 1]],
                 'subscription',
                 "user:$uid",
                 "$base/billing.php?checkout=success",
@@ -67,17 +67,48 @@ switch ("$method:$action") {
         $cycle = $stmt->fetchColumn();
         if (!$cycle) json_response(['error' => 'Organization not found'], 404);
 
-        $amount = $cycle === 'yearly' ? STRIPE_PRICE_ORG_SEAT_YEARLY : STRIPE_PRICE_ORG_SEAT_MONTHLY;
-        $interval = $cycle === 'yearly' ? 'year' : 'month';
+        $price = $cycle === 'yearly' ? STRIPE_PRICE_ORG_SEAT_YEARLY : STRIPE_PRICE_ORG_SEAT_MONTHLY;
         $base = APP_BASE_URL ?: ((!empty($_SERVER['HTTPS']) ? 'https://' : 'http://') . ($_SERVER['HTTP_HOST'] ?? ''));
         try {
             $url = create_stripe_checkout_session(
-                [['amount' => $amount, 'product_name' => 'Taskvel Pro — Organization Seat (' . ucfirst($cycle) . ')', 'interval' => $interval, 'quantity' => $seats]],
+                [['price' => $price, 'quantity' => $seats]],
                 'subscription',
                 // Seat count is encoded here (not just "org:$orgId") so the
                 // webhook can apply the exact quantity purchased without a
                 // second round-trip to Stripe's API to fetch line items.
                 "org:$orgId:seats:$seats",
+                "$base/billing.php?org_checkout=success",
+                "$base/billing.php?org_checkout=cancelled"
+            );
+            json_response(['url' => $url]);
+        } catch (Throwable $e) {
+            json_response(['error' => $e->getMessage()], 502);
+        }
+        break;
+
+    // Business tier — a flat-rate bundle of BUSINESS_BUNDLE_SEATS seats,
+    // instead of the per-seat pricing above. Seat count is fixed at
+    // BUSINESS_BUNDLE_SEATS regardless of Stripe's line-item "quantity"
+    // (which stays 1 — this is one flat-rate bundle, not N of something),
+    // so it's encoded directly into client_reference_id the same way the
+    // per-seat flow already does.
+    case 'POST:create-business-checkout-session':
+        $orgId = (int)($in['org_id'] ?? 0);
+        require_org_admin($orgId);
+        $cycle = one_of($in['billing_cycle'] ?? 'monthly', ['monthly', 'yearly'], 'monthly');
+
+        $stmt = $pdo->prepare('SELECT id FROM organizations WHERE id = ?');
+        $stmt->execute([$orgId]);
+        if (!$stmt->fetchColumn()) json_response(['error' => 'Organization not found'], 404);
+
+        $amount = $cycle === 'yearly' ? STRIPE_PRICE_BUSINESS_YEARLY : STRIPE_PRICE_BUSINESS_MONTHLY;
+        $interval = $cycle === 'yearly' ? 'year' : 'month';
+        $base = APP_BASE_URL ?: ((!empty($_SERVER['HTTPS']) ? 'https://' : 'http://') . ($_SERVER['HTTP_HOST'] ?? ''));
+        try {
+            $url = create_stripe_checkout_session(
+                [['amount' => $amount, 'product_name' => 'Taskvel Business — ' . BUSINESS_BUNDLE_SEATS . ' seats (' . ucfirst($cycle) . ')', 'interval' => $interval, 'quantity' => 1]],
+                'subscription',
+                'org:' . $orgId . ':seats:' . BUSINESS_BUNDLE_SEATS,
                 "$base/billing.php?org_checkout=success",
                 "$base/billing.php?org_checkout=cancelled"
             );
