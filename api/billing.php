@@ -43,7 +43,7 @@ switch ("$method:$action") {
         $base = APP_BASE_URL ?: ((!empty($_SERVER['HTTPS']) ? 'https://' : 'http://') . ($_SERVER['HTTP_HOST'] ?? ''));
         try {
             $url = create_stripe_checkout_session(
-                [['price' => STRIPE_PRICE_PRO, 'quantity' => 1]],
+                [['amount' => STRIPE_PRICE_PRO, 'product_name' => 'Taskvel Pro (Monthly)', 'interval' => 'month', 'quantity' => 1]],
                 'subscription',
                 "user:$uid",
                 "$base/billing.php?checkout=success",
@@ -67,11 +67,12 @@ switch ("$method:$action") {
         $cycle = $stmt->fetchColumn();
         if (!$cycle) json_response(['error' => 'Organization not found'], 404);
 
-        $price = $cycle === 'yearly' ? STRIPE_PRICE_ORG_SEAT_YEARLY : STRIPE_PRICE_ORG_SEAT_MONTHLY;
+        $amount = $cycle === 'yearly' ? STRIPE_PRICE_ORG_SEAT_YEARLY : STRIPE_PRICE_ORG_SEAT_MONTHLY;
+        $interval = $cycle === 'yearly' ? 'year' : 'month';
         $base = APP_BASE_URL ?: ((!empty($_SERVER['HTTPS']) ? 'https://' : 'http://') . ($_SERVER['HTTP_HOST'] ?? ''));
         try {
             $url = create_stripe_checkout_session(
-                [['price' => $price, 'quantity' => $seats]],
+                [['amount' => $amount, 'product_name' => 'Taskvel Pro — Organization Seat (' . ucfirst($cycle) . ')', 'interval' => $interval, 'quantity' => $seats]],
                 'subscription',
                 // Seat count is encoded here (not just "org:$orgId") so the
                 // webhook can apply the exact quantity purchased without a
