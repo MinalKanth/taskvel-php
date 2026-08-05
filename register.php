@@ -39,15 +39,24 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $_SESSION['last_rotated_at'] = time();
             unset($_SESSION['csrf_token']);
 
-            // Fire the welcome email. Never let a mail hiccup block or fail
-            // the signup itself — log and move on either way.
+            // Send the redirect to the browser FIRST, then send the welcome
+            // email afterward. SMTP is a slow, blocking, multi-round-trip
+            // conversation — if it runs before the redirect, a slow mail
+            // server (or PHP's max_execution_time) can kill the script
+            // before the user ever sees a response, even though their
+            // account was already created.
+            header('Location: taskvel-pro.php');
+            session_write_close();
+            if (function_exists('fastcgi_finish_request')) {
+                fastcgi_finish_request(); // flushes the response to the browser now; code below still runs
+            }
+
             try {
                 send_welcome_email($email, $name);
             } catch (\Throwable $e) {
                 error_log('Welcome email failed for ' . $email . ': ' . $e->getMessage());
             }
-
-            header('Location: taskvel-pro.php'); exit;
+            exit;
         }
         $error = $res['error'];
     }

@@ -31,6 +31,7 @@ function smtp_send(string $to, string $subject, string $htmlBody): bool
         error_log("SMTP connect failed: $errstr ($errno)");
         return false;
     }
+    stream_set_timeout($fp, 8); // cap every read at 8s so a slow/unresponsive SMTP server fails fast instead of hanging toward max_execution_time
 
     // Reads a FULL response, including multi-line replies (e.g. EHLO's
     // capability list). SMTP marks the last line of a multi-line reply with
