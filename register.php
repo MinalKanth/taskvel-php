@@ -343,6 +343,26 @@ input:focus-visible, button:focus-visible, a:focus-visible{outline:2px solid var
       setTimeout(function(){ s.remove(); }, 650);
     });
   }
+
+  /* Prevent double-submit: a second click while the first request is still
+     in flight would reuse the same CSRF token — but the first successful
+     request already consumes/clears it server-side, so the second request
+     fails with a misleading "session expired" error even though the
+     account from the first request was already created. Disabling the
+     button on the form's submit event (not just decorating clicks) is
+     what actually stops that second request from ever being sent. */
+  var form = btn ? btn.closest('form') : null;
+  if (form && btn) {
+    form.addEventListener('submit', function(){
+      if (!form.checkValidity()) return; // let native validation messages show first
+      setTimeout(function(){ // let the ripple + native validation run first
+        btn.disabled = true;
+        btn.style.opacity = '.7';
+        btn.style.cursor = 'wait';
+        btn.textContent = 'Creating account…';
+      }, 0);
+    });
+  }
 })();
 </script>
 </body>

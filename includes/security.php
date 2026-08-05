@@ -41,8 +41,20 @@ function send_security_headers(): void
 
     // HSTS only makes sense once you're actually on HTTPS — sending it over
     // plain HTTP would be a lie the browser can't act on usefully.
+    //
+    // IMPORTANT: max-age is intentionally SHORT (5 minutes) for now, not the
+    // usual one-year value, and 'includeSubDomains' is intentionally left
+    // off. HSTS makes a certificate problem completely unbypassable in the
+    // browser (no "proceed anyway" option) for as long as max-age says —
+    // sending a 1-year policy while cert reliability isn't yet proven can
+    // lock real visitors out of the entire domain for a full year the next
+    // time there's any cert hiccup. Once you've confirmed HTTPS + the
+    // certificate are stable for a while, raise this back up in stages
+    // (e.g. 1 day -> 1 week -> 1 month -> 1 year) and only add
+    // 'includeSubDomains' once every subdomain you actually use also has a
+    // valid HTTPS certificate of its own.
     if (is_https()) {
-        header('Strict-Transport-Security: max-age=31536000; includeSubDomains');
+        header('Strict-Transport-Security: max-age=300');
     }
 }
 

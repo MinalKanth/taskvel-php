@@ -1,5 +1,14 @@
 <?php
 require_once __DIR__ . '/includes/auth.php';
+
+// Same fix as login.php/register.php: without this, a CDN/hosting-level
+// page cache can serve a stale copy of this form whose embedded CSRF token
+// no longer matches a given visitor's actual session — causing "Your
+// session expired" on the very first submit.
+header('Cache-Control: no-store, no-cache, must-revalidate, max-age=0');
+header('Pragma: no-cache');
+send_security_headers();
+
 if (current_user_id()) {
     header('Location: ' . (current_user_role() === 'admin' ? 'admin/index.php' : 'taskvel-pro.php'));
     exit;
