@@ -1,11 +1,26 @@
 <?php
 require_once __DIR__ . '/includes/auth.php';
+
+// See register.php for why this matters: without it, a CDN/hosting-level
+// page cache can serve a stale copy of this form whose embedded CSRF token
+// no longer matches a given visitor's actual session — causing "Your
+// session expired" on the very first submit.
+header('Cache-Control: no-store, no-cache, must-revalidate, max-age=0');
+header('Pragma: no-cache');
+send_security_headers();
+
+// Only allow redirecting back to a local, relative path — never an absolute
+// URL or protocol-relative one (open-redirect protection).
+$next = $_GET['next'] ?? '';
+$next = (is_string($next) && $next !== '' && $next[0] === '/' && !str_starts_with($next, '//')) ? $next : '';
+
 // if (current_user_id()) { header('Location: taskvel-pro.php'); exit; }
 if (current_user_id()) {
-    header('Location: ' . (current_user_role() === 'admin' ? 'admin/index.php' : 'taskvel-pro.php'));
+    header('Location: ' . ($next ?: (current_user_role() === 'admin' ? 'admin/index.php' : 'taskvel-pro.php')));
     exit;
 }
 $error = null;
+$sessionExpired = !empty($_GET['expired']);
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if (empty($_POST['csrf_token']) || !hash_equals($_SESSION['csrf_token'] ?? '', $_POST['csrf_token'])) {
@@ -14,7 +29,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $res = attempt_login($_POST['email'] ?? '', $_POST['password'] ?? '');
         if ($res['ok']) {
             $role = $res['user']['role'] ?? current_user_role();
-            header('Location: ' . ($role === 'admin' ? 'admin/index.php' : 'taskvel-pro.php'));
+            $postNext = $_POST['next'] ?? '';
+            $postNext = (is_string($postNext) && $postNext !== '' && $postNext[0] === '/' && !str_starts_with($postNext, '//')) ? $postNext : '';
+            header('Location: ' . ($postNext ?: ($role === 'admin' ? 'admin/index.php' : 'taskvel-pro.php')));
             exit;
         }
         $error = $res['error'];
