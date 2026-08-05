@@ -3,6 +3,7 @@ require_once __DIR__ . '/security.php';
 
 if (session_status() === PHP_SESSION_NONE) {
     session_set_cookie_params([
+        'lifetime' => 24 * 60 * 60, // 24 hours — without this the cookie itself is a "until browser closes" session cookie, regardless of the server-side timeouts below
         'httponly' => true,
         'samesite' => 'Lax',
         'secure'   => is_https(),
@@ -16,8 +17,8 @@ if (session_status() === PHP_SESSION_NONE) {
 // rotation so a long-lived session doesn't keep the same cookie value
 // forever (limits the window a stolen session ID is useful in).
 // ────────────────────────────────────────────────────────────
-const SESSION_IDLE_TIMEOUT = 2 * 60 * 60;      // 2 hours of inactivity
-const SESSION_ABSOLUTE_LIFETIME = 12 * 60 * 60; // 12 hours max, even if active
+const SESSION_IDLE_TIMEOUT = 24 * 60 * 60;      // 24 hours of inactivity
+const SESSION_ABSOLUTE_LIFETIME = 24 * 60 * 60; // 24 hours max, even if active
 const SESSION_ROTATE_INTERVAL = 15 * 60;        // rotate session ID every 15 min
 
 if (!empty($_SESSION['user_id'])) {
