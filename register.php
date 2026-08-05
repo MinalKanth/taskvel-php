@@ -6,6 +6,18 @@ ini_set('display_startup_errors', 1);
 
 require_once __DIR__ . '/includes/auth.php';
 require_once __DIR__ . '/includes/mailer.php';
+
+// CRITICAL: this page embeds a CSRF token tied to the visitor's current
+// session. If a CDN, LiteSpeed/Hostinger-style hosting cache, or the
+// browser itself caches this page's HTML, later visitors get served a
+// stale token that no longer matches their own (different) session's
+// $_SESSION['csrf_token'] — producing "Your session expired" on the very
+// first submit, for every visitor who hit a cached copy. no-store forbids
+// caching this response anywhere.
+header('Cache-Control: no-store, no-cache, must-revalidate, max-age=0');
+header('Pragma: no-cache');
+send_security_headers(); // defined in includes/security.php but was never actually being called anywhere in the app
+
 if (current_user_id()) {
     header('Location: ' . (current_user_role() === 'admin' ? 'admin/index.php' : 'taskvel-pro.php'));
     exit;
