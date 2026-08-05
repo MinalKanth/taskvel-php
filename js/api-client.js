@@ -50,6 +50,16 @@ const Taskvel = (() => {
             body: body ? JSON.stringify(body) : undefined,
             credentials: 'same-origin',
         });
+        if (res.status === 401) {
+            // Session expired (or was never valid) — auto-logout to a clean
+            // login screen instead of leaving every page on-screen showing
+            // scattered "Unauthenticated"/"Could not load ..." errors.
+            const here = window.location.pathname + window.location.search;
+            if (!here.startsWith('/login.php')) {
+                window.location.href = 'login.php?expired=1&next=' + encodeURIComponent(here);
+            }
+            throw new Error('Your session has expired — redirecting to login…');
+        }
         const data = await res.json().catch(() => ({}));
         if (!res.ok) throw new Error(data.error || `Request failed (${res.status})`);
         return data;
