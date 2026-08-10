@@ -184,7 +184,7 @@ section{position:relative;}
   box-shadow: inset 0 0 0 1px rgba(255,255,255,0.15);
 }
 .brand-name{font-family:var(--font-display); font-weight:700; font-size:16.5px; color: #E06C1F; letter-spacing:-.01em; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;}
-
+.brand-name{ transition:filter .3s ease; }
 .brand-mark {
     width: 42px;
     height: 42px;
@@ -286,7 +286,12 @@ section{position:relative;}
   background:
     radial-gradient(1100px 560px at 88% -10%, rgba(232,199,102,0.14), transparent 60%),
     radial-gradient(900px 500px at -10% 110%, rgba(27,42,107,0.35), transparent 60%),
-    linear-gradient(160deg, var(--navy-ink) 0%, var(--teal-deep) 65%, #0F4436 100%);
+    linear-gradient(160deg, rgba(10,17,40,0.93) 0%, rgba(18,81,62,0.90) 65%, rgba(15,68,54,0.93) 100%),
+    url('images/hero-bg.png');
+  background-size: cover, cover, cover, cover;
+  background-position: center, center, center, center 25%;
+  background-repeat: no-repeat, no-repeat, no-repeat, no-repeat;
+  background-attachment: scroll, scroll, scroll, fixed;
   padding:110px 0 100px;
   overflow:hidden;
 }
@@ -345,6 +350,17 @@ section{position:relative;}
   color:rgba(250,247,242,0.78); font-size:16.5px; max-width:520px; margin-top:18px;
 }
 @media (min-width:640px){ .hero-content p.lead{font-size:18px;} }
+
+.word-reveal{ perspective:600px; }
+.word-reveal span{
+  display:inline-block;
+  transform:rotateX(-90deg) translateY(10px);
+  opacity:0;
+  transition:transform .6s var(--ease), opacity .6s var(--ease);
+  transition-delay:calc(var(--w,0) * 35ms);
+}
+.word-reveal.in span{ transform:rotateX(0deg) translateY(0); opacity:1; }
+
 .hero-tagline{
   font-family:var(--font-display); font-weight:600; font-size:15px; color:var(--teal-2);
   margin-top:10px; letter-spacing:.01em;
@@ -489,6 +505,9 @@ section{position:relative;}
   box-shadow:var(--shadow-sm);
   transform-style:preserve-3d;
 }
+@media (min-width:900px){
+  .about-visual-sticky{ position:sticky; top:110px; }
+}
 @media (min-width:640px){ .about-visual{padding:32px;} }
 .about-visual .quote-mark{position:absolute; top:22px; left:24px; font-family:var(--font-display); font-size:56px; color:rgba(255,255,255,0.15); line-height:1;}
 .about-visual{ overflow:hidden; }
@@ -561,6 +580,14 @@ section{position:relative;}
 .stat-block.settle::before{ transform:scaleX(1); }
 .stat-num span{color:var(--teal-2);}
 .stat-label{color:rgba(250,247,242,0.6); font-size:12.5px; margin-top:6px; letter-spacing:.01em;}
+
+.stats-band-pin{
+  position:sticky; top:0;
+}
+@media (min-width:768px){
+  .stats-band{ padding:0; }
+  .stats-band-pin{ padding:70px 0; min-height:100vh; display:flex; align-items:center; }
+}
 
 /* ============================= CORE SERVICES ============================= */
 .services-bg{
@@ -744,6 +771,12 @@ section{position:relative;}
 .industry-card .n{font-family:var(--font-display); font-size:12px; color:var(--teal-2); font-weight:600;}
 .industry-card h4{color:var(--ivory); font-size:16.5px; margin-top:28px;}
 @media (min-width:640px){ .industry-card h4{font-size:18px; margin-top:34px;} }
+
+.industry-scroll{ perspective:1400px; }
+.industry-card{
+  transform:translateZ(0) rotateX(0deg);
+  transition:transform .5s var(--ease), box-shadow .45s var(--ease);
+}
 
 /* ============================= INDUSTRY CARDS PREMIUM 3D ============================= */
 .industry-scroll{ perspective:1000px; }
@@ -1178,7 +1211,11 @@ footer .wrap{ position:relative; z-index:2; }
   background:
     radial-gradient(900px 480px at 12% -10%, rgba(232,199,102,0.10), transparent 60%),
     radial-gradient(800px 500px at 100% 110%, rgba(143,160,232,0.14), transparent 60%),
-    linear-gradient(200deg, #0F4436 0%, var(--navy-ink) 45%, #0B1330 100%);
+    linear-gradient(200deg, rgba(15,68,54,0.92) 0%, rgba(10,17,40,0.90) 45%, rgba(11,19,48,0.94) 100%),
+    url('images/products-bg.png');
+  background-size: cover, cover, cover, cover;
+  background-position: center, center, center, center 20%;
+  background-repeat: no-repeat;
 }
 .products-band::before{
   content:''; position:absolute; inset:0; pointer-events:none; opacity:.5;
@@ -1189,6 +1226,10 @@ footer .wrap{ position:relative; z-index:2; }
   mask-image:radial-gradient(ellipse 90% 70% at 50% 40%, #000 30%, transparent 100%);
   -webkit-mask-image:radial-gradient(ellipse 90% 70% at 50% 40%, #000 30%, transparent 100%);
 }
+.products-band{
+  transition:filter .15s ease;
+}
+
 .products-band .orb{position:absolute; border-radius:50%; filter:blur(80px); opacity:.22; pointer-events:none;}
 .products-band .p-orb-1{width:340px;height:340px;background:var(--amber-2);top:-90px;left:-60px;animation:orbFloat 19s ease-in-out infinite;}
 .products-band .p-orb-2{width:260px;height:260px;background:var(--teal-2);bottom:-70px;right:-40px;animation:orbFloat 24s ease-in-out infinite;animation-delay:3s;}
@@ -2004,6 +2045,173 @@ html, body{ max-width:100%; overflow-x:hidden; }
     transition:none !important;
   }
 }
+
+
+
+/* ============================= EXPLODED VIEWS — SHARED ============================= */
+.exp-section{ position:relative; overflow:hidden; }
+.exp-section.on-dark{
+  color:var(--ivory);
+  background:linear-gradient(175deg, var(--navy-ink) 0%, var(--teal-deep) 60%, #0F4436 100%);
+}
+.exp-section.on-dark .section-head h2{ color:var(--ivory); }
+.exp-section.on-dark .section-head p{ color:rgba(250,247,242,0.68); }
+.exp-section.on-dark .eyebrow{ color:var(--amber-2); }
+.exp-section.on-dark .eyebrow::before{ background:var(--amber-2); }
+.exp-hint{
+  text-align:center; margin-top:-8px; margin-bottom:34px;
+  font-family:var(--font-eyebrow); font-size:11.5px; letter-spacing:.08em; text-transform:uppercase;
+  color:rgba(250,247,242,0.45);
+}
+.exp-section:not(.on-dark) .exp-hint{ color:#8F8B80; }
+ 
+/* ============================= 1. EXPLODED OFFICE ============================= */
+.exp-office-grid{
+  display:grid; grid-template-columns:repeat(2,1fr); gap:16px; perspective:1600px;
+}
+@media (min-width:640px){ .exp-office-grid{grid-template-columns:repeat(3,1fr); gap:20px;} }
+@media (min-width:1024px){ .exp-office-grid{grid-template-columns:repeat(4,1fr); gap:22px;} }
+.exp-room{
+  position:relative; border-radius:var(--radius-md); padding:24px 18px;
+  background:rgba(255,255,255,0.06); border:1px solid rgba(255,255,255,0.14);
+  backdrop-filter:blur(10px);
+  min-height:150px; display:flex; flex-direction:column; justify-content:flex-end;
+  opacity:0; transform:translate3d(var(--fx,0), var(--fy,-40px), 0) rotate(var(--fr,-6deg)) scale(.85);
+  transition:transform .9s var(--ease), opacity .9s var(--ease), box-shadow .4s ease, border-color .4s ease;
+  cursor:default; overflow:hidden;
+}
+.exp-room.in{ opacity:1; transform:translate3d(0,0,0) rotate(0deg) scale(1); }
+.exp-room:hover{ box-shadow:0 24px 46px -20px rgba(0,0,0,0.5); border-color:rgba(232,199,102,0.4); transform:translateY(-6px) scale(1.02); }
+.exp-room-icon{
+  width:38px; height:38px; border-radius:11px; margin-bottom:14px; font-size:16px;
+  display:flex; align-items:center; justify-content:center;
+  background:rgba(255,255,255,0.1); color:var(--amber-2); border:1px solid rgba(255,255,255,0.16);
+}
+.exp-room h4{ color:var(--ivory); font-size:15.5px; margin-bottom:6px; }
+.exp-room p{
+  color:rgba(250,247,242,0.62); font-size:12.5px; line-height:1.5;
+  max-height:0; opacity:0; overflow:hidden; transition:max-height .4s var(--ease), opacity .35s ease;
+}
+.exp-room:hover p{ max-height:100px; opacity:1; margin-top:2px; }
+ 
+/* ============================= 2. EXPLODED COMPLIANCE ENGINE ============================= */
+.exp-engine-wrap{ display:flex; justify-content:center; padding:20px 0 6px; }
+.exp-engine{ position:relative; width:100%; max-width:460px; aspect-ratio:1/1; }
+.exp-engine-hub{
+  position:absolute; top:50%; left:50%; width:110px; height:110px; margin:-55px 0 0 -55px;
+  border-radius:50%; display:flex; align-items:center; justify-content:center; text-align:center;
+  background:linear-gradient(145deg,var(--amber-2),var(--amber)); color:#1C1400;
+  font-family:var(--font-display); font-weight:700; font-size:13px; line-height:1.3; padding:10px;
+  box-shadow:0 0 0 8px rgba(232,199,102,0.10), 0 20px 40px -16px rgba(201,162,39,0.6);
+  opacity:0; transform:scale(.4); transition:opacity .7s var(--ease), transform .7s var(--ease);
+}
+.exp-engine.in .exp-engine-hub{ opacity:1; transform:scale(1); }
+.exp-gear{
+  position:absolute; top:50%; left:50%; width:64px; height:64px; margin:-32px 0 0 -32px;
+  border-radius:50%; display:flex; align-items:center; justify-content:center; flex-direction:column; gap:2px;
+  background:var(--ivory); border:1px solid var(--line); backdrop-filter:blur(8px);
+  box-shadow:var(--shadow-sm);
+  color:var(--teal-deep); font-size:18px;
+  opacity:0; transform:translate(0,0) scale(.3) rotate(0deg);
+  transition:opacity .8s var(--ease), transform .8s var(--ease), border-color .3s ease, background .3s ease;
+}
+.exp-gear span{ font-size:9px; font-family:var(--font-eyebrow); font-weight:600; letter-spacing:.03em; color:#54514C; }
+.exp-gear.in{ opacity:1; transform:translate(var(--gx), var(--gy)) scale(1) rotate(0deg); }
+.exp-gear:hover{ border-color:var(--amber-2); background:rgba(232,199,102,0.12); color:var(--amber-deep); }
+.exp-gear:hover span{ color:var(--navy-ink); }
+.exp-orbit-ring{
+  position:absolute; inset:0; border-radius:50%; border:1px dashed rgba(255,255,255,0.14);
+  opacity:0; transition:opacity 1s ease .3s;
+}
+.exp-engine.in .exp-orbit-ring{ opacity:1; }
+ 
+/* ============================= 3. EXPLODED BUSINESS DASHBOARD ============================= */
+.exp-dash-wrap{ position:relative; display:flex; justify-content:center; padding:10px 0 30px; perspective:1400px; }
+.exp-dash-core{
+  position:relative; width:100%; max-width:900px; min-height:340px;
+}
+.exp-dash-frame{
+  position:absolute; top:50%; left:50%; width:170px; margin:-46px 0 0 -85px;
+  padding:18px 16px; border-radius:16px; text-align:center;
+  background:rgba(255,255,255,0.08); border:1px solid rgba(255,255,255,0.18); backdrop-filter:blur(10px);
+  opacity:0; transform:scale(.5); transition:opacity .6s var(--ease), transform .6s var(--ease);
+}
+.exp-dash-core.in .exp-dash-frame{ opacity:1; transform:scale(1); }
+.exp-dash-frame b{ display:block; color:var(--ivory); font-family:var(--font-display); font-size:14.5px; }
+.exp-dash-frame small{ color:rgba(250,247,242,0.55); font-size:11px; }
+.exp-card{
+  position:absolute; top:50%; left:50%; width:150px; margin:-42px 0 0 -75px;
+  padding:16px 14px; border-radius:14px;
+  background:rgba(255,255,255,0.06); border:1px solid rgba(255,255,255,0.14); backdrop-filter:blur(8px);
+  opacity:0; transform:translate(0,0) scale(.4) rotate(var(--dr,0deg));
+  transition:opacity .8s var(--ease), transform .8s var(--ease), border-color .35s ease, box-shadow .35s ease;
+}
+.exp-card.in{ opacity:1; transform:translate(var(--dx),var(--dy)) scale(1) rotate(0deg); }
+.exp-card:hover{ border-color:rgba(232,199,102,0.45); box-shadow:0 20px 40px -18px rgba(0,0,0,0.5); }
+.exp-card .exp-card-icon{ font-size:16px; color:var(--amber-2); margin-bottom:8px; display:block; }
+.exp-card h5{ color:var(--ivory); font-size:13px; margin-bottom:4px; }
+.exp-card p{
+  color:rgba(250,247,242,0.6); font-size:11.5px; line-height:1.45;
+  max-height:0; opacity:0; overflow:hidden; transition:max-height .35s var(--ease), opacity .3s ease;
+}
+.exp-card:hover p{ max-height:70px; opacity:1; }
+ 
+/* ============================= 4. EXPLODED CERTIFICATE ============================= */
+.exp-cert-wrap{ display:flex; justify-content:center; perspective:1600px; padding:10px 0; }
+.exp-cert-stack{ position:relative; width:100%; max-width:480px; }
+.exp-cert-layer{
+  position:relative; border-radius:16px; padding:22px 24px; margin-bottom:14px;
+  background:linear-gradient(160deg, rgba(255,255,255,0.08), rgba(255,255,255,0.02));
+  border:1px solid rgba(255,255,255,0.16); backdrop-filter:blur(10px);
+  display:grid; grid-template-columns:auto 1fr; gap:16px; align-items:center;
+  opacity:0; transform:translateY(30px) rotateX(-12deg) translateZ(-40px);
+  transition:opacity .7s var(--ease), transform .7s var(--ease), border-color .3s ease;
+}
+.exp-cert-layer.in{ opacity:1; transform:translateY(0) rotateX(0deg) translateZ(0); }
+.exp-cert-layer:hover{ border-color:rgba(232,199,102,0.4); }
+.exp-cert-num{
+  width:38px; height:38px; border-radius:50%; flex-shrink:0;
+  display:flex; align-items:center; justify-content:center;
+  background:linear-gradient(145deg,var(--amber-2),var(--amber)); color:#1C1400;
+  font-family:var(--font-display); font-weight:700; font-size:14px;
+}
+.exp-cert-layer h5{ color:var(--ivory); font-size:15px; margin-bottom:4px; }
+.exp-cert-layer p{ color:rgba(250,247,242,0.62); font-size:13px; line-height:1.5; }
+.exp-cert-connector{
+  position:absolute; left:37px; top:100%; width:1px; height:14px;
+  background:repeating-linear-gradient(rgba(255,255,255,0.25) 0 4px, transparent 4px 8px);
+}
+.exp-cert-layer:last-child .exp-cert-connector{ display:none; }
+ 
+@media (prefers-reduced-motion: reduce){
+  .exp-room, .exp-gear, .exp-engine-hub, .exp-card, .exp-dash-frame, .exp-cert-layer{
+    transition:opacity .3s ease !important; transform:none !important; opacity:1 !important;
+  }
+}
+
+.exp-cert-layer {
+    background: linear-gradient(160deg, rgba(255,255,255,0.9), rgba(255,255,255,0.6)) !important;
+    border: 1px solid var(--line) !important;
+}
+.exp-cert-layer h5 {
+    color: var(--navy-ink) !important;
+}
+.exp-cert-layer p {
+    color: #54514C !important;
+}
+.exp-cert-num {
+    box-shadow: 0 8px 18px -8px rgba(201,162,39,0.5);
+}
+
+.section-head h2{
+  transform:perspective(900px) rotateX(10deg) translateY(20px);
+  opacity:0;
+  transition:transform 1s var(--ease), opacity 1s var(--ease);
+}
+.section-head.in h2{
+  transform:perspective(900px) rotateX(0deg) translateY(0);
+  opacity:1;
+}
 </style>
 
 <script type="application/ld+json">
@@ -2171,15 +2379,15 @@ html, body{ max-width:100%; overflow-x:hidden; }
       <span class="eyebrow load-in" style="--d:1">Business Compliance &amp; Advisory</span>
       <h1 class="load-in" style="--d:2">GST, Company &amp; Compliance Consultancy in <em>Nagaon, Tezpur &amp; Assam</em>. Every deadline, met.</h1>
       <p class="hero-tagline load-in" style="--d:3">Providing trusted compliance services since 1993.</p>
-      <p class="lead load-in" style="--d:4">Samal Consultancy runs the tax, registration and labour-law compliance behind 70+ businesses across Assam — so nothing slips, nothing lapses, and nothing is left to chance.</p>
+      <p class="lead word-reveal" id="heroLeadWords" style="--d:4"></p>
       <div class="hero-actions load-in" style="--d:5">
         <a href="#contact" class="btn btn-gold btn-premium-glow" data-ripple>Get Free Consultation<span class="btn-shine" aria-hidden="true"></span></a>
         <a href="#services" class="btn btn-ghost" data-ripple>Explore Services<span class="btn-shine" aria-hidden="true"></span></a>
       </div>
       <div class="trust-row load-in" style="--d:6">
-        <div><div class="t-num">70+</div><div class="t-label">Businesses served</div></div>
-        <div><div class="t-num">99.2%</div><div class="t-label">On-time filing rate</div></div>
-        <div><div class="t-num">30+ yrs</div><div class="t-label">In practice</div></div>
+        <div><div class="t-num" id="tNum1">0</div><div class="t-label">Businesses served</div></div>
+        <div><div class="t-num" id="tNum2">0%</div><div class="t-label">On-time filing rate</div></div>
+        <div><div class="t-num" id="tNum3">0 yrs</div><div class="t-label">In practice</div></div>
       </div>
     </div>
 
@@ -2211,8 +2419,8 @@ html, body{ max-width:100%; overflow-x:hidden; }
 <!-- ============================= ABOUT ============================= -->
 <section class="pad" id="about">
   <div class="wrap about-grid">
-    <div class="reveal">
-      <div class="about-visual" data-plane="near">
+    <div class="reveal about-visual-sticky">
+  <div class="about-visual" data-plane="near">
         <span class="quote-mark">"</span>
         <p>We don't sell paperwork. We sell the certainty that your business is standing on solid legal ground.</p>
         <div class="sig">— Subham Kumar Samal, Managing Partner</div>
@@ -2247,11 +2455,13 @@ html, body{ max-width:100%; overflow-x:hidden; }
 
 <!-- ============================= STATS ============================= -->
 <section class="stats-band">
+  <div class="stats-band-pin">
   <div class="wrap stats-grid">
     <div class="stat-block reveal"><div class="stat-num" data-count="70" data-suffix="+">0</div><div class="stat-label">Clients served</div></div>
 <div class="stat-block reveal" style="transition-delay:.08s;"><div class="stat-num" data-count="40" data-suffix="+">0</div><div class="stat-label">Active clients</div></div>
 <div class="stat-block reveal" style="transition-delay:.16s;"><div class="stat-num" data-count="40" data-suffix="+">0</div><div class="stat-label">EPFO &amp; ESIC registrations</div></div>
 <div class="stat-block reveal" style="transition-delay:.24s;"><div class="stat-num" data-count="30" data-suffix="+">0</div><div class="stat-label">Years of experience</div></div>
+  </div>
   </div>
 </section>
 
@@ -2348,6 +2558,65 @@ html, body{ max-width:100%; overflow-x:hidden; }
       <h2>Compliance experience across the sectors that build Assam's economy.</h2>
     </div>
     <div class="ind-grid reveal" id="indGrid"></div>
+  </div>
+</section>
+
+
+
+<!-- ============================= 1. EXPLODED OFFICE ============================= -->
+<section class="pad exp-section on-dark" id="exploded-office">
+  <div class="wrap">
+    <div class="section-head center reveal" style="margin-left:auto;margin-right:auto;">
+      <span class="eyebrow">Inside Samal Consultancy</span>
+      <h2>One office, every discipline you need under one roof.</h2>
+    </div>
+    <p class="exp-hint">Scroll into view to watch the office assemble</p>
+    <div class="exp-office-grid" id="expOfficeGrid"></div>
+  </div>
+</section>
+ 
+<!-- ============================= 2. EXPLODED COMPLIANCE ENGINE ============================= -->
+<section class="pad exp-section" style="background:var(--paper);">
+  <div class="wrap">
+    <div class="section-head center reveal" style="margin-left:auto;margin-right:auto;">
+      <span class="eyebrow">How It All Connects</span>
+      <h2>Every compliance discipline, running as one engine.</h2>
+    </div>
+    <div class="exp-engine-wrap">
+      <div class="exp-engine" id="expEngine">
+        <div class="exp-orbit-ring"></div>
+        <div class="exp-engine-hub">Compliance<br>Engine</div>
+        <div class="exp-gear" id="expGears"></div>
+      </div>
+    </div>
+  </div>
+</section>
+ 
+<!-- ============================= 3. EXPLODED BUSINESS DASHBOARD ============================= -->
+<section class="pad exp-section on-dark" id="exploded-dashboard">
+  <div class="wrap">
+    <div class="section-head center reveal" style="margin-left:auto;margin-right:auto;">
+      <span class="eyebrow">Full Visibility</span>
+      <h2>Every filing, report and certificate — one dashboard away.</h2>
+    </div>
+    <div class="exp-dash-wrap">
+      <div class="exp-dash-core" id="expDashCore">
+        <div class="exp-dash-frame"><b>Your Dashboard</b><small>Live &amp; auto-reconciled</small></div>
+      </div>
+    </div>
+  </div>
+</section>
+ 
+<!-- ============================= 4. EXPLODED CERTIFICATE ============================= -->
+<section class="pad exp-section" style="background:var(--paper);">
+  <div class="wrap">
+    <div class="section-head center reveal" style="margin-left:auto;margin-right:auto;">
+      <span class="eyebrow">From Application to Approval</span>
+      <h2>How a government certificate actually gets issued.</h2>
+    </div>
+    <div class="exp-cert-wrap">
+      <div class="exp-cert-stack" id="expCertStack"></div>
+    </div>
   </div>
 </section>
 
@@ -2720,6 +2989,32 @@ else{
   setTimeout(dismissPreloader, 2200);
 }
 
+(function wordReveal(){
+  const el = document.getElementById('heroLeadWords');
+  if(!el) return;
+  const text = "Samal Consultancy runs the tax, registration and labour-law compliance behind 70+ businesses across Assam — so nothing slips, nothing lapses, and nothing is left to chance.";
+  el.innerHTML = text.split(' ').map((w,i)=>`<span style="--w:${i}">${w}</span>`).join(' ');
+  requestAnimationFrame(()=> requestAnimationFrame(()=> el.classList.add('in')));
+})();
+
+(function trustCount(){
+  const targets = [
+    { el: document.getElementById('tNum1'), end:70, suffix:'+' },
+    { el: document.getElementById('tNum2'), end:99.2, suffix:'%', decimal:true },
+    { el: document.getElementById('tNum3'), end:30, suffix:'+ yrs' }
+  ];
+  const dur = 1800, start = performance.now();
+  function step(now){
+    const p = Math.min((now-start)/dur, 1);
+    const eased = 1 - Math.pow(1-p, 3);
+    targets.forEach(t=>{
+      const val = t.decimal ? (eased*t.end).toFixed(1) : Math.floor(eased*t.end);
+      if(t.el) t.el.textContent = val + t.suffix;
+    });
+    if(p<1) requestAnimationFrame(step);
+  }
+  requestAnimationFrame(step);
+})();
 
 /* ============================= NAVBAR SCROLL ============================= */
 const navbar = document.getElementById('navbar');
@@ -2751,6 +3046,11 @@ function onScrollFrame(){
   mobileCtaBar.classList.toggle('show', y > 500);
   const max = document.documentElement.scrollHeight - window.innerHeight;
   scrollProgress.style.width = (max > 0 ? (y / max) * 100 : 0) + '%';
+  const brandNameEl = document.querySelector('.brand-name');
+if(brandNameEl){
+  const hueP = max > 0 ? Math.min(y / max, 1) : 0;
+  brandNameEl.style.filter = `hue-rotate(${hueP*25}deg) saturate(${1+hueP*0.3})`;
+}
   const heroGridEl = document.querySelector('.hero-grid');
   if(heroGridEl && !prefersReduced && !isCoarsePointer){
     const heroH = heroEl ? heroEl.offsetHeight : window.innerHeight;
@@ -3063,6 +3363,20 @@ window.addEventListener('scroll', ()=>{
   lastScrollTime = now; lastScrollY2 = window.scrollY;
 }, {passive:true});
 
+(function bgWarpOnScroll(){
+  if(prefersReduced) return;
+  const band = document.getElementById('products');
+  if(!band) return;
+  let lastY = window.scrollY, lastT = performance.now();
+  window.addEventListener('scroll', ()=>{
+    const now = performance.now();
+    const dt = now - lastT || 16;
+    const v = Math.min(Math.abs(window.scrollY - lastY) / dt, 3);
+    band.style.filter = `saturate(${1 + v*0.4}) brightness(${1 + v*0.08})`;
+    lastY = window.scrollY; lastT = now;
+  }, { passive:true });
+})();
+
 /* ============================= STATS COUNTER ============================= */
 const statEls = document.querySelectorAll('.stat-num');
 function animateCount(el){
@@ -3361,6 +3675,14 @@ const revealObserver = new IntersectionObserver((entries)=>{
   });
 }, { threshold:0.12 });
 revealEls.forEach(el=>revealObserver.observe(el));
+
+document.querySelectorAll('.section-head').forEach(head=>{
+  new IntersectionObserver((entries)=>{
+    entries.forEach(e=>{
+      if(e.isIntersecting){ e.target.classList.add('in'); }
+    });
+  },{threshold:0.4}).observe(head);
+});
 
 /* ============================= CONTACT FORM VALIDATION + SUBMIT ============================= */
 const validators = {
@@ -3921,7 +4243,49 @@ document.querySelectorAll('.btn-gold[data-ripple]').forEach(btn=>{
   });
 })();
 
+(function scrollScrubTilt(){
+  if(prefersReduced || isCoarsePointer) return;
+  const cards = document.querySelectorAll('.core-card, .ind-card');
+  let hoveredEl = null;
+  cards.forEach(c=>{
+    c.addEventListener('mouseenter', ()=> hoveredEl = c);
+    c.addEventListener('mouseleave', ()=> { if(hoveredEl === c) hoveredEl = null; });
+  });
+  function update(){
+    const vh = window.innerHeight;
+    cards.forEach(card=>{
+      if(card === hoveredEl) return; // let the hover-tilt handler own this one
+      const r = card.getBoundingClientRect();
+      const centerDist = (r.top + r.height/2) - vh/2;
+      const p = Math.max(-1, Math.min(1, centerDist / (vh/2)));
+      card.style.transform = `perspective(1000px) rotateX(${p*6}deg) translateY(${p*10}px)`;
+    });
+  }
+  window.addEventListener('scroll', ()=> requestAnimationFrame(update), {passive:true});
+  update();
+})();
 
+(function industryDepthScroll(){
+  if(prefersReduced || isCoarsePointer) return;
+  const cards = document.querySelectorAll('.industry-card');
+  let hoveredEl = null;
+  cards.forEach(c=>{
+    c.addEventListener('mouseenter', ()=> hoveredEl = c);
+    c.addEventListener('mouseleave', ()=> { if(hoveredEl === c) hoveredEl = null; });
+  });
+  function update(){
+    const vh = window.innerHeight;
+    cards.forEach(card=>{
+      if(card === hoveredEl) return;
+      const r = card.getBoundingClientRect();
+      const centerDist = (r.top + r.height/2) - vh/2;
+      const p = Math.max(-1, Math.min(1, centerDist / (vh/2)));
+      card.style.transform = `translateZ(${-Math.abs(p)*40}px) rotateX(${p*8}deg) translateY(${Math.abs(p)*6}px)`;
+    });
+  }
+  window.addEventListener('scroll', ()=> requestAnimationFrame(update), {passive:true});
+  update();
+})();
 
 (function initGyroTilt(){
   if(!isCoarsePointer || prefersReduced || !ledgerCard) return;
@@ -3956,6 +4320,120 @@ function attachTilt3D(el, {max=8, glare=true} = {}){
 }
 document.querySelectorAll('[data-tilt-3d]').forEach(el=> attachTilt3D(el));
 
+/* ============================= EXPLODED VIEWS: DATA + RENDER ============================= */
+(function(){
+  const prefersReduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+ 
+  /* ---- 1. Exploded Office ---- */
+  const officeRooms = [
+    { icon:'☏', title:'Reception', desc:'Your first point of contact — routes every query to the right specialist.' },
+    { icon:'◈', title:'GST Desk', desc:'Registration, monthly/annual returns, reconciliation and notices.' },
+    { icon:'⌘', title:'Income Tax', desc:'ITR filing, tax planning, TDS and notice handling.' },
+    { icon:'◉', title:'Payroll', desc:'Salary processing, statutory deductions, payslips.' },
+    { icon:'⚖', title:'Legal', desc:'Agreements, documentation, trademark and legal filings.' },
+    { icon:'▤', title:'Accounting', desc:'Bookkeeping, reconciliation, financial statements.' },
+    { icon:'✓', title:'Compliance', desc:'EPFO, ESIC, ROC and the full compliance calendar.' },
+    { icon:'◆', title:'Advisory', desc:'Virtual CFO guidance for growing businesses.' }
+  ];
+  const officeGrid = document.getElementById('expOfficeGrid');
+  if(officeGrid){
+    officeGrid.innerHTML = officeRooms.map((r,i)=>{
+      const fx = (i%2===0? -1:1) * (40+Math.random()*40) + 'px';
+      const fy = (-30 - Math.random()*40) + 'px';
+      const fr = ((i%2===0? -1:1) * (4+Math.random()*8)) + 'deg';
+      return `<div class="exp-room" style="--fx:${fx};--fy:${fy};--fr:${fr};transition-delay:${i*70}ms">
+        <div class="exp-room-icon">${r.icon}</div>
+        <h4>${r.title}</h4>
+        <p>${r.desc}</p>
+      </div>`;
+    }).join('');
+  }
+ 
+  /* ---- 2. Exploded Compliance Engine ---- */
+  const gearData = [
+    { label:'GST', icon:'◈' }, { label:'Income Tax', icon:'⌘' }, { label:'EPFO', icon:'◉' },
+    { label:'ESIC', icon:'✚' }, { label:'ROC', icon:'▦' }, { label:'Accounting', icon:'▤' },
+    { label:'Payroll', icon:'☰' }, { label:'Audit', icon:'⌕' }
+  ];
+  const gearsHost = document.getElementById('expGears');
+  if(gearsHost){
+    const n = gearData.length, radius = 150;
+    gearsHost.outerHTML = gearData.map((g,i)=>{
+      const angle = (i / n) * Math.PI * 2 - Math.PI/2;
+      const gx = Math.round(Math.cos(angle)*radius);
+      const gy = Math.round(Math.sin(angle)*radius);
+      return `<div class="exp-gear" style="--gx:${gx}px;--gy:${gy}px;transition-delay:${i*60}ms">
+        ${g.icon}<span>${g.label}</span>
+      </div>`;
+    }).join('');
+  }
+ 
+  /* ---- 3. Exploded Business Dashboard ---- */
+  const dashCards = [
+    { icon:'📈', title:'Charts', desc:'Filing trends and compliance health at a glance.' },
+    { icon:'▤', title:'Reports', desc:'Monthly compliance and financial summaries.' },
+    { icon:'✓', title:'Certificates', desc:'Every registration certificate, stored and searchable.' },
+    { icon:'🧾', title:'Invoices', desc:'GST-ready invoices generated and tracked.' },
+    { icon:'📁', title:'Tax Files', desc:'ITR, TDS and audit documents, organised by year.' },
+    { icon:'◷', title:'Compliance Status', desc:'Live status on every open filing and renewal.' }
+  ];
+  const dashCore = document.getElementById('expDashCore');
+  if(dashCore){
+    const n = dashCards.length, radius = 240;
+    dashCore.insertAdjacentHTML('beforeend', dashCards.map((c,i)=>{
+      const angle = (i / n) * Math.PI * 2 - Math.PI/2;
+      const dx = Math.round(Math.cos(angle)*radius) + 'px';
+      const dy = Math.round(Math.sin(angle)*radius*0.62) + 'px';
+      const dr = ((i%2===0?-1:1) * 10) + 'deg';
+      return `<div class="exp-card" style="--dx:${dx};--dy:${dy};--dr:${dr};transition-delay:${i*70+120}ms">
+        <span class="exp-card-icon">${c.icon}</span>
+        <h5>${c.title}</h5>
+        <p>${c.desc}</p>
+      </div>`;
+    }).join(''));
+  }
+ 
+  /* ---- 4. Exploded Certificate ---- */
+  const certLayers = [
+    { title:'Application Submitted', desc:'Documents verified and the application is filed with the department.' },
+    { title:'Government Verification', desc:'The department reviews the application and raises queries, if any.' },
+    { title:'Approval Granted', desc:'Objections resolved and the application is approved for issuance.' },
+    { title:'Certificate Issued', desc:'The final certificate is issued and shared with you, digitally signed.' }
+  ];
+  const certStack = document.getElementById('expCertStack');
+  if(certStack){
+    certStack.innerHTML = certLayers.map((c,i)=>`
+      <div class="exp-cert-layer" style="transition-delay:${i*130}ms">
+        <div class="exp-cert-num">${i+1}</div>
+        <div><h5>${c.title}</h5><p>${c.desc}</p></div>
+        <div class="exp-cert-connector"></div>
+      </div>`).join('');
+  }
+ 
+  /* ---- Shared scroll-trigger: reveal + assemble each module once ---- */
+  const targets = [
+    { el: officeGrid, itemSel:'.exp-room' },
+    { el: document.getElementById('expEngine'), itemSel:'.exp-gear', selfClass:true },
+    { el: dashCore, itemSel:'.exp-card', selfClass:true },
+    { el: certStack, itemSel:'.exp-cert-layer' }
+  ];
+  const io = new IntersectionObserver((entries)=>{
+    entries.forEach(entry=>{
+      if(!entry.isIntersecting) return;
+      const target = targets.find(t=> t.el === entry.target);
+      if(!target) return;
+      if(target.selfClass) entry.target.classList.add('in');
+      entry.target.querySelectorAll(target.itemSel).forEach(item=> item.classList.add('in'));
+      io.unobserve(entry.target);
+    });
+  }, { threshold:0.25 });
+  targets.forEach(t=>{ if(t.el) io.observe(t.el); });
+ 
+  if(prefersReduced){
+    document.querySelectorAll('.exp-room, .exp-gear, .exp-card, .exp-cert-layer, .exp-engine, .exp-dash-core, .exp-engine-hub')
+      .forEach(el=> el.classList.add('in'));
+  }
+})();
 </script>
 </body>
 </html>
