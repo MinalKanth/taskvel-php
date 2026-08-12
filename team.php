@@ -213,7 +213,7 @@ if (!$role) { header('Location: teams.php'); exit; }
         <input type="hidden" id="ev-id" />
         <div class="fg"><label>Title</label><input type="text" id="ev-title" maxlength="190" placeholder="e.g. Sprint review, Client demo, Team lunch" /></div>
         <div class="row2">
-            <div class="fg"><label>Date</label><input type="date" id="ev-date" /></div>
+            <div class="fg"><label>Date</label><input type="date" id="ev-date" min="" /></div>
             <div class="fg"><label>Project (optional)</label><select id="ev-project"><option value="">— None —</option></select></div>
         </div>
         <div class="row2">
@@ -409,6 +409,7 @@ function openEventModal(ev = null) {
     document.getElementById('ev-save-btn').textContent = ev ? 'Update event' : 'Save event';
     document.getElementById('ev-title').value = ev ? ev.title : '';
     document.getElementById('ev-date').value = ev ? ev.event_date : new Date().toISOString().slice(0,10);
+    document.getElementById('ev-date').min = new Date().toISOString().slice(0,10);
     document.getElementById('ev-start').value = ev && ev.start_time ? ev.start_time.slice(0,5) : '';
     document.getElementById('ev-end').value = ev && ev.end_time ? ev.end_time.slice(0,5) : '';
     document.getElementById('ev-location').value = ev ? (ev.location || '') : '';

@@ -77,7 +77,9 @@ function save_attendees(int $eventId, int $teamId, array $attendeeIds, int $crea
 function valid_date(?string $d): ?string
 {
     $d = trim((string)$d);
-    return preg_match('/^\d{4}-\d{2}-\d{2}$/', $d) ? $d : null;
+    if (!preg_match('/^\d{4}-\d{2}-\d{2}$/', $d)) return null;
+    if ($d < date('Y-m-d')) return null; // block backdated events
+    return $d;
 }
 
 function valid_time(?string $t): ?string
