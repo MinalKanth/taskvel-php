@@ -195,6 +195,9 @@ switch ("$method:$action") {
             $params[] = $id;
             $pdo->prepare('UPDATE tasks SET ' . implode(', ', $set) . ' WHERE id = ?')->execute($params);
         }
+        if (array_key_exists('due_date', $in) || array_key_exists('due_time', $in)) {
+            $pdo->prepare('UPDATE tasks SET due_soon_notified_at = NULL, overdue_notified_at = NULL WHERE id = ?')->execute([$id]);
+        }
 
         if (($in['status'] ?? null) === 'done') {
             $pdo->prepare("UPDATE tasks SET completed_at = NOW() WHERE id = ? AND completed_at IS NULL")->execute([$id]);

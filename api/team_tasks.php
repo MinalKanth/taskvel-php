@@ -137,6 +137,9 @@ switch ("$method:$action") {
                 $status, $progress,
                 $assigneeId, isset($in['due_date']) ? (clean_str($in['due_date'], 10) ?: null) : $task['due_date'], $id,
             ]);
+            if (isset($in['due_date']) && $in['due_date'] != $task['due_date']) {
+                $pdo->prepare('UPDATE team_tasks SET due_soon_notified_at = NULL, overdue_notified_at = NULL WHERE id = ?')->execute([$id]);
+            }
 
             $newAssignee = $in['assignee_id'] ?? $task['assignee_id'];
             if ($newAssignee != $task['assignee_id'] && $assigneeId && $assigneeId != $uid) {
