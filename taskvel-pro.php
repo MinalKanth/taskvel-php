@@ -3834,6 +3834,10 @@ $user = current_user();
                         title="Daily Check-in — office mode: check in, report tasks, check out with a summary">
                         <span class="tt-icon">📍</span>
                     </button>
+                    <button class="icon-btn" onclick="location.href='features.php'" aria-label="View all features"
+                        title="Explore everything Taskvel can do">
+                        <span class="tt-icon">✦</span>
+                    </button>
                     <button class="icon-btn" id="export-btn" onclick="togglePanel('export-panel')" aria-label="Export"
                         title="Export">
                         <span class="tt-icon">↓</span>
@@ -4353,7 +4357,7 @@ $user = current_user();
     <div class="foot">
         <div class="n">Taskvel</div>
         <div class="d">Focus · Rank · Ship</div>
-        <div class="k">Signed in as <b><?= htmlspecialchars($user['email']) ?></b> · <a href="#"
+        <div class="k">Signed in as <b><?= htmlspecialchars($user['email']) ?></b> · <a href="features.php" style="color:var(--accent);font-weight:600">Explore features</a> · <a href="#"
                 onclick="logoutUser();return false;" style="color:var(--accent);font-weight:600">Log out</a></div>
         <div class="k">Shortcuts: <kbd>⌘K</kbd> commands · <kbd>N</kbd> new · <kbd>/</kbd> search · <kbd>Space</kbd>
             timer · <kbd>T</kbd> dark · <kbd>Esc</kbd> close</div>
