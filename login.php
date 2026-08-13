@@ -245,12 +245,31 @@ body::before{
   .shell{gap:34px;}
 }
 input:focus-visible, button:focus-visible, a:focus-visible{outline:2px solid var(--gold); outline-offset:3px;}
+
+.back-home-link{
+  display:inline-flex;
+  align-items:center;
+  gap:6px;
+  font-family:var(--font-eyebrow, inherit);
+  font-size:13.5px;
+  font-weight:600;
+  color:var(--paper-dim, #666);
+  text-decoration:none;
+  padding:10px 0;
+  transition:color .25s ease, transform .25s ease;
+}
+.back-home-link:hover{
+  color:var(--amber-2, #C9A227);
+  transform:translateX(-3px);
+}
 </style>
 </head>
 <body>
 <span class="orb o1" aria-hidden="true"></span>
 <span class="orb o2" aria-hidden="true"></span>
-
+<a href="index.php" class="back-home-link">
+  ← Back to Home
+</a>
 <div class="shell">
 
   <!-- BRANDING + PREMIUM FEATURES -->
@@ -278,6 +297,7 @@ input:focus-visible, button:focus-visible, a:focus-visible{outline:2px solid var
       <div><div class="t-num">99.2%</div><div class="t-label">On-time delivery</div></div>
     </div>
   </div>
+  
 
   <!-- 3D LOGIN CARD -->
   <div class="card-zone">

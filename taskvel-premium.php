@@ -716,6 +716,41 @@ footer{border-top:1px solid var(--line);padding:48px 0 30px;}
 @supports (padding:max(0px)){
   .wrap{padding-left:max(16px,env(safe-area-inset-left));padding-right:max(16px,env(safe-area-inset-right));}
 }
+
+/* ── Plan type + cycle toggle ── */
+.plan-type-toggle{
+  display:flex; justify-content:center; gap:8px; margin-bottom:28px; flex-wrap:wrap;
+}
+.plan-type-btn{
+  font-family:var(--mono); font-size:12.5px; letter-spacing:.04em; font-weight:600;
+  padding:10px 20px; border-radius:100px; border:1px solid var(--line);
+  background:transparent; color:var(--paper-dim); cursor:pointer; transition:all .3s var(--ease);
+}
+.plan-type-btn.active{
+  background:linear-gradient(135deg,var(--brass-2),var(--brass)); color:#20150A; border-color:transparent;
+}
+.price-toggle{
+  display:flex; justify-content:center; gap:10px; margin-bottom:36px; flex-wrap:wrap;
+}
+.cycle-btn{
+  font-family:var(--mono); font-size:12px; letter-spacing:.03em; font-weight:600;
+  padding:9px 16px; border-radius:100px; border:1px solid var(--line);
+  background:transparent; color:var(--paper-dim); cursor:pointer; transition:all .3s var(--ease);
+  display:inline-flex; align-items:center; gap:6px;
+}
+.cycle-btn.active{
+  border-color:var(--brass-dim); color:var(--brass-2); background:rgba(201,161,92,.08);
+}
+.cycle-btn .save-badge{
+  font-family:var(--mono); font-size:9px; color:var(--teal); background:rgba(79,179,160,.14);
+  padding:2px 7px; border-radius:2px;
+}
+.price-card .price-note{
+  font-family:var(--mono); font-size:11px; color:var(--paper-dim); margin-top:6px;
+}
+.price-card .price-per-user{
+  font-family:var(--mono); font-size:10.5px; color:var(--teal); margin-top:4px; letter-spacing:.03em;
+}
 </style>
 </head>
 <body>
@@ -1017,44 +1052,24 @@ footer{border-top:1px solid var(--line);padding:48px 0 30px;}
   <div class="wrap">
     <div class="section-head reveal" style="margin-left:auto;margin-right:auto;text-align:center">
       <span class="eyebrow" style="justify-content:center">Access</span>
-      <h2>Straightforward pricing. No surprise renewals.</h2>
+      <h2>Plans for individuals and teams.</h2>
+      <p style="margin-left:auto;margin-right:auto">Every plan starts with a 14-day free trial. No card required to try it.</p>
     </div>
-    <div class="price-toggle reveal">
-      <span class="off on" id="labelMonthly">Monthly</span>
-      <div class="switch" id="priceSwitch"><div class="switch-knob"></div></div>
-      <span id="labelYearly">Yearly <span class="save-badge">Save 2 months</span></span>
+
+    <!-- User type tabs -->
+    <div class="plan-type-toggle reveal">
+      <button class="plan-type-btn active" data-type="individual">Individual</button>
+      <button class="plan-type-btn" data-type="enterprise">Enterprise / Team</button>
     </div>
-    <div class="pricing-wrap reveal">
-      <div class="price-card">
-        <span class="price-tier">Free</span>
-        <div class="price-amt">₹0<span>/forever</span></div>
-        <p class="price-desc">For one person's own list — no account, no limit on tasks.</p>
-        <ul class="price-feats">
-          <li>Task ranking &amp; Pomodoro timer</li>
-          <li>Tags, deadlines, recurring tasks</li>
-          <li>CSV / PDF / calendar export</li>
-          <li>Works offline, installs like an app</li>
-        </ul>
-        <a href="taskvel-free.php" class="btn btn-ghost magnetic">Use Taskvel Free →</a>
-      </div>
-      <div class="price-card pro">
-        <span class="price-tier">Premium</span>
-        <div class="price-amt"><span id="priceNum">₹399</span><span id="priceUnit">/user/mo</span></div>
-        <p class="price-desc">For teams and professionals accountable to more than themselves.</p>
-        <ul class="price-feats">
-          <li>Everything in Free</li>
-          <li>Multi-device sync &amp; team collaboration</li>
-          <li>Analytics dashboard</li>
-          <li>Compliance &amp; client tracker</li>
-          <li>Daily check-in &amp; manager dashboard</li>
-          <li>Real push notifications, even offline</li>
-          <li>Role &amp; permission control</li>
-          <li>Audit-grade security &amp; rate limiting</li>
-          <li>Priority support</li>
-        </ul>
-        <a href="register.php" class="btn btn-brass magnetic">Start 14-day free trial →</a>
-      </div>
+
+    <!-- Billing cycle tabs -->
+    <div class="price-toggle reveal" style="margin-bottom:44px;">
+      <button class="cycle-btn active" data-cycle="monthly">Monthly</button>
+      <button class="cycle-btn" data-cycle="six">6 Months <span class="save-badge">Save 15%</span></button>
+      <button class="cycle-btn" data-cycle="yearly">Yearly <span class="save-badge">Save 30%</span></button>
     </div>
+
+    <div class="pricing-wrap reveal" id="pricingCards"></div>
   </div>
 </section>
 
@@ -1335,19 +1350,95 @@ function renderTestimonials(){
 renderTestimonials();
 setInterval(()=>{logIdx=(logIdx+1)%testimonials.length;renderTestimonials();},6000);
 
-/* ═══════════════════════ PRICING TOGGLE ═══════════════════════ */
-const priceSwitch=document.getElementById('priceSwitch');
-const priceNum=document.getElementById('priceNum'), priceUnit=document.getElementById('priceUnit');
-const labelMonthly=document.getElementById('labelMonthly'), labelYearly=document.getElementById('labelYearly');
-let yearly=false;
-priceSwitch.addEventListener('click',()=>{
-  yearly=!yearly;
-  priceSwitch.classList.toggle('yearly',yearly);
-  priceNum.textContent=yearly?'₹3,990':'₹399';
-  priceUnit.textContent=yearly?'/user/yr':'/user/mo';
-  labelMonthly.classList.toggle('on',!yearly);
-  labelYearly.classList.toggle('on',yearly);
+/* ═══════════════════════ PRICING: TYPE + CYCLE ═══════════════════════ */
+const planData = {
+  individual: {
+    monthly:  { price: 49,  unit: '/mo',      note: 'Billed monthly' },
+    six:      { price: 42,  unit: '/mo',      note: 'Billed ₹252 every 6 months' },
+    yearly:   { price: 34,  unit: '/mo',      note: 'Billed ₹408 per year' }
+  },
+  enterprise: {
+    monthly:  { price: 99,  unit: '/user/mo', note: 'Billed monthly · per user' },
+    six:      { price: 84,  unit: '/user/mo', note: 'Billed ₹504/user every 6 months' },
+    yearly:   { price: 69,  unit: '/user/mo', note: 'Billed ₹828/user per year' }
+  }
+};
+
+const planFeatures = {
+  individual: [
+    'Everything in Free',
+    'Multi-device sync & personal analytics',
+    'Custom Pomodoro focus sessions',
+    'Compliance & client tracker',
+    'Real push notifications, even offline',
+    'CSV / PDF / calendar export',
+    'Priority email support'
+  ],
+  enterprise: [
+    'Everything in Individual',
+    'Team collaboration & task assignment',
+    'Role & permission control',
+    'Daily check-in & manager dashboard',
+    'Team-wide analytics dashboard',
+    'Audit log & rate-limited security',
+    'Dedicated priority support & onboarding'
+  ]
+};
+
+let currentType = 'individual';
+let currentCycle = 'monthly';
+
+function renderPricingCards(){
+  const plan = planData[currentType][currentCycle];
+  const feats = planFeatures[currentType];
+  const container = document.getElementById('pricingCards');
+
+  container.innerHTML = `
+    <div class="price-card">
+      <span class="price-tier">Free</span>
+      <div class="price-amt">₹0<span>/forever</span></div>
+      <p class="price-desc">For one person's own list — no account, no limit on tasks.</p>
+      <ul class="price-feats">
+        <li>Task ranking & Pomodoro timer</li>
+        <li>Tags, deadlines, recurring tasks</li>
+        <li>CSV / PDF / calendar export</li>
+        <li>Works offline, installs like an app</li>
+      </ul>
+      <a href="taskvel-free.php" class="btn btn-ghost magnetic">Use Taskvel Free →</a>
+    </div>
+    <div class="price-card pro">
+      <span class="price-tier">${currentType === 'enterprise' ? 'Enterprise' : 'Premium'}</span>
+      <div class="price-amt">₹${plan.price}<span>${plan.unit}</span></div>
+      <div class="price-note">${plan.note}</div>
+      <p class="price-desc">${currentType === 'enterprise'
+    ? 'For anyone using team features — collaboration, roles, assignment. Every team member is billed individually at this rate.'
+    : 'For professionals accountable to more than themselves.'}</p>
+      <ul class="price-feats">
+        ${feats.map(f => `<li>${f}</li>`).join('')}
+      </ul>
+      <a href="register.php?plan=${currentType}&cycle=${currentCycle}" class="btn btn-brass magnetic">Start 14-day free trial →</a>
+    </div>
+  `;
+}
+
+document.querySelectorAll('.plan-type-btn').forEach(btn=>{
+  btn.addEventListener('click', ()=>{
+    document.querySelectorAll('.plan-type-btn').forEach(b=>b.classList.remove('active'));
+    btn.classList.add('active');
+    currentType = btn.dataset.type;
+    renderPricingCards();
+  });
 });
+document.querySelectorAll('.cycle-btn').forEach(btn=>{
+  btn.addEventListener('click', ()=>{
+    document.querySelectorAll('.cycle-btn').forEach(b=>b.classList.remove('active'));
+    btn.classList.add('active');
+    currentCycle = btn.dataset.cycle;
+    renderPricingCards();
+  });
+});
+
+renderPricingCards();
 </script>
 </body>
 </html>

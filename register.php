@@ -235,12 +235,21 @@ body::before{
   .shell{gap:34px;}
 }
 input:focus-visible, button:focus-visible, a:focus-visible{outline:2px solid var(--gold); outline-offset:3px;}
+.back-home-link{
+  position:fixed; top:20px; left:20px; z-index:5;
+  display:inline-flex; align-items:center; gap:6px;
+  font-size:13.5px; font-weight:600; color:rgba(250,248,243,0.75);
+  text-decoration:none; padding:8px 14px; border-radius:100px;
+  background:rgba(255,255,255,0.06); border:1px solid rgba(255,255,255,0.14);
+  backdrop-filter:blur(8px); transition:color .25s ease, border-color .25s ease, transform .25s ease;
+}
+.back-home-link:hover{ color:var(--gold-2); border-color:rgba(201,162,39,0.5); transform:translateX(-3px); }
 </style>
 </head>
 <body>
 <span class="orb o1" aria-hidden="true"></span>
 <span class="orb o2" aria-hidden="true"></span>
-
+<a href="index.php" class="back-home-link">← Back to Home</a>
 <div class="shell">
 
   <!-- BRANDING + PREMIUM FEATURES -->

@@ -11,6 +11,16 @@ $user = current_user();
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Everything Taskvel does · Taskvel</title>
 <meta name="description" content="Every Taskvel feature in one place — capture, focus, organize, and work with a team, all inside one fast task OS.">
+<meta name="apple-mobile-web-app-capable" content="yes" />
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+<meta name="apple-mobile-web-app-title" content="Taskvel" />
+<meta name="theme-color" content="#FAF8F3" media="(prefers-color-scheme: light)" />
+<meta name="theme-color" content="#0A1128" media="(prefers-color-scheme: dark)" />
+<link rel="icon"
+    href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='22' fill='%230a0a0a'/%3E%3Ctext x='50' y='72' font-family='Arial,sans-serif' font-size='62' font-weight='800' fill='%23ffffff' text-anchor='middle'%3ET%3C/text%3E%3C/svg%3E" />
+<link rel="apple-touch-icon"
+    href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='22' fill='%230a0a0a'/%3E%3Ctext x='50' y='72' font-family='Arial,sans-serif' font-size='62' font-weight='800' fill='%23ffffff' text-anchor='middle'%3ET%3C/text%3E%3C/svg%3E" />
+<link rel="manifest" href="manifest.json" />
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Sora:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;700&display=swap" media="print" onload="this.media='all'">
@@ -144,6 +154,72 @@ body{font-family:'Sora',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;b
 
 @media (prefers-reduced-motion:reduce){ * { animation-duration:.001ms !important; transition-duration:.05ms !important; } }
 :focus-visible{outline:2px solid var(--accent);outline-offset:2px;}
+
+/* ═══════ PRICING ═══════ */
+.pricing-section{padding:64px 0 24px;}
+.pricing-head{text-align:center;max-width:560px;margin:0 auto 36px;}
+.pricing-head .rail-eyebrow{justify-content:center;display:flex;}
+.pricing-head h2{font-family:'Sora';font-size:clamp(24px,4.4vw,36px);font-weight:800;letter-spacing:-.7px;margin-top:10px;}
+.pricing-head p{font-size:14px;color:var(--ink3);margin-top:10px;line-height:1.6;}
+
+.plan-toggle-row{display:flex;flex-direction:column;align-items:center;gap:14px;margin-bottom:40px;}
+.toggle-pill{display:inline-flex;padding:4px;border-radius:100px;background:var(--bg-sunk);border:1px solid var(--line);gap:2px;}
+.toggle-pill button{
+  border:none;background:transparent;padding:9px 18px;border-radius:100px;font-family:'Space Grotesk';
+  font-size:12.5px;font-weight:700;color:var(--ink3);cursor:pointer;transition:all .3s var(--spring);
+  display:inline-flex;align-items:center;gap:6px;white-space:nowrap;
+}
+.toggle-pill button.active{background:var(--accent);color:var(--on-accent);box-shadow:0 8px 20px -8px var(--accent-glow);}
+.toggle-pill .save-tag{font-family:'JetBrains Mono';font-size:8.5px;background:var(--good-soft);color:var(--good);padding:1px 6px;border-radius:5px;letter-spacing:.3px;}
+.toggle-pill button.active .save-tag{background:rgba(255,255,255,.22);color:var(--on-accent);}
+
+.price-cards{display:grid;grid-template-columns:1fr;gap:16px;max-width:820px;margin:0 auto;}
+@media (min-width:720px){ .price-cards{grid-template-columns:1fr 1fr;} }
+
+.price-card{
+  position:relative;background:var(--bg-elev);border:1px solid var(--line);border-radius:var(--r-lg);
+  padding:28px 24px;box-shadow:var(--shadow-sm);transition:transform .35s var(--spring),box-shadow .35s var(--ease),border-color .3s;
+  display:flex;flex-direction:column;overflow:hidden;
+}
+.price-card:hover{transform:translateY(-6px);box-shadow:var(--shadow-lg);}
+.price-card.hi{border-color:var(--accent);background:linear-gradient(165deg,var(--accent-soft),var(--bg-elev) 55%);}
+.price-card.hi::before{
+  content:'MOST POPULAR';position:absolute;top:0;right:0;font-family:'JetBrains Mono';font-size:9px;font-weight:700;
+  letter-spacing:1px;background:var(--accent);color:var(--on-accent);padding:6px 14px;border-radius:0 0 0 12px;
+}
+.price-tier{font-family:'JetBrains Mono';font-size:11px;letter-spacing:1.5px;text-transform:uppercase;color:var(--accent);font-weight:700;}
+.price-amt{font-family:'Sora';font-size:38px;font-weight:800;letter-spacing:-1px;margin-top:10px;color:var(--ink);}
+.price-amt span{font-family:'Space Grotesk';font-size:13px;font-weight:500;color:var(--ink3);}
+.price-note{font-family:'JetBrains Mono';font-size:10.5px;color:var(--ink3);margin-top:4px;}
+.price-desc{font-size:13px;color:var(--ink3);margin-top:12px;line-height:1.55;}
+.price-feats{list-style:none;margin-top:20px;display:flex;flex-direction:column;gap:10px;flex:1;}
+.price-feats li{display:flex;gap:9px;align-items:flex-start;font-size:12.8px;color:var(--ink2);line-height:1.5;}
+.price-feats li::before{
+  content:'✓';flex-shrink:0;width:17px;height:17px;border-radius:50%;margin-top:1px;
+  display:flex;align-items:center;justify-content:center;background:var(--accent-soft);color:var(--accent);
+  font-size:9px;font-weight:800;
+}
+.price-card .btn{margin-top:22px;width:100%;justify-content:center;}
+
+/* ═══════ TRIAL EXPIRY NOTICE ═══════ */
+.trial-notice{
+  max-width:820px;margin:28px auto 0;border-radius:18px;padding:24px 26px;
+  background:linear-gradient(150deg,var(--warn-soft),transparent 70%);
+  border:1px solid rgba(217,119,6,.28);position:relative;overflow:hidden;
+}
+:root[data-theme="dark"] .trial-notice{border-color:rgba(251,191,36,.28);}
+.trial-notice-head{display:flex;align-items:center;gap:10px;margin-bottom:10px;}
+.trial-notice-ic{
+  width:30px;height:30px;border-radius:9px;background:var(--warn);color:#fff;flex-shrink:0;
+  display:flex;align-items:center;justify-content:center;font-size:15px;font-weight:800;
+}
+.trial-notice h4{font-family:'Space Grotesk';font-size:14.5px;font-weight:700;}
+.trial-notice p{font-size:12.8px;color:var(--ink2);line-height:1.65;}
+.trial-notice p strong{color:var(--ink);font-weight:700;}
+.trial-notice-list{list-style:none;margin-top:12px;display:flex;flex-direction:column;gap:7px;}
+.trial-notice-list li{display:flex;gap:8px;font-size:12.3px;color:var(--ink3);align-items:flex-start;}
+.trial-notice-list li::before{content:'—';color:var(--warn);flex-shrink:0;}
+
 </style>
 <script>
 (function(){
@@ -300,6 +376,43 @@ body{font-family:'Sora',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;b
     </div>
   </section>
 
+  <!-- PRICING -->
+  <section class="rail-section pricing-section" id="pricing">
+    <div class="pricing-head">
+      <span class="rail-eyebrow">06 — Pricing</span>
+      <h2>Simple, honest pricing.</h2>
+      <p>Every plan starts with a 14-day free trial — every premium feature unlocked, no card required to begin.</p>
+    </div>
+
+    <div class="plan-toggle-row">
+      <div class="toggle-pill" id="typeToggle">
+        <button class="active" data-type="individual">Individual</button>
+        <button data-type="enterprise">Enterprise / Team</button>
+      </div>
+      <div class="toggle-pill" id="cycleToggle">
+        <button class="active" data-cycle="monthly">Monthly</button>
+        <button data-cycle="six">6 Months <span class="save-tag">Save 15%</span></button>
+        <button data-cycle="yearly">Yearly <span class="save-tag">Save 30%</span></button>
+      </div>
+    </div>
+
+    <div class="price-cards" id="priceCards"></div>
+
+    <div class="trial-notice">
+      <div class="trial-notice-head">
+        <div class="trial-notice-ic">!</div>
+        <h4>What happens after your free trial</h4>
+      </div>
+      <p>Your first <strong>14 days are fully free</strong> — every premium feature is unlocked, exactly as shown on this page. If you started on a <strong>1-month free promotional plan</strong>, here's exactly what happens the moment it ends:</p>
+      <ul class="trial-notice-list">
+        <li>Your account automatically reverts to the <strong>Free tier</strong> — no charge is ever made without your consent.</li>
+        <li>Premium features are locked: <strong>team collaboration, analytics dashboard, multi-device sync, manager dashboard, compliance tracker, and push notifications</strong> will stop working.</li>
+        <li>Your existing tasks, remarks, and data are <strong>never deleted</strong> — everything is preserved and waiting the moment you subscribe.</li>
+        <li>Re-activate instantly at any time by choosing a plan above — there's no re-onboarding, you pick up exactly where you left off.</li>
+      </ul>
+    </div>
+  </section>
+
   <!-- FINAL CTA -->
   <div class="final-cta">
     <h2>That's the whole toolkit.</h2>
@@ -380,6 +493,86 @@ document.getElementById('replay-tour-btn').addEventListener('click', function(){
     });
   }, { threshold: 0.15 });
   cards.forEach((c,i) => { c.style.transitionDelay = (i % 3 * 60) + 'ms'; io.observe(c); });
+})();
+// ── Pricing: type + cycle toggle ──
+(function(){
+  const planData = {
+    individual: {
+      monthly: { price: 49, unit: '/mo', note: 'Billed monthly' },
+      six:     { price: 42, unit: '/mo', note: 'Billed ₹252 every 6 months' },
+      yearly:  { price: 34, unit: '/mo', note: 'Billed ₹408 per year' }
+    },
+    enterprise: {
+      monthly: { price: 99, unit: '/user/mo', note: 'Billed monthly · per user' },
+      six:     { price: 84, unit: '/user/mo', note: 'Billed ₹504/user every 6 months' },
+      yearly:  { price: 69, unit: '/user/mo', note: 'Billed ₹828/user per year' }
+    }
+  };
+  const planFeats = {
+    individual: [
+      'Everything in Free',
+      'Multi-device sync & personal analytics',
+      'Custom Pomodoro focus sessions',
+      'Compliance & client tracker',
+      'Real push notifications, even offline',
+      'Priority email support'
+    ],
+    enterprise: [
+      'Everything in Individual',
+      'Team collaboration & task assignment',
+      'Role & permission control',
+      'Daily check-in & manager dashboard',
+      'Team-wide analytics dashboard',
+      'Dedicated priority support & onboarding'
+    ]
+  };
+
+  let curType = 'individual', curCycle = 'monthly';
+  const cardsEl = document.getElementById('priceCards');
+
+  function render(){
+    const p = planData[curType][curCycle];
+    const feats = planFeats[curType];
+    cardsEl.innerHTML = `
+      <div class="price-card">
+        <span class="price-tier">Free</span>
+        <div class="price-amt">₹0<span>/forever</span></div>
+        <p class="price-desc">Solo task tracking with the essentials — always free, no trial needed.</p>
+        <ul class="price-feats">
+          <li>Task ranking & Pomodoro timer</li>
+          <li>Tags, deadlines, recurring tasks</li>
+          <li>CSV / PDF / calendar export</li>
+          <li>Works offline, installs like an app</li>
+        </ul>
+        <a href="taskvel-pro.php" class="btn btn-ghost">Continue on Free</a>
+      </div>
+      <div class="price-card hi">
+        <span class="price-tier">${curType === 'enterprise' ? 'Enterprise' : 'Premium'}</span>
+        <div class="price-amt">₹${p.price}<span>${p.unit}</span></div>
+        <div class="price-note">${p.note}</div>
+        <p class="price-desc">${curType === 'enterprise'
+          ? 'For anyone using team features. Every member is billed individually at this rate.'
+          : 'For professionals who need the full toolkit, every day.'}</p>
+        <ul class="price-feats">${feats.map(f => `<li>${f}</li>`).join('')}</ul>
+        <a href="register.php?plan=${curType}&cycle=${curCycle}" class="btn btn-primary">Start 14-day free trial →</a>
+      </div>
+    `;
+  }
+
+  document.querySelectorAll('#typeToggle button').forEach(b=>{
+    b.addEventListener('click', ()=>{
+      document.querySelectorAll('#typeToggle button').forEach(x=>x.classList.remove('active'));
+      b.classList.add('active'); curType = b.dataset.type; render();
+    });
+  });
+  document.querySelectorAll('#cycleToggle button').forEach(b=>{
+    b.addEventListener('click', ()=>{
+      document.querySelectorAll('#cycleToggle button').forEach(x=>x.classList.remove('active'));
+      b.classList.add('active'); curCycle = b.dataset.cycle; render();
+    });
+  });
+
+  render();
 })();
 </script>
 </body>
