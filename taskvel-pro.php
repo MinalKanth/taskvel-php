@@ -3776,6 +3776,444 @@ $user = current_user();
             display: none;
         }
     }
+    /* Premium Explore Features Button */
+.features-btn {
+    position: relative;
+    width: 78px;
+    min-width: 78px;
+    height: 40px;
+    padding: 0 12px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 7px;
+    overflow: hidden;
+
+    border: 1px solid rgba(255, 255, 255, 0.16);
+    border-radius: 13px;
+
+    background:
+        linear-gradient(
+            135deg,
+            rgba(99, 102, 241, 0.22),
+            rgba(139, 92, 246, 0.12)
+        ),
+        rgba(255, 255, 255, 0.045);
+
+    color: #fff;
+
+    box-shadow:
+        0 6px 20px rgba(99, 102, 241, 0.14),
+        inset 0 1px 0 rgba(255, 255, 255, 0.12);
+
+    backdrop-filter: blur(14px);
+    -webkit-backdrop-filter: blur(14px);
+
+    cursor: pointer;
+
+    transition:
+        transform 0.3s cubic-bezier(.2,.8,.2,1),
+        box-shadow 0.3s ease,
+        border-color 0.3s ease,
+        background 0.3s ease;
+}
+
+/* Ambient glow */
+.features-glow {
+    position: absolute;
+    width: 32px;
+    height: 32px;
+    top: -10px;
+    right: -8px;
+
+    background: rgba(139, 92, 246, 0.55);
+    filter: blur(18px);
+    border-radius: 50%;
+
+    opacity: 0.45;
+    transition: all 0.4s ease;
+}
+
+/* Spark icon */
+.features-spark {
+    position: relative;
+    z-index: 2;
+
+    font-size: 15px;
+    line-height: 1;
+
+    color: #c4b5fd;
+
+    text-shadow:
+        0 0 6px rgba(167, 139, 250, 0.9),
+        0 0 16px rgba(139, 92, 246, 0.65);
+
+    transition:
+        transform 0.4s cubic-bezier(.2,.8,.2,1),
+        color 0.3s ease;
+}
+
+/* Text */
+.features-label {
+    position: relative;
+    z-index: 2;
+
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+
+    color: rgba(255, 255, 255, 0.82);
+
+    transition: color 0.3s ease;
+}
+
+/* Shimmer */
+.features-btn::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+
+    background: linear-gradient(
+        110deg,
+        transparent 25%,
+        rgba(255, 255, 255, 0.18) 45%,
+        transparent 65%
+    );
+
+    transform: translateX(-120%);
+    transition: transform 0.65s ease;
+}
+
+/* Hover */
+.features-btn:hover {
+    transform: translateY(-2px) scale(1.035);
+
+    border-color: rgba(167, 139, 250, 0.55);
+
+    background:
+        linear-gradient(
+            135deg,
+            rgba(99, 102, 241, 0.34),
+            rgba(139, 92, 246, 0.22)
+        ),
+        rgba(255, 255, 255, 0.06);
+
+    box-shadow:
+        0 10px 30px rgba(99, 102, 241, 0.28),
+        0 0 22px rgba(139, 92, 246, 0.16),
+        inset 0 1px 0 rgba(255, 255, 255, 0.18);
+}
+
+.features-btn:hover::before {
+    transform: translateX(120%);
+}
+
+.features-btn:hover .features-glow {
+    opacity: 0.85;
+    transform: scale(1.5);
+}
+
+.features-btn:hover .features-spark {
+    transform: rotate(90deg) scale(1.18);
+
+    color: #ffffff;
+
+    text-shadow:
+        0 0 7px rgba(255, 255, 255, 1),
+        0 0 18px rgba(139, 92, 246, 0.9);
+}
+
+.features-btn:hover .features-label {
+    color: #ffffff;
+}
+
+/* Press */
+.features-btn:active {
+    transform: translateY(0) scale(0.97);
+}
+
+/* Subtle attention animation */
+.features-btn .features-spark {
+    animation: featureSpark 3s ease-in-out infinite;
+}
+
+@keyframes featureSpark {
+    0%, 100% {
+        opacity: 0.8;
+        transform: scale(1);
+    }
+
+    50% {
+        opacity: 1;
+        transform: scale(1.12);
+    }
+}
+
+/* Mobile */
+@media (max-width: 700px) {
+    .features-btn {
+        width: 42px;
+        min-width: 42px;
+        padding: 0;
+    }
+
+    .features-label {
+        display: none;
+    }
+}
+/* =========================================================
+   RESPONSIVE HEADER CONTROLS
+   ========================================================= */
+
+.head-right {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    min-width: 0;
+}
+
+/* Keep all controls from shrinking unpredictably */
+.head-right > .icon-btn,
+.head-right > .clock-chip {
+    flex-shrink: 0;
+}
+
+
+/* =========================================================
+   TABLET
+   ========================================================= */
+
+@media (max-width: 1100px) {
+
+    .head-right {
+        gap: 6px;
+    }
+
+    .head-right .icon-btn {
+        width: 38px;
+        min-width: 38px;
+        height: 38px;
+    }
+
+    .head-right .clock-chip {
+        padding: 5px 9px;
+    }
+
+    .features-btn {
+        width: 72px;
+        min-width: 72px;
+    }
+}
+
+
+/* =========================================================
+   MOBILE
+   ========================================================= */
+
+@media (max-width: 768px) {
+
+    .head-right {
+        gap: 5px;
+
+        /*
+         * Keep everything on one line.
+         * User can swipe horizontally if the screen
+         * cannot fit every control.
+         */
+        max-width: 100%;
+        overflow-x: auto;
+        overflow-y: hidden;
+
+        padding: 3px 2px;
+
+        scrollbar-width: none;
+        -ms-overflow-style: none;
+
+        -webkit-overflow-scrolling: touch;
+    }
+
+    .head-right::-webkit-scrollbar {
+        display: none;
+    }
+
+
+    /* Standard icon buttons */
+
+    .head-right > .icon-btn {
+        width: 36px;
+        min-width: 36px;
+        height: 36px;
+
+        padding: 0;
+
+        border-radius: 11px;
+    }
+
+
+    /* Icon size */
+
+    .head-right .tt-icon {
+        font-size: 15px;
+    }
+
+
+    /* =====================================================
+       EXPLORE BUTTON
+       ===================================================== */
+
+    .head-right .features-btn {
+        width: 62px;
+        min-width: 62px;
+        height: 36px;
+
+        padding: 0 8px;
+
+        gap: 5px;
+
+        border-radius: 11px;
+    }
+
+    .head-right .features-spark {
+        font-size: 13px;
+    }
+
+    .head-right .features-label {
+        display: inline;
+
+        font-size: 8px;
+        letter-spacing: 0.06em;
+    }
+
+
+    /* =====================================================
+       CLOCK
+       ===================================================== */
+
+    .head-right .clock-chip {
+        min-width: 72px;
+
+        padding: 4px 7px;
+
+        border-radius: 10px;
+    }
+
+    .head-right .clock-time {
+        font-size: 12px;
+        line-height: 14px;
+    }
+
+    .head-right .clock-date {
+        font-size: 7px;
+        line-height: 10px;
+    }
+
+    .head-right .clock-time .sec {
+        font-size: 8px;
+    }
+}
+
+
+/* =========================================================
+   SMALL PHONES
+   ========================================================= */
+
+@media (max-width: 480px) {
+
+    .head-right {
+        gap: 4px;
+    }
+
+    .head-right > .icon-btn {
+        width: 34px;
+        min-width: 34px;
+        height: 34px;
+
+        border-radius: 10px;
+    }
+
+    .head-right .tt-icon {
+        font-size: 14px;
+    }
+
+
+    /* Compact Explore button */
+
+    .head-right .features-btn {
+        width: 58px;
+        min-width: 58px;
+        height: 34px;
+
+        padding: 0 6px;
+
+        gap: 4px;
+
+        border-radius: 10px;
+    }
+
+    .head-right .features-spark {
+        font-size: 12px;
+    }
+
+    .head-right .features-label {
+        font-size: 7px;
+    }
+
+
+    /* Compact clock */
+
+    .head-right .clock-chip {
+        min-width: 65px;
+
+        padding: 3px 6px;
+    }
+
+    .head-right .clock-time {
+        font-size: 11px;
+    }
+
+    .head-right .clock-date {
+        font-size: 6px;
+    }
+}
+
+
+/* =========================================================
+   VERY SMALL DEVICES
+   ========================================================= */
+
+@media (max-width: 360px) {
+
+    .head-right {
+        gap: 3px;
+    }
+
+    .head-right > .icon-btn {
+        width: 32px;
+        min-width: 32px;
+        height: 32px;
+    }
+
+    .head-right .features-btn {
+        width: 54px;
+        min-width: 54px;
+        height: 32px;
+    }
+
+    .head-right .features-label {
+        font-size: 6.5px;
+    }
+
+    .head-right .clock-chip {
+        min-width: 60px;
+    }
+}
+@media (max-width: 768px) {
+    .head-right {
+        flex: 1;
+        min-width: 0;
+    }
+}
     </style>
     <script>
     (function() {
@@ -3817,6 +4255,16 @@ $user = current_user();
                     </div>
                 </div>
                 <div class="head-right">
+                    <button
+                        class="icon-btn features-btn"
+                        onclick="location.href='features.php'"
+                        aria-label="View all features"
+                        title="Explore everything Taskvel can do"
+                    >
+                        <span class="features-glow"></span>
+                        <span class="features-spark">✦</span>
+                        <span class="features-label">Explore</span>
+                    </button>
                     <button class="icon-btn" id="notif-btn" onclick="togglePanel('notif-panel')"
                         aria-label="Notifications" title="Notifications">
                         <span class="tt-icon">◔</span>
@@ -3834,10 +4282,7 @@ $user = current_user();
                         title="Daily Check-in — office mode: check in, report tasks, check out with a summary">
                         <span class="tt-icon">📍</span>
                     </button>
-                    <button class="icon-btn" onclick="location.href='features.php'" aria-label="View all features"
-                        title="Explore everything Taskvel can do">
-                        <span class="tt-icon">✦</span>
-                    </button>
+                    
                     <button class="icon-btn" id="export-btn" onclick="togglePanel('export-panel')" aria-label="Export"
                         title="Export">
                         <span class="tt-icon">↓</span>

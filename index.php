@@ -2300,7 +2300,7 @@ html, body{ max-width:100%; overflow-x:hidden; }
   ]
 }
 </script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<!-- <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>  -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/lenis/1.1.13/lenis.min.js"></script>
 </head>
 <body>
@@ -3275,7 +3275,7 @@ if(!prefersReduced && !isCoarsePointer){
 }
 
 /* ============================= PRODUCTS SECTION — EXTRA 3D FX ============================= */
-const productsBandEl = document.getElementById('products');
+/* const productsBandEl = document.getElementById('products');
 const productsSpotlightEl = document.getElementById('productsSpotlight');
 if(productsBandEl && productsSpotlightEl && !prefersReduced && !isCoarsePointer){
   productsSpotlightEl.classList.add('on');
@@ -3286,10 +3286,10 @@ if(productsBandEl && productsSpotlightEl && !prefersReduced && !isCoarsePointer)
     productsSpotlightEl.style.setProperty('--psx', px + '%');
     productsSpotlightEl.style.setProperty('--psy', py + '%');
   });
-}
+} */
 
 /* Ambient floating particles inside the products band */
-const prodParticlesEl = document.getElementById('prodParticles');
+/* const prodParticlesEl = document.getElementById('prodParticles');
 if(prodParticlesEl && !prefersReduced){
   const pColors = ['rgba(232,199,102,0.9)','rgba(143,160,232,0.85)','rgba(255,255,255,0.6)'];
   let html = '';
@@ -3303,10 +3303,10 @@ if(prodParticlesEl && !prefersReduced){
     html += `<span class="prod-particle" style="width:${size}px;height:${size}px;left:${left}%;top:${top}%;background:radial-gradient(circle, ${color}, transparent);animation-duration:${dur}s;animation-delay:${delay}s;"></span>`;
   }
   prodParticlesEl.innerHTML = html;
-}
+} */
 
 /* Extra icon parallax based on card tilt (adds to existing tilt effect) */
-if(!prefersReduced && !isCoarsePointer){
+/* if(!prefersReduced && !isCoarsePointer){
   document.querySelectorAll('.prod-card[data-tilt]').forEach(card=>{
     const icon = card.querySelector('.prod-icon');
     card.addEventListener('mousemove', (e)=>{
@@ -3318,7 +3318,7 @@ if(!prefersReduced && !isCoarsePointer){
     });
     card.addEventListener('mouseleave', ()=>{ if(icon) icon.style.transform = ''; });
   });
-}
+} */
 
 /* ============================= LIVE LEDGER ============================= */
 const ledgerItems = [
@@ -3363,7 +3363,7 @@ window.addEventListener('scroll', ()=>{
   lastScrollTime = now; lastScrollY2 = window.scrollY;
 }, {passive:true});
 
-(function bgWarpOnScroll(){
+/* (function bgWarpOnScroll(){
   if(prefersReduced) return;
   const band = document.getElementById('products');
   if(!band) return;
@@ -4042,7 +4042,7 @@ document.querySelectorAll('.btn-gold[data-ripple]').forEach(btn=>{
 });
 
 /* ============================= 3D PARTICLE NETWORK (Three.js) ============================= */
-(function initHero3D(){
+/* (function initHero3D(){
   const canvas = document.getElementById('hero3d');
   if(!canvas || typeof THREE === 'undefined' || prefersReduced || isCoarsePointer) return;
 
@@ -4162,7 +4162,7 @@ document.querySelectorAll('.btn-gold[data-ripple]').forEach(btn=>{
     const p = Math.min(Math.max(window.scrollY / heroH, 0), 1);
     canvas.style.filter = `blur(${p*3}px) saturate(${1 + p*0.6})`;
   }, { passive:true });
-})();
+})(); */
 
 (function initAreaGlobe(){
   const canvas = document.getElementById('areaGlobe');
@@ -4243,7 +4243,7 @@ document.querySelectorAll('.btn-gold[data-ripple]').forEach(btn=>{
   });
 })();
 
-(function scrollScrubTilt(){
+/* (function scrollScrubTilt(){
   if(prefersReduced || isCoarsePointer) return;
   const cards = document.querySelectorAll('.core-card, .ind-card');
   let hoveredEl = null;
@@ -4263,9 +4263,9 @@ document.querySelectorAll('.btn-gold[data-ripple]').forEach(btn=>{
   }
   window.addEventListener('scroll', ()=> requestAnimationFrame(update), {passive:true});
   update();
-})();
+})(); */
 
-(function industryDepthScroll(){
+/* (function industryDepthScroll(){
   if(prefersReduced || isCoarsePointer) return;
   const cards = document.querySelectorAll('.industry-card');
   let hoveredEl = null;
@@ -4285,7 +4285,7 @@ document.querySelectorAll('.btn-gold[data-ripple]').forEach(btn=>{
   }
   window.addEventListener('scroll', ()=> requestAnimationFrame(update), {passive:true});
   update();
-})();
+})(); */
 
 (function initGyroTilt(){
   if(!isCoarsePointer || prefersReduced || !ledgerCard) return;
