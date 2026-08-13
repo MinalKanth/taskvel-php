@@ -32,35 +32,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $email = trim($_POST['email'] ?? '');
         $res = register_user($name, $email, $_POST['password'] ?? '');
         if ($res['ok']) {
-            session_regenerate_id(true); // was missing — prevented a fixed pre-auth session ID from carrying over
-            $_SESSION['user_id'] = $res['user_id'];
-            $_SESSION['session_started_at'] = time();
-            $_SESSION['last_activity'] = time();
-            $_SESSION['last_rotated_at'] = time();
-            unset($_SESSION['csrf_token']);
-
-            // Send the redirect to the browser FIRST, then send the welcome
-            // email afterward. SMTP is a slow, blocking, multi-round-trip
-            // conversation — if it runs before the redirect, a slow mail
-            // server (or PHP's max_execution_time) can kill the script
-            // before the user ever sees a response, even though their
-            // account was already created.
-            header('Location: taskvel-pro.php');
-            session_write_close();
-            if (function_exists('fastcgi_finish_request')) {
-                fastcgi_finish_request(); // flushes the response to the browser now; code below still runs
-            }
-
-            try {
-                send_welcome_email($email, $name);
-            } catch (\Throwable $e) {
-                error_log('Welcome email failed for ' . $email . ': ' . $e->getMessage());
-            }
-            exit;
+            // No auto-login anymore — the account exists but is unverified
+            // until the email link is clicked. Show a "check your email"
+            // state on this same page instead of redirecting in.
+            $registeredEmail = $res['email'];
+        } else {
+            $error = $res['error'];
         }
-        $error = $res['error'];
     }
 }
+$registeredEmail = $registeredEmail ?? null;
 $csrfToken = csrf_token();
 ?>
 <!DOCTYPE html>
@@ -292,6 +273,16 @@ input:focus-visible, button:focus-visible, a:focus-visible{outline:2px solid var
   <div class="card-zone">
     <div class="card" id="card">
       <span class="glare" aria-hidden="true"></span>
+      <?php if ($registeredEmail): ?>
+        <h3>Check your inbox</h3>
+        <p class="sub">We've sent a verification link to <strong><?= htmlspecialchars($registeredEmail) ?></strong>. Click it to activate your account, then log in.</p>
+        <form method="post" action="resend-verification.php" style="margin-top:10px">
+          <input type="hidden" name="csrf_token" value="<?= htmlspecialchars($csrfToken) ?>">
+          <input type="hidden" name="email" value="<?= htmlspecialchars($registeredEmail) ?>">
+          <button type="submit" class="btn ghost" style="width:auto;padding:10px 18px;font-size:13px;">Resend verification email</button>
+        </form>
+        <p class="alt"><a href="login.php">Back to log in</a></p>
+      <?php else: ?>
       <h3>Create your account</h3>
       <p class="sub">Free to start — premium features included.</p>
       <?php if ($error): ?><div class="err"><?= htmlspecialchars($error) ?></div><?php endif; ?>
@@ -312,6 +303,7 @@ input:focus-visible, button:focus-visible, a:focus-visible{outline:2px solid var
         <button type="submit" class="btn" id="submitBtn">Create account</button>
       </form>
       <p class="alt">Already have an account? <a href="login.php">Log in</a></p>
+      <?php endif; ?>
       <div class="card-foot">A product of <a href="https://www.samalconsultancy.com" target="_blank" rel="noopener">Samal Consultancy</a> · Guwahati, Assam · Trusted compliance since 1993</div>
     </div>
   </div>

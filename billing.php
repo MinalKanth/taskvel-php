@@ -71,7 +71,7 @@ $user = current_user();
         </div>
         <div class="modal-actions">
             <button class="btn ghost" onclick="closeBusinessBundle()">Cancel</button>
-            <button class="btn" onclick="submitBusinessBundle()">Continue to payment</button>
+            <button class="btn" id="biz-save-btn" onclick="submitBusinessBundle()">Continue to payment</button>
         </div>
     </div>
 </div>
@@ -184,7 +184,7 @@ function renderOrgDashboard(dash) {
             <div class="seat-stat"><b>${seats.assigned}</b>Assigned</div>
             <div class="seat-stat"><b>${seats.available}</b>Available</div>
         </div>
-        <button class="btn ghost sm" onclick="addSeats()">+ Add more seats</button>
+        <button class="btn ghost sm" id="add-seats-btn" onclick="addSeats()">+ Add more seats</button>
         <button class="btn ghost sm" onclick="openBusinessBundle()">🏢 Business — <?= BUSINESS_BUNDLE_SEATS ?> seats bundled</button>
         <h4 style="margin:20px 0 6px;font-family:var(--font-display)">Members</h4>
         <div id="org-members"></div>
@@ -291,23 +291,41 @@ async function submitInvite() {
 async function addSeats() {
     const n = prompt('How many additional seats would you like to purchase?', '5');
     if (!n || isNaN(n) || parseInt(n, 10) < 1) return;
+    const btn = document.getElementById('add-seats-btn');
+    if (btn.disabled) return;
+    btn.disabled = true;
+    const orig = btn.textContent;
+    btn.textContent = 'Starting checkout…';
     try {
         const { url } = await Taskvel.request('/api/billing.php?action=create-org-checkout-session', {
             method: 'POST', body: { org_id: currentOrg.organization_id, seats: parseInt(n, 10) },
         });
         window.location.href = url; // Stripe Checkout — seats are added by the webhook once payment completes
-    } catch (e) { toast(e.message || 'Could not start checkout — is Stripe configured?'); }
+    } catch (e) {
+        toast(e.message || 'Could not start checkout — is Stripe configured?');
+        btn.disabled = false;
+        btn.textContent = orig;
+    }
 }
 
 function openBusinessBundle() { document.getElementById('biz-overlay').classList.add('open'); }
 function closeBusinessBundle() { document.getElementById('biz-overlay').classList.remove('open'); }
 async function submitBusinessBundle() {
+    const btn = document.getElementById('biz-save-btn');
+    if (btn.disabled) return;
+    btn.disabled = true;
+    const orig = btn.textContent;
+    btn.textContent = 'Starting checkout…';
     try {
         const { url } = await Taskvel.request('/api/billing.php?action=create-business-checkout-session', {
             method: 'POST', body: { org_id: currentOrg.organization_id, billing_cycle: document.getElementById('biz-cycle').value },
         });
         window.location.href = url;
-    } catch (e) { toast(e.message || 'Could not start checkout — is Stripe configured?'); }
+    } catch (e) {
+        toast(e.message || 'Could not start checkout — is Stripe configured?');
+        btn.disabled = false;
+        btn.textContent = orig;
+    }
 }
 async function suspendMember(orgId, userId) {
     try { await Taskvel.request('/api/organizations.php?action=suspend-member', { method:'POST', body:{ org_id: orgId, user_id: userId } }); loadOrgMembers(orgId); }

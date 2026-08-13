@@ -148,7 +148,7 @@ const MY_USER_ID = <?= (int)current_user_id() ?>;
 let members = [];
 let currentTaskId = null;
 
-function esc(s) { return (s || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+function esc(s) { return (s || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;'); }
 document.getElementById('back-link').href = 'team.php?id=' + TEAM_ID;
 
 function initials(name) {
@@ -255,6 +255,12 @@ function closeTaskModal() { document.getElementById('task-overlay').classList.re
 
 async function saveTask() {
     const title = document.getElementById('t-title').value.trim();
+    if (!currentTaskId && !title) { alert('Enter a task title'); return; }
+    const btn = document.getElementById('t-save-btn');
+    if (btn.disabled) return;
+    btn.disabled = true;
+    const orig = btn.textContent;
+    btn.textContent = 'Saving…';
     const payload = {
         title,
         description: document.getElementById('t-desc').value.trim(),
@@ -268,13 +274,15 @@ async function saveTask() {
             payload.id = currentTaskId;
             await Taskvel.request('/api/project_tasks.php?action=update', { method:'POST', body: payload });
         } else {
-            if (!title) { alert('Enter a task title'); return; }
             payload.project_id = PROJECT_ID;
             await Taskvel.request('/api/project_tasks.php?action=create', { method:'POST', body: payload });
         }
         closeTaskModal();
         loadTasks(); loadSummary();
-    } catch (e) { alert(e.message || 'Could not save task'); }
+    } catch (e) { alert(e.message || 'Could not save task'); } finally {
+        btn.disabled = false;
+        btn.textContent = orig;
+    }
 }
 
 async function deleteTask() {

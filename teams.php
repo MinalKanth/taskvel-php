@@ -39,14 +39,14 @@ $user = current_user();
         </div>
         <div class="modal-actions">
             <button class="btn ghost" onclick="closeCreateTeam()">Cancel</button>
-            <button class="btn" onclick="submitCreateTeam()">Create</button>
+            <button class="btn" id="ct-save-btn" onclick="submitCreateTeam()">Create</button>
         </div>
     </div>
 </div>
 
 <script src="js/api-client.js?v=2"></script>
 <script>
-function esc(s) { return (s || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+function esc(s) { return (s || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;'); }
 
 async function loadTeams() {
     const list = document.getElementById('team-list');
@@ -88,6 +88,11 @@ async function loadLimits() {
 async function submitCreateTeam() {
     const name = document.getElementById('ct-name').value.trim();
     if (!name) return;
+    const btn = document.getElementById('ct-save-btn');
+    if (btn.disabled) return;
+    btn.disabled = true;
+    const orig = btn.textContent;
+    btn.textContent = 'Creating…';
     try {
         const res = await Taskvel.request('/api/teams.php?action=create', { method:'POST', body:{ name } });
         closeCreateTeam();
@@ -96,6 +101,8 @@ async function submitCreateTeam() {
         if ((e.message || '').includes('Upgrade')) {
             if (confirm(e.message + '\n\nGo to billing now?')) window.location.href = 'billing.php';
         } else { toast(e.message || 'Could not create team'); }
+        btn.disabled = false;
+        btn.textContent = orig;
     }
 }
 loadTeams();

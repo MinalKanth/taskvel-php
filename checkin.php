@@ -95,7 +95,7 @@ $user = current_user();
                     <input type="number" id="new-task-expected" placeholder="Expected minutes (optional)" min="1" />
                 </div>
                 <div class="hint">Leave "Report to" blank if this task doesn't need anyone notified. Expected minutes flags it as overdue on the manager dashboard if it runs long.</div>
-                <button class="btn sm" onclick="addTask()" style="align-self:flex-start">+ Add task</button>
+                <button class="btn sm" id="add-task-btn" onclick="addTask()" style="align-self:flex-start">+ Add task</button>
             </div>
         </section>
         <section>
@@ -131,7 +131,7 @@ $user = current_user();
 
 <script src="js/api-client.js?v=2"></script>
 <script>
-function esc(s) { return (s || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+function esc(s) { return (s || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;'); }
 function fmtTime(iso) { return new Date(iso.replace(' ', 'T')).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }); }
 function fmtDuration(seconds) {
     const h = Math.floor(seconds / 3600), m = Math.floor((seconds % 3600) / 60);
@@ -170,7 +170,7 @@ function renderStatus() {
                 <h2>Ready to start your day?</h2>
                 <div class="meta">Check in to start logging and tracking today's tasks.</div>
                 <input type="email" id="checkin-report-to" placeholder="Report to (optional — manager/lead email)" />
-                <button class="btn" onclick="checkIn()">✅ Check in</button>
+                <button class="btn" id="checkin-btn" onclick="checkIn()">✅ Check in</button>
             </div>`;
         return;
     }
@@ -202,10 +202,19 @@ function renderStatus() {
 
 async function checkIn() {
     const reportTo = document.getElementById('checkin-report-to').value.trim();
+    const btn = document.getElementById('checkin-btn');
+    if (btn.disabled) return;
+    btn.disabled = true;
+    const orig = btn.textContent;
+    btn.textContent = 'Checking in…';
     try {
         await Taskvel.request('/api/workday.php?action=checkin', { method: 'POST', body: { report_to_email: reportTo || null } });
         load();
-    } catch (e) { alert(e.message || 'Could not check in'); }
+    } catch (e) {
+        alert(e.message || 'Could not check in');
+        btn.disabled = false;
+        btn.textContent = orig;
+    }
 }
 async function startBreak() {
     const type = document.getElementById('break-type').value;
@@ -292,13 +301,18 @@ async function addTask() {
     const email = document.getElementById('new-task-email').value.trim();
     const expected = document.getElementById('new-task-expected').value.trim();
     if (!title) { alert('Enter a task title'); return; }
+    const btn = document.getElementById('add-task-btn');
+    if (btn.disabled) return;
+    btn.disabled = true;
     try {
         await Taskvel.request('/api/workday.php?action=add-task', { method: 'POST', body: { title, report_to_email: email || null, expected_minutes: expected || null } });
         document.getElementById('new-task-title').value = '';
         document.getElementById('new-task-email').value = '';
         document.getElementById('new-task-expected').value = '';
         load();
-    } catch (e) { alert(e.message || 'Could not add task'); }
+    } catch (e) { alert(e.message || 'Could not add task'); } finally {
+        btn.disabled = false;
+    }
 }
 async function startTask(id) {
     await Taskvel.request('/api/workday.php?action=start-task', { method: 'POST', body: { id } });
@@ -354,6 +368,11 @@ function renderCustomEmailChips() {
 async function checkOut() {
     const stillOpen = currentTasks.filter(t => t.status !== 'done').length;
     if (stillOpen && !confirm(`${stillOpen} task(s) aren't fully done yet. Check out anyway?`)) return;
+    const btn = document.getElementById('checkout-btn');
+    if (btn.disabled) return;
+    btn.disabled = true;
+    const orig = btn.textContent;
+    btn.textContent = 'Checking out…';
     const notes = document.getElementById('checkout-notes').value.trim();
     const managerUserId = document.getElementById('report-manager').value || null;
     const teamMemberUserIds = Array.from(document.querySelectorAll('#report-team-members input:checked')).map(el => parseInt(el.value, 10));
@@ -365,7 +384,11 @@ async function checkOut() {
         clearInterval(liveTimerHandle);
         await load();
         renderSummary(res.summary, res.notified);
-    } catch (e) { alert(e.message || 'Could not check out'); }
+    } catch (e) {
+        alert(e.message || 'Could not check out');
+        btn.disabled = false;
+        btn.textContent = orig;
+    }
 }
 
 function renderSummary(summary, notified) {

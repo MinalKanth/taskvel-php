@@ -35,6 +35,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             exit;
         }
         $error = $res['error'];
+        $unverifiedEmail = !empty($res['unverified']) ? $res['email'] : null;
     }
 }
 $csrfToken = csrf_token();
@@ -285,10 +286,18 @@ input:focus-visible, button:focus-visible, a:focus-visible{outline:2px solid var
       <h3>Welcome back</h3>
       <p class="sub">Log in to your Taskvel workspace.</p>
       <?php if ($error): ?><div class="err"><?= htmlspecialchars($error) ?></div><?php endif; ?>
+      <?php if (!empty($unverifiedEmail)): ?>
+        <form method="post" action="resend-verification.php" style="margin-bottom:16px">
+          <input type="hidden" name="csrf_token" value="<?= htmlspecialchars($csrfToken) ?>">
+          <input type="hidden" name="email" value="<?= htmlspecialchars($unverifiedEmail) ?>">
+          <button type="submit" class="btn ghost" style="width:auto;padding:10px 18px;font-size:13px;">Resend verification email</button>
+        </form>
+      <?php endif; ?>
       <form method="post">
         <input type="hidden" name="csrf_token" value="<?= htmlspecialchars($csrfToken) ?>">
+        <input type="hidden" name="next" value="<?= htmlspecialchars($next) ?>">
         <div class="field">
-          <input type="email" name="email" placeholder=" " required maxlength="190" autocomplete="username" id="email">
+          <input type="email" name="email" placeholder=" " required maxlength="190" autocomplete="username" id="email" value="<?= htmlspecialchars($unverifiedEmail ?? '') ?>">
           <label for="email">Email address</label>
         </div>
         <div class="field has-toggle">
@@ -343,6 +352,23 @@ input:focus-visible, button:focus-visible, a:focus-visible{outline:2px solid var
       s.style.top  = (e.clientY - rect.top  - size/2) + 'px';
       this.appendChild(s);
       setTimeout(function(){ s.remove(); }, 650);
+    });
+  }
+
+  /* Prevent double-submit: a second click while the first login request
+     is still in flight can send two requests with the same CSRF token,
+     and the first one already consumes it — the second fails with a
+     misleading "session expired" error. */
+  var form = btn ? btn.closest('form') : null;
+  if (form && btn) {
+    form.addEventListener('submit', function(){
+      if (!form.checkValidity()) return;
+      setTimeout(function(){
+        btn.disabled = true;
+        btn.style.opacity = '.7';
+        btn.style.cursor = 'wait';
+        btn.textContent = 'Logging in…';
+      }, 0);
     });
   }
 })();

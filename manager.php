@@ -129,7 +129,7 @@ $user = current_user();
 
 <script src="js/api-client.js?v=2"></script>
 <script>
-function esc(s) { return (s || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+function esc(s) { return (s || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;'); }
 function fmtDuration(seconds) {
     if (!seconds) return '—';
     const h = Math.floor(seconds / 3600), m = Math.floor((seconds % 3600) / 60);

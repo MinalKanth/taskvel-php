@@ -196,7 +196,7 @@ input:focus-visible, button:focus-visible, a:focus-visible{outline:2px solid var
             <svg class="eye-off" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17.94 17.94A10.94 10.94 0 0 1 12 20c-7 0-11-8-11-8a21.6 21.6 0 0 1 5.06-6.94M9.9 4.24A10.4 10.4 0 0 1 12 4c7 0 11 8 11 8a21.6 21.6 0 0 1-2.61 3.94M14.12 14.12a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/></svg>
           </button>
         </div>
-        <button type="submit" class="btn">Reset password</button>
+        <button type="submit" class="btn" id="resetBtn">Reset password</button>
       </form>
     <?php endif; ?>
   </div>
@@ -219,6 +219,20 @@ input:focus-visible, button:focus-visible, a:focus-visible{outline:2px solid var
   }
   wireToggle('togglePass1', 'password');
   wireToggle('togglePass2', 'password_confirm');
+
+  var resetForm = document.getElementById('form') || document.querySelector('form');
+  var resetBtn = document.getElementById('resetBtn');
+  if (resetForm && resetBtn) {
+    resetForm.addEventListener('submit', function(){
+      if (!resetForm.checkValidity()) return;
+      setTimeout(function(){
+        resetBtn.disabled = true;
+        resetBtn.style.opacity = '.7';
+        resetBtn.style.cursor = 'wait';
+        resetBtn.textContent = 'Resetting…';
+      }, 0);
+    });
+  }
 })();
 </script>
 </body>

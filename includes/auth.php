@@ -137,23 +137,32 @@ function register_user(string $name, string $email, string $password): array
     }
 
     $hash = password_hash($password, PASSWORD_BCRYPT);
-    // Every newly registered user gets a 30-day Taskvel Pro trial starting
-    // now (Feature 4). plan_source='trial' is what lets the trial-expiry
-    // cron (cron/send_trial_reminders.php) know it's safe to downgrade this
-    // user later without ever touching a real Stripe subscriber or an
-    // org-seat holder.
+    $verifyToken = bin2hex(random_bytes(32));
+
+    // email_verified_at stays NULL until the link is clicked — attempt_login()
+    // blocks unverified accounts, so a typo'd address like a@gmail.com can
+    // register a row but can never actually be used to log in.
     $stmt = db()->prepare(
-        'INSERT INTO users (name, email, password_hash, plan, plan_source, trial_ends_at)
-         VALUES (?, ?, ?, \'pro\', \'trial\', DATE_ADD(NOW(), INTERVAL 30 DAY))'
+        'INSERT INTO users (name, email, password_hash, plan, plan_source, trial_ends_at,
+                             email_verification_token, email_verification_sent_at)
+         VALUES (?, ?, ?, \'pro\', \'trial\', DATE_ADD(NOW(), INTERVAL 30 DAY), ?, NOW())'
     );
-    $stmt->execute([$name, $email, $hash]);
+    $stmt->execute([$name, $email, $hash, $verifyToken]);
     $userId = (int)db()->lastInsertId();
 
     db()->prepare('INSERT INTO streaks (user_id) VALUES (?)')->execute([$userId]);
     rate_limit_hit("register:$ip", 3600);
     audit_log($userId, 'register_success', ['email' => $email]);
 
-    return ['ok' => true, 'user_id' => $userId];
+    require_once __DIR__ . '/mailer.php';
+    try {
+        send_verification_email($email, $name, $verifyToken);
+    } catch (Throwable $e) {
+        error_log('Verification email failed for ' . $email . ': ' . $e->getMessage());
+    }
+
+    // needs_verification tells the caller not to log the user in yet.
+    return ['ok' => true, 'user_id' => $userId, 'needs_verification' => true, 'email' => $email];
 }
 
 function attempt_login(string $email, string $password): array
@@ -161,16 +170,13 @@ function attempt_login(string $email, string $password): array
     $email = clean_email($email);
     $ip = client_ip();
 
-    // Rate limit on the (email, IP) pair — slows credential stuffing without
-    // letting one malicious IP lock out an unrelated legitimate user who
-    // happens to share that IP (e.g. NAT'd office network) from every account.
     $limitKey = "login:$email:$ip";
-    if (!rate_limit_check($limitKey, 5, 900)) { // 5 attempts / 15 min
+    if (!rate_limit_check($limitKey, 5, 900)) {
         audit_log(null, 'login_rate_limited', ['email' => $email]);
         return ['ok' => false, 'error' => 'Too many failed attempts. Please wait 15 minutes and try again.'];
     }
 
-    $stmt = db()->prepare('SELECT id, password_hash, is_active FROM users WHERE email = ?');
+    $stmt = db()->prepare('SELECT id, password_hash, is_active, email_verified_at FROM users WHERE email = ?');
     $stmt->execute([$email]);
     $user = $stmt->fetch();
 
@@ -183,6 +189,11 @@ function attempt_login(string $email, string $password): array
         audit_log((int)$user['id'], 'login_disabled_account', ['email' => $email]);
         return ['ok' => false, 'error' => 'This account has been disabled.'];
     }
+    if (!$user['email_verified_at']) {
+        audit_log((int)$user['id'], 'login_unverified_email', ['email' => $email]);
+        // 'unverified' => true is what the login page uses to show the resend option.
+        return ['ok' => false, 'error' => 'Please verify your email before logging in.', 'unverified' => true, 'email' => $email];
+    }
 
     rate_limit_reset($limitKey);
     session_regenerate_id(true);
@@ -190,10 +201,68 @@ function attempt_login(string $email, string $password): array
     $_SESSION['session_started_at'] = time();
     $_SESSION['last_activity'] = time();
     $_SESSION['last_rotated_at'] = time();
-    unset($_SESSION['csrf_token']); // fresh CSRF token per session, issued lazily on next csrf_token() call
+    unset($_SESSION['csrf_token']);
     audit_log((int)$user['id'], 'login_success', []);
 
     return ['ok' => true, 'user_id' => (int)$user['id']];
+}
+
+function verify_email_token(string $token): array
+{
+    if ($token === '' || !preg_match('/^[a-f0-9]{64}$/', $token)) {
+        return ['ok' => false, 'error' => 'This verification link is invalid.'];
+    }
+    $stmt = db()->prepare('SELECT id, name, email_verified_at FROM users WHERE email_verification_token = ?');
+    $stmt->execute([$token]);
+    $user = $stmt->fetch();
+    if (!$user) {
+        return ['ok' => false, 'error' => 'This verification link is invalid or has already been used.'];
+    }
+    if ($user['email_verified_at']) {
+        return ['ok' => true, 'already_verified' => true];
+    }
+    db()->prepare('UPDATE users SET email_verified_at = NOW(), email_verification_token = NULL WHERE id = ?')
+        ->execute([$user['id']]);
+    audit_log((int)$user['id'], 'email_verified', []);
+    return ['ok' => true];
+}
+
+function resend_verification_email(string $email): array
+{
+    $ip = client_ip();
+    $rl = enforce_rate_limit_soft("resend-verify:$ip", 5, 3600);
+    if (!$rl['ok']) return $rl;
+    rate_limit_hit("resend-verify:$ip", 3600);
+
+    $email = clean_email($email);
+    $stmt = db()->prepare('SELECT id, name, email_verified_at, email_verification_sent_at FROM users WHERE email = ?');
+    $stmt->execute([$email]);
+    $user = $stmt->fetch();
+
+    // Same response whether or not the account exists, so this can't be
+    // used to enumerate registered emails.
+    if (!$user || $user['email_verified_at']) {
+        return ['ok' => true];
+    }
+
+    // Throttle resends per-account too, separate from the per-IP limit above.
+    if ($user['email_verification_sent_at'] && strtotime($user['email_verification_sent_at']) > time() - 60) {
+        return ['ok' => false, 'error' => 'Please wait a minute before requesting another verification email.'];
+    }
+
+    $token = bin2hex(random_bytes(32));
+    db()->prepare('UPDATE users SET email_verification_token = ?, email_verification_sent_at = NOW() WHERE id = ?')
+        ->execute([$token, $user['id']]);
+
+    require_once __DIR__ . '/mailer.php';
+    try {
+        send_verification_email($email, $user['name'], $token);
+    } catch (Throwable $e) {
+        error_log('Resend verification email failed for ' . $email . ': ' . $e->getMessage());
+        return ['ok' => false, 'error' => 'Could not send the email right now. Please try again shortly.'];
+    }
+
+    return ['ok' => true];
 }
 
 // A short, illustrative blocklist — swap for a proper list (e.g. the top

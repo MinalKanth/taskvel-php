@@ -109,6 +109,16 @@ function toggleMode() {
     ? 'Already have an account? <a onclick="toggleMode()">Log in instead</a>'
     : 'New here? <a onclick="toggleMode()">Create an account instead</a>';
 }
+document.getElementById('form').addEventListener('submit', function(){
+  if (!this.checkValidity()) return;
+  var btn = document.getElementById('submitBtn');
+  setTimeout(function(){
+    btn.disabled = true;
+    btn.style.opacity = '.7';
+    btn.style.cursor = 'wait';
+    btn.textContent = isRegister ? 'Creating account…' : 'Logging in…';
+  }, 0);
+});
 </script>
 </body>
 </html>

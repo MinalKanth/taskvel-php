@@ -24,6 +24,22 @@ function send_mail(string $to, string $subject, string $htmlBody): bool
     return mail($to, $subject, $htmlBody, $headers);
 }
 
+function send_verification_email(string $email, string $name, string $token): void
+{
+    $link = APP_URL . '/verify-email.php?token=' . urlencode($token);
+    $subject = 'Verify your email — Taskvel';
+    $body = "Hi " . htmlspecialchars($name) . ",\n\n"
+        . "Please confirm your email address to activate your Taskvel account:\n\n"
+        . $link . "\n\n"
+        . "This link doesn't expire, but you won't be able to log in until you use it.\n\n"
+        . "If you didn't create a Taskvel account, you can ignore this email.";
+
+    // Use whatever mail-sending mechanism send_welcome_email()/
+    // send_password_reset_email() already use in this file (PHPMailer, etc).
+    // Example if using PHPMailer, mirror send_password_reset_email()'s setup:
+    send_app_email($email, $subject, $body); // replace with your existing helper name
+}
+
 function smtp_send(string $to, string $subject, string $htmlBody): bool
 {
     $fp = @fsockopen((strpos(SMTP_HOST, 'ssl://') === 0 ? '' : 'tcp://') . SMTP_HOST, (int)SMTP_PORT, $errno, $errstr, 10);

@@ -120,7 +120,7 @@ if (!$role) { header('Location: teams.php'); exit; }
         </div>
         <div class="modal-actions">
             <button class="btn ghost" onclick="closeInvite()">Cancel</button>
-            <button class="btn" onclick="submitInvite()">Send invite</button>
+            <button class="btn" id="inv-save-btn" onclick="submitInvite()">Send invite</button>
         </div>
     </div>
 </div>
@@ -150,7 +150,7 @@ if (!$role) { header('Location: teams.php'); exit; }
         </div>
         <div class="modal-actions">
             <button class="btn ghost" onclick="closeProgressUpdate()">Cancel</button>
-            <button class="btn" onclick="submitProgressUpdate()">Send update</button>
+            <button class="btn" id="pu-save-btn" onclick="submitProgressUpdate()">Send update</button>
         </div>
     </div>
 </div>
@@ -201,7 +201,7 @@ if (!$role) { header('Location: teams.php'); exit; }
         <div class="fg"><label>Description (optional)</label><textarea id="proj-desc" rows="3" placeholder="What's this project about?"></textarea></div>
         <div class="modal-actions">
             <button class="btn ghost" onclick="closeCreateProject()">Cancel</button>
-            <button class="btn" onclick="submitCreateProject()">Create</button>
+            <button class="btn" id="proj-save-btn" onclick="submitCreateProject()">Create</button>
         </div>
     </div>
 </div>
@@ -244,7 +244,7 @@ let projects = [];
 let editingEventId = null;
 let editingCreatorId = null;
 
-function esc(s) { return (s || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+function esc(s) { return (s || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;'); }
 function initials(name) { return (name || '?').split(' ').map(w => w[0]).join('').slice(0,2).toUpperCase(); }
 const MONTHS = ['JAN','FEB','MAR','APR','MAY','JUN','JUL','AUG','SEP','OCT','NOV','DEC'];
 function fmtTime(t) { if (!t) return ''; const [h,m] = t.split(':').map(Number);
@@ -426,6 +426,11 @@ async function saveEvent() {
     const event_date = document.getElementById('ev-date').value;
     if (!title) { toast('Give the event a title'); return; }
     if (!event_date) { toast('Pick a date'); return; }
+    const btn = document.getElementById('ev-save-btn');
+    if (btn.disabled) return;
+    btn.disabled = true;
+    const orig = btn.textContent;
+    btn.textContent = editingEventId ? 'Updating…' : 'Saving…';
     const attendee_ids = [...document.querySelectorAll('#ev-attendees .chip.on')].map(c => parseInt(c.dataset.id, 10));
     const payload = {
         team_id: TEAM_ID, title, event_date,
@@ -447,7 +452,10 @@ async function saveEvent() {
         }
         closeEventModal();
         loadEvents();
-    } catch (e) { toast(e.message || 'Could not save event'); }
+    } catch (e) { toast(e.message || 'Could not save event'); } finally {
+        btn.disabled = false;
+        btn.textContent = orig;
+    }
 }
 async function rsvp(eventId, status) {
     try { await Taskvel.request('/api/team_events.php?action=rsvp', { method:'POST', body:{ event_id: eventId, status } }); loadEvents(); }
@@ -534,6 +542,11 @@ function closeAssignTask() { document.getElementById('tt-overlay').classList.rem
 async function submitAssignTask() {
     const title = document.getElementById('tt-title').value.trim();
     if (!title) { toast('Give the task a title'); return; }
+    const btn = document.getElementById('tt-save-btn');
+    if (btn.disabled) return;
+    btn.disabled = true;
+    const orig = btn.textContent;
+    btn.textContent = editingTeamTaskId ? 'Saving…' : 'Assigning…';
     const payload = {
         team_id: TEAM_ID, title,
         description: document.getElementById('tt-desc').value.trim(),
@@ -552,7 +565,10 @@ async function submitAssignTask() {
         }
         closeAssignTask();
         loadTeamTasks();
-    } catch (e) { toast(e.message || 'Could not save task'); }
+    } catch (e) { toast(e.message || 'Could not save task'); } finally {
+        btn.disabled = false;
+        btn.textContent = orig;
+    }
 }
 
 // ─────────── Update Progress (Feature 3) ───────────
@@ -592,6 +608,11 @@ async function uploadPendingAttachment(input) {
 
 async function submitProgressUpdate() {
     if (!progressTaskId) return;
+    const btn = document.getElementById('pu-save-btn');
+    if (btn.disabled) return;
+    btn.disabled = true;
+    const orig = btn.textContent;
+    btn.textContent = 'Sending…';
     const payload = {
         id: progressTaskId,
         status: document.getElementById('pu-status').value,
@@ -604,7 +625,10 @@ async function submitProgressUpdate() {
         toast('Progress update sent ✓');
         closeProgressUpdate();
         loadTeamTasks();
-    } catch (e) { toast(e.message || 'Could not send update'); }
+    } catch (e) { toast(e.message || 'Could not send update'); } finally {
+        btn.disabled = false;
+        btn.textContent = orig;
+    }
 }
 
 async function openTaskHistory(taskId, title) {
@@ -644,6 +668,11 @@ async function submitInvite() {
     const email = document.getElementById('inv-email').value.trim();
     const role = document.getElementById('inv-role').value;
     if (!email) return;
+    const btn = document.getElementById('inv-save-btn');
+    if (btn.disabled) return;
+    btn.disabled = true;
+    const orig = btn.textContent;
+    btn.textContent = 'Sending…';
     try {
         const res = await Taskvel.request('/api/teams.php?action=invite', { method:'POST', body:{ team_id: TEAM_ID, email, role } });
         closeInvite();
@@ -653,6 +682,9 @@ async function submitInvite() {
         if ((e.message || '').includes('Upgrade')) {
             if (confirm(e.message + '\n\nGo to billing now?')) window.location.href = 'billing.php?team_id=' + TEAM_ID;
         } else { toast(e.message || 'Could not invite'); }
+    } finally {
+        btn.disabled = false;
+        btn.textContent = orig;
     }
 }
 async function changeRole(userId, role) {
@@ -675,10 +707,19 @@ async function submitCreateProject() {
     const name = document.getElementById('proj-name').value.trim();
     const description = document.getElementById('proj-desc').value.trim();
     if (!name) return;
+    const btn = document.getElementById('proj-save-btn');
+    if (btn.disabled) return;
+    btn.disabled = true;
+    const orig = btn.textContent;
+    btn.textContent = 'Creating…';
     try {
         const res = await Taskvel.request('/api/projects.php?action=create', { method:'POST', body:{ team_id: TEAM_ID, name, description } });
         window.location.href = 'project.php?id=' + res.project_id;
-    } catch (e) { toast(e.message || 'Could not create project'); }
+    } catch (e) {
+        toast(e.message || 'Could not create project');
+        btn.disabled = false;
+        btn.textContent = orig;
+    }
 }
 loadAll();
 </script>
