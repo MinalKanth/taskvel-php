@@ -43,6 +43,19 @@ function team_task_editable(PDO $pdo, int $teamTaskId, int $uid): bool
     return $t['assignee_id'] == $uid || can_manage_team((int)$t['team_id'], $uid);
 }
 
+// A project (board) task's assignee, creator, or a team manager/owner may
+// attach files to it — same rule as project_task_edit_context() in
+// includes/teams.php, reimplemented locally to avoid a circular include.
+function project_task_editable(PDO $pdo, int $projectTaskId, int $uid): bool
+{
+    $stmt = $pdo->prepare('SELECT p.team_id, pt.assignee_id, pt.created_by FROM project_tasks pt
+                            JOIN projects p ON p.id = pt.project_id WHERE pt.id = ?');
+    $stmt->execute([$projectTaskId]);
+    $t = $stmt->fetch();
+    if (!$t) return false;
+    return $t['assignee_id'] == $uid || $t['created_by'] == $uid || can_manage_team((int)$t['team_id'], $uid);
+}
+
 switch ("$method:$action") {
 
     case 'POST:upload':
@@ -50,9 +63,11 @@ switch ("$method:$action") {
 
         $taskId = !empty($_POST['task_id']) ? (int)$_POST['task_id'] : null;
         $teamTaskId = !empty($_POST['team_task_id']) ? (int)$_POST['team_task_id'] : null;
-        if (!$taskId && !$teamTaskId) json_response(['error' => 'task_id or team_task_id is required'], 422);
+        $projectTaskId = !empty($_POST['project_task_id']) ? (int)$_POST['project_task_id'] : null;
+        if (!$taskId && !$teamTaskId && !$projectTaskId) json_response(['error' => 'task_id, team_task_id, or project_task_id is required'], 422);
         if ($taskId && !task_owned_or_editable($pdo, $taskId, $uid)) json_response(['error' => 'Forbidden'], 403);
         if ($teamTaskId && !team_task_editable($pdo, $teamTaskId, $uid)) json_response(['error' => 'Forbidden'], 403);
+        if ($projectTaskId && !project_task_editable($pdo, $projectTaskId, $uid)) json_response(['error' => 'Forbidden'], 403);
         if (empty($_FILES['file']) || $_FILES['file']['error'] !== UPLOAD_ERR_OK) json_response(['error' => 'No file uploaded'], 422);
 
         $file = $_FILES['file'];
@@ -70,7 +85,7 @@ switch ("$method:$action") {
         }
         $ext = ALLOWED_MIME_EXT[$realMime];
 
-        $dirKey = $taskId ? "task-$taskId" : "team-task-$teamTaskId";
+        $dirKey = $taskId ? "task-$taskId" : ($teamTaskId ? "team-task-$teamTaskId" : "project-task-$projectTaskId");
         $dir = __DIR__ . '/../uploads/' . $dirKey;
         if (!is_dir($dir)) mkdir($dir, 0755, true);
 
@@ -94,10 +109,10 @@ switch ("$method:$action") {
 
         $relPath = 'uploads/' . $dirKey . '/' . $safeName;
         $originalName = clean_str($file['name'] ?? 'file', 190);
-        $stmt = $pdo->prepare('INSERT INTO attachments (task_id, team_task_id, uploaded_by, file_name, file_path, file_size, mime_type) VALUES (?, ?, ?, ?, ?, ?, ?)');
-        $stmt->execute([$taskId, $teamTaskId, $uid, $originalName, $relPath, $file['size'], $realMime]);
+        $stmt = $pdo->prepare('INSERT INTO attachments (task_id, team_task_id, project_task_id, uploaded_by, file_name, file_path, file_size, mime_type) VALUES (?, ?, ?, ?, ?, ?, ?, ?)');
+        $stmt->execute([$taskId, $teamTaskId, $projectTaskId, $uid, $originalName, $relPath, $file['size'], $realMime]);
 
-        audit_log($uid, 'file_uploaded', ['task_id' => $taskId, 'team_task_id' => $teamTaskId, 'mime' => $realMime, 'size' => $file['size']]);
+        audit_log($uid, 'file_uploaded', ['task_id' => $taskId, 'team_task_id' => $teamTaskId, 'project_task_id' => $projectTaskId, 'mime' => $realMime, 'size' => $file['size']]);
 
         json_response(['ok' => true, 'attachment' => [
             'id' => (int)$pdo->lastInsertId(), 'file_name' => $originalName, 'file_path' => $relPath, 'file_size' => $file['size'],
@@ -109,6 +124,21 @@ switch ("$method:$action") {
         if (!task_owned_or_editable($pdo, $taskId, $uid)) json_response(['error' => 'Forbidden'], 403);
         $stmt = $pdo->prepare('SELECT a.* FROM attachments a WHERE a.task_id = ?');
         $stmt->execute([$taskId]);
+        json_response(['attachments' => $stmt->fetchAll()]);
+        break;
+
+    case 'GET:list-for-project-task':
+        $projectTaskId = (int)($_GET['project_task_id'] ?? 0);
+        if (!project_task_editable($pdo, $projectTaskId, $uid)) {
+            // Fall back to read access: any team member can view a project task's files, even if only managers/assignee can add/remove them.
+            $stmt = $pdo->prepare('SELECT p.team_id FROM project_tasks pt JOIN projects p ON p.id = pt.project_id WHERE pt.id = ?');
+            $stmt->execute([$projectTaskId]);
+            $teamId = $stmt->fetchColumn();
+            if (!$teamId || !team_role((int)$teamId, $uid)) json_response(['error' => 'Forbidden'], 403);
+        }
+        $stmt = $pdo->prepare('SELECT a.*, u.name AS uploaded_by_name FROM attachments a
+                               LEFT JOIN users u ON u.id = a.uploaded_by WHERE a.project_task_id = ? ORDER BY a.created_at ASC');
+        $stmt->execute([$projectTaskId]);
         json_response(['attachments' => $stmt->fetchAll()]);
         break;
 
@@ -126,10 +156,18 @@ switch ("$method:$action") {
 
     case 'DELETE:delete':
         $id = (int)($_GET['id'] ?? 0);
-        $stmt = $pdo->prepare('SELECT * FROM attachments WHERE id = ? AND uploaded_by = ?');
-        $stmt->execute([$id, $uid]);
+        $stmt = $pdo->prepare('SELECT * FROM attachments WHERE id = ?');
+        $stmt->execute([$id]);
         $a = $stmt->fetch();
         if (!$a) json_response(['error' => 'Not found'], 404);
+        $canDelete = $a['uploaded_by'] == $uid;
+        if (!$canDelete && $a['project_task_id']) {
+            $stmt = $pdo->prepare('SELECT p.team_id FROM project_tasks pt JOIN projects p ON p.id = pt.project_id WHERE pt.id = ?');
+            $stmt->execute([$a['project_task_id']]);
+            $teamId = $stmt->fetchColumn();
+            $canDelete = $teamId && can_manage_team((int)$teamId, $uid);
+        }
+        if (!$canDelete) json_response(['error' => 'Forbidden'], 403);
         // Path is entirely server-generated (see upload above), but resolve
         // and re-verify it stays inside the uploads directory before
         // deleting, as a defense-in-depth guard against any future regression.

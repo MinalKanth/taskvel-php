@@ -52,3 +52,22 @@ function log_project_activity(int $projectId, int $userId, string $message): voi
     $stmt = db()->prepare('INSERT INTO project_activity_log (project_id, user_id, message) VALUES (?, ?, ?)');
     $stmt->execute([$projectId, $userId, $message]);
 }
+
+// A project-board task can be edited (subtasks/labels/attachments/deps
+// added or removed) by a team manager/owner, or by the task's own
+// assignee — same split used for status updates in api/project_tasks.php.
+// Returns [projectId, teamId, isManager] or null if the caller has no
+// access to this task at all (not a team member, or task doesn't exist).
+function project_task_edit_context(int $taskId, int $userId): ?array
+{
+    $projectId = task_project_id($taskId);
+    if (!$projectId) return null;
+    $teamId = project_team_id($projectId);
+    if (!$teamId || !team_role($teamId, $userId)) return null;
+    $stmt = db()->prepare('SELECT assignee_id, created_by FROM project_tasks WHERE id = ?');
+    $stmt->execute([$taskId]);
+    $task = $stmt->fetch();
+    $isManager = can_manage_team($teamId, $userId);
+    $canEdit = $isManager || ($task && ($task['assignee_id'] == $userId || $task['created_by'] == $userId));
+    return [$projectId, $teamId, $isManager, $canEdit];
+}

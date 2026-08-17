@@ -141,12 +141,15 @@ const Taskvel = (() => {
         attachments: {
             list:   (taskId) => request(`/api/attachments.php?action=list&task_id=${taskId}`),
             listForUpdate: (updateId) => request(`/api/attachments.php?action=list-for-update&team_task_update_id=${updateId}`),
+            listForProjectTask: (projectTaskId) => request(`/api/attachments.php?action=list-for-project-task&project_task_id=${projectTaskId}`),
             remove: (id) => request(`/api/attachments.php?action=delete&id=${id}`, { method: 'DELETE' }),
             // taskId: personal task id. teamTaskId: team_tasks id (Feature 3 progress-update attachments).
-            upload: async (file, { taskId, teamTaskId } = {}) => {
+            // projectTaskId: project_tasks id (board task attachments).
+            upload: async (file, { taskId, teamTaskId, projectTaskId } = {}) => {
                 const fd = new FormData();
                 if (taskId) fd.append('task_id', taskId);
                 if (teamTaskId) fd.append('team_task_id', teamTaskId);
+                if (projectTaskId) fd.append('project_task_id', projectTaskId);
                 fd.append('file', file);
                 // BUG FIX: this call previously never sent X-CSRF-Token, so it would
                 // have been rejected by require_login()->require_csrf() on any POST —

@@ -1,5 +1,6 @@
 <?php
 require_once __DIR__ . '/includes/teams.php';
+require_once __DIR__ . '/includes/pro-shell.php';
 if (!current_user_id()) { header('Location: login.php'); exit; }
 $user = current_user();
 $projectId = (int)($_GET['id'] ?? 0);
@@ -14,87 +15,129 @@ $isManager = ($role === 'owner' || $role === 'manager');
 <head>
 <meta charset="UTF-8">
 <meta name="csrf-token" content="<?= htmlspecialchars(csrf_token()) ?>">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Project · Taskvel</title>
+<?php pro_head('Project'); ?>
 <style>
-    :root {
-        --bg:#f6f6f4; --bg-elev:#fff; --bg-sunk:#ededea; --ink:#0a0a0a; --ink2:#3d3d3b; --ink3:#7c7c78;
-        --line:#e6e5e0; --line2:#d4d3cd; --accent:#4f46e5; --accent-soft:rgba(79,70,229,.1); --on-accent:#fff;
-        --good:#059669; --warn:#d97706; --bad:#dc2626;
-        --shadow:0 10px 34px rgba(10,10,10,.08); --r:14px; --ease:cubic-bezier(.22,1,.36,1);
-    }
-    * { box-sizing:border-box; }
-    body { margin:0; font-family:-apple-system,'Segoe UI',Arial,sans-serif; background:var(--bg); color:var(--ink); }
-    .wrap { max-width:980px; margin:0 auto; padding:24px 18px 90px; }
-    .topbar { display:flex; justify-content:space-between; align-items:center; margin-bottom:18px; }
-    .topbar a.back { color:var(--ink3); text-decoration:none; font-size:13px; font-weight:600; }
-    .topbar a.back:hover { color:var(--accent); }
-    h1 { font-size:22px; font-weight:800; margin:0 0 4px; }
-    .sub { color:var(--ink3); font-size:13.5px; margin-bottom:18px; }
-    .btn { display:inline-flex; align-items:center; gap:6px; padding:10px 16px; border-radius:10px; border:none;
-        background:var(--accent); color:var(--on-accent); font-weight:700; font-size:13.5px; cursor:pointer;
-        transition:transform .2s var(--ease); }
-    .btn:hover { transform:translateY(-2px); }
-    .btn.ghost { background:var(--bg-elev); color:var(--ink); border:1px solid var(--line2); }
-    .btn.danger { background:var(--bad); }
-    .btn.sm { padding:6px 11px; font-size:11.5px; }
+    /* Board pages need more breathing room than the default list-page wrap */
+    .wrap { max-width:1180px; }
+    @media (min-width:720px) { .wrap { max-width:1180px; } }
+    @media (min-width:980px) { .wrap { max-width:1180px; } }
+
+    .topbar { display:flex; justify-content:space-between; align-items:flex-start; gap:12px; margin-bottom:6px; flex-wrap:wrap; }
+    .topbar .actions { display:flex; gap:8px; flex-wrap:wrap; }
 
     /* Per-person progress strip */
-    .summary-strip { display:flex; gap:10px; overflow-x:auto; padding-bottom:6px; margin-bottom:22px; }
-    .summary-chip { background:var(--bg-elev); border:1px solid var(--line); border-radius:12px; padding:10px 14px;
-        min-width:120px; flex-shrink:0; }
-    .summary-chip .name { font-size:12.5px; font-weight:700; margin-bottom:6px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+    .summary-strip { display:flex; gap:10px; overflow-x:auto; padding-bottom:6px; margin:18px 0 22px; }
+    .summary-chip { background:var(--bg-elev); border:1px solid var(--line); border-radius:var(--r-sm); padding:10px 14px;
+        min-width:130px; flex-shrink:0; }
+    .summary-chip .name { font-family:var(--font-display); font-size:12.5px; font-weight:700; margin-bottom:6px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
     .summary-chip .bar { height:5px; border-radius:4px; background:var(--bg-sunk); overflow:hidden; margin-bottom:5px; }
     .summary-chip .bar i { display:block; height:100%; background:var(--good); }
-    .summary-chip .nums { font-size:10.5px; color:var(--ink3); font-family:monospace; }
+    .summary-chip .nums { font-size:10.5px; color:var(--ink3); font-family:var(--font-display); }
 
     .board { display:grid; grid-template-columns:repeat(3,1fr); gap:16px; }
-    @media (max-width:760px) { .board { grid-template-columns:1fr; } }
+    @media (max-width:820px) { .board { grid-template-columns:1fr; } }
     .col { background:var(--bg-sunk); border-radius:var(--r); padding:12px; min-height:120px; }
-    .col h3 { font-size:12.5px; text-transform:uppercase; letter-spacing:.6px; color:var(--ink3); margin:4px 6px 10px;
-        display:flex; justify-content:space-between; }
-    .task-card { background:var(--bg-elev); border:1px solid var(--line); border-radius:12px; padding:12px 13px;
-        margin-bottom:10px; cursor:pointer; transition:transform .2s var(--ease), box-shadow .2s; }
+    .col h3 { font-family:var(--font-display); font-size:12px; text-transform:uppercase; letter-spacing:.7px; color:var(--ink3); margin:4px 6px 10px;
+        display:flex; justify-content:space-between; font-weight:700; }
+    .task-card { background:var(--bg-elev); border:1px solid var(--line); border-radius:var(--r-sm); padding:12px 13px;
+        margin-bottom:10px; cursor:pointer; transition:transform .2s var(--ease), box-shadow .2s, border-color .2s; }
     .task-card:hover { transform:translateY(-2px); box-shadow:var(--shadow); border-color:var(--accent); }
-    .task-title { font-size:14px; font-weight:600; margin-bottom:6px; }
+    .task-title { font-size:14px; font-weight:700; margin-bottom:7px; line-height:1.35; }
+    .task-labels { display:flex; flex-wrap:wrap; gap:4px; margin-bottom:7px; }
+    .label-dot-chip { font-size:10px; font-weight:700; padding:2px 8px 2px 7px; border-radius:999px; display:inline-flex; align-items:center; gap:5px; }
     .task-meta { display:flex; flex-wrap:wrap; gap:6px; align-items:center; }
-    .pill { font-size:9.5px; font-weight:700; padding:3px 8px; border-radius:6px; text-transform:uppercase; letter-spacing:.4px; }
-    .pri-critical { background:var(--ink); color:#fff; }
-    .pri-high { background:var(--accent-soft); color:var(--accent); }
-    .pri-medium { background:var(--bg-sunk); color:var(--ink2); }
+    .pill { font-size:9.5px; font-weight:700; padding:3px 8px; border-radius:6px; text-transform:uppercase; letter-spacing:.4px; font-family:var(--font-display); }
+    .pri-critical { background:var(--ink); color:var(--bg); }
+    :root[data-theme="dark"] .pri-critical { background:var(--accent); color:var(--on-accent); }
+    .pri-high { background:var(--bad-soft); color:var(--bad); }
+    .pri-medium { background:var(--accent-soft); color:var(--accent); }
     .pri-low { background:var(--bg-sunk); color:var(--ink3); }
-    .avatar { width:22px; height:22px; border-radius:50%; background:var(--accent); color:#fff; font-size:10px;
-        font-weight:700; display:inline-flex; align-items:center; justify-content:center; }
-    .due { font-size:10.5px; color:var(--ink3); font-family:monospace; }
+    .mini-stat { font-size:10.5px; color:var(--ink3); font-family:var(--font-display); font-weight:600; display:inline-flex; align-items:center; gap:3px; }
+    .mini-stat.blocked { color:var(--bad); }
+    .mini-stat.checked { color:var(--good); }
+    .due { font-size:10.5px; color:var(--ink3); font-family:var(--font-display); font-weight:600; }
     .due.overdue { color:var(--bad); font-weight:700; }
     .empty-col { text-align:center; color:var(--ink3); font-size:12px; padding:20px 6px; }
 
-    .modal-overlay { position:fixed; inset:0; background:rgba(10,10,10,.45); display:none; align-items:center; justify-content:center; z-index:100; padding:16px; }
-    .modal-overlay.open { display:flex; }
-    .modal { background:#fff; border-radius:18px; padding:26px; width:min(460px,94vw); max-height:88vh; overflow-y:auto; box-shadow:0 30px 80px rgba(0,0,0,.25); }
-    .modal h2 { margin:0 0 16px; font-size:19px; }
-    .modal label { font-size:11px; color:var(--ink3); text-transform:uppercase; letter-spacing:.5px; display:block; margin-bottom:6px; font-weight:600; }
-    .modal .fg { margin-bottom:14px; }
-    .modal input, .modal select, .modal textarea { width:100%; padding:11px 13px; border:1px solid var(--line2); border-radius:10px;
-        font-size:14px; font-family:inherit; }
-    .modal textarea { resize:vertical; min-height:70px; }
-    .modal-actions { display:flex; gap:8px; margin-top:6px; }
-    .modal-actions .btn { flex:1; justify-content:center; }
-    .row2 { display:grid; grid-template-columns:1fr 1fr; gap:10px; }
-    .comments { margin-top:16px; border-top:1px solid var(--line); padding-top:14px; }
-    .comment { font-size:12.5px; margin-bottom:8px; padding:8px 10px; background:var(--bg-sunk); border-radius:8px; }
-    .comment b { font-size:11.5px; }
+    /* ── Task modal detail sections ── */
+    .tsec { margin-top:18px; padding-top:16px; border-top:1px solid var(--line); }
+    .tsec-head { display:flex; justify-content:space-between; align-items:center; margin-bottom:10px; }
+    .tsec-head label { margin:0; }
+    .tsec-head .link-btn { font-family:var(--font-display); font-size:11px; font-weight:700; color:var(--accent); background:none; border:none; cursor:pointer; padding:2px; }
+    .tsec-locked { font-size:12px; color:var(--ink3); background:var(--bg-sunk); border:1px dashed var(--line2); border-radius:var(--r-sm); padding:12px; text-align:center; }
+
+    .label-chip-row { display:flex; flex-wrap:wrap; gap:7px; }
+    .label-chip { font-family:var(--font-display); font-size:11.5px; font-weight:700; padding:6px 12px; border-radius:999px;
+        border:1.5px solid transparent; cursor:pointer; transition:all .15s var(--ease); display:inline-flex; align-items:center; gap:6px; opacity:.55; }
+    .label-chip.on { opacity:1; box-shadow:0 4px 12px -6px rgba(0,0,0,.3); }
+    .label-chip .dot { width:8px; height:8px; border-radius:50%; }
+    .label-swatches { display:flex; gap:7px; flex-wrap:wrap; margin:8px 0; }
+    .swatch { width:24px; height:24px; border-radius:50%; cursor:pointer; border:2px solid transparent; }
+    .swatch.on { border-color:var(--ink); transform:scale(1.15); }
+    .manage-labels-list { display:flex; flex-direction:column; gap:6px; max-height:220px; overflow-y:auto; }
+    .manage-labels-row { display:flex; align-items:center; gap:8px; padding:7px 9px; border-radius:9px; background:var(--bg-sunk); }
+    .manage-labels-row .lbl-name { flex:1; font-size:13px; font-weight:600; }
+    .manage-labels-row button { border:none; background:none; color:var(--ink3); cursor:pointer; font-size:13px; }
+    .manage-labels-row button:hover { color:var(--bad); }
+
+    .subtask-progress { height:6px; border-radius:4px; background:var(--bg-sunk); overflow:hidden; margin-bottom:10px; }
+    .subtask-progress i { display:block; height:100%; background:var(--good); transition:width .25s var(--ease); }
+    .subtask-row { display:flex; align-items:center; gap:9px; padding:7px 2px; border-bottom:1px solid var(--line); }
+    .subtask-row:last-child { border-bottom:none; }
+    .subtask-row input[type=checkbox] { width:17px; height:17px; accent-color:var(--accent); flex-shrink:0; cursor:pointer; }
+    .subtask-row span { flex:1; font-size:13.5px; }
+    .subtask-row.done span { text-decoration:line-through; color:var(--ink3); }
+    .subtask-row button { border:none; background:none; color:var(--ink4); cursor:pointer; font-size:13px; opacity:0; transition:opacity .15s; }
+    .subtask-row:hover button { opacity:1; }
+    .subtask-row button:hover { color:var(--bad); }
+    .add-inline { display:flex; gap:7px; margin-top:8px; }
+    .add-inline input { flex:1; }
+    .add-inline button { flex-shrink:0; }
+
+    .dep-chip { display:flex; align-items:center; gap:8px; padding:8px 10px; border-radius:10px; background:var(--bg-sunk); margin-bottom:7px; font-size:13px; }
+    .dep-chip .status-dot { width:8px; height:8px; border-radius:50%; flex-shrink:0; }
+    .dep-chip .status-dot.todo { background:var(--ink4); }
+    .dep-chip .status-dot.in_progress { background:var(--warn); }
+    .dep-chip .status-dot.done { background:var(--good); }
+    .dep-chip span.t { flex:1; }
+    .dep-chip.blocked-warn { background:var(--bad-soft); }
+    .dep-chip button { border:none; background:none; color:var(--ink3); cursor:pointer; font-size:12.5px; }
+    .dep-chip button:hover { color:var(--bad); }
+    .blocks-note { font-size:11.5px; color:var(--ink3); margin-top:4px; }
+
+    .attach-row { display:flex; align-items:center; gap:10px; padding:8px 9px; border-radius:10px; background:var(--bg-sunk); margin-bottom:7px; }
+    .attach-row .ic { font-size:17px; flex-shrink:0; }
+    .attach-row .info { flex:1; min-width:0; }
+    .attach-row a.fname { font-size:13px; font-weight:600; text-decoration:none; color:var(--ink); display:block; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+    .attach-row a.fname:hover { color:var(--accent); }
+    .attach-row .fsize { font-size:10.5px; color:var(--ink3); }
+    .attach-row button { border:none; background:none; color:var(--ink3); cursor:pointer; font-size:13px; flex-shrink:0; }
+    .attach-row button:hover { color:var(--bad); }
+    .upload-zone { border:1.5px dashed var(--line2); border-radius:var(--r-sm); padding:16px; text-align:center; cursor:pointer;
+        transition:border-color .2s; color:var(--ink3); font-size:12.5px; }
+    .upload-zone:hover { border-color:var(--accent); color:var(--accent); }
+
+    .comments { margin-top:0; }
+    .comment { font-size:12.5px; margin-bottom:8px; padding:9px 11px; background:var(--bg-sunk); border-radius:9px; }
+    .comment b { font-family:var(--font-display); font-size:11.5px; }
 </style>
 </head>
 <body>
+<div class="aurora"><span class="a1"></span><span class="a2"></span></div>
 <div class="wrap">
+    <?php pro_header($user, 'teams'); ?>
+
     <div class="topbar">
-        <a class="back" href="#" id="back-link">← Back to team</a>
-        <span style="font-size:12.5px;color:var(--ink3)"><?= htmlspecialchars($user['email']) ?> · <?= htmlspecialchars($role) ?></span>
+        <div>
+            <div class="crumb"><a href="team.php?id=<?= (int)$teamId ?>">← Back to team</a></div>
+            <h1 class="page-title" id="proj-title">Loading…</h1>
+            <div class="sub" id="proj-desc" style="margin-bottom:0"></div>
+        </div>
+        <div class="actions">
+            <button class="btn ghost" onclick="openManageLabels()">🏷 Labels</button>
+            <button class="btn" onclick="openCreateTask()">+ Add task</button>
+        </div>
     </div>
-    <h1 id="proj-title">Loading…</h1>
-    <div class="sub" id="proj-desc"></div>
-    <button class="btn" onclick="openCreateTask()">+ Add task</button>
 
     <div class="summary-strip" id="summary-strip"></div>
 
@@ -130,26 +173,93 @@ $isManager = ($role === 'owner' || $role === 'manager');
         </div>
         <button class="btn danger sm" id="t-delete-btn" style="margin-top:10px;display:none" onclick="deleteTask()">Delete task</button>
 
-        <div class="comments" id="comments-section" style="display:none">
-            <label>Comments</label>
+        <!-- Labels -->
+        <div class="tsec">
+            <div class="tsec-head"><label style="margin:0">Labels</label></div>
+            <div id="labels-locked" class="tsec-locked" style="display:none">Save the task to add labels</div>
+            <div id="labels-picker" class="label-chip-row" style="display:none"></div>
+        </div>
+
+        <!-- Subtasks -->
+        <div class="tsec">
+            <div class="tsec-head"><label style="margin:0">Subtasks</label><span class="mini-stat" id="subtask-count"></span></div>
+            <div id="subtasks-locked" class="tsec-locked" style="display:none">Save the task to add subtasks</div>
+            <div id="subtasks-body" style="display:none">
+                <div class="subtask-progress"><i id="subtask-bar" style="width:0%"></i></div>
+                <div id="subtasks-list"></div>
+                <div class="add-inline">
+                    <input type="text" id="subtask-input" placeholder="Add a subtask and press Enter…" onkeydown="if(event.key==='Enter')addSubtask()" />
+                    <button class="btn sm" onclick="addSubtask()">Add</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Dependencies -->
+        <div class="tsec">
+            <div class="tsec-head"><label style="margin:0">Blocked by</label></div>
+            <div id="deps-locked" class="tsec-locked" style="display:none">Save the task to link dependencies</div>
+            <div id="deps-body" style="display:none">
+                <div id="deps-list"></div>
+                <div class="add-inline">
+                    <select id="dep-select" style="flex:1"></select>
+                    <button class="btn sm" onclick="addDependency()">Link</button>
+                </div>
+                <div class="blocks-note" id="blocks-note"></div>
+            </div>
+        </div>
+
+        <!-- Attachments -->
+        <div class="tsec">
+            <div class="tsec-head"><label style="margin:0">Attachments</label></div>
+            <div id="attach-locked" class="tsec-locked" style="display:none">Save the task to attach files</div>
+            <div id="attach-body" style="display:none">
+                <div id="attach-list"></div>
+                <div class="upload-zone" onclick="document.getElementById('attach-input').click()">📎 Click to upload a file (max 10MB — images, PDF, or .txt)</div>
+                <input type="file" id="attach-input" style="display:none" onchange="uploadAttachment(this.files[0])" />
+            </div>
+        </div>
+
+        <!-- Comments -->
+        <div class="tsec comments" id="comments-section" style="display:none">
+            <div class="tsec-head"><label style="margin:0">Comments</label></div>
             <div id="comments-list"></div>
-            <div class="fg" style="margin-top:8px"><input type="text" id="comment-input" placeholder="Write a comment and press Enter…" onkeydown="if(event.key==='Enter')submitComment()" /></div>
+            <div class="add-inline"><input type="text" id="comment-input" placeholder="Write a comment and press Enter…" onkeydown="if(event.key==='Enter')submitComment()" /></div>
         </div>
     </div>
 </div>
 
-<script src="js/api-client.js?v=2"></script>
+<!-- Manage labels modal -->
+<div class="modal-overlay" id="ml-overlay" onclick="if(event.target===this)closeManageLabels()">
+    <div class="modal" style="width:min(400px,94vw)">
+        <h2>Project labels</h2>
+        <div class="manage-labels-list" id="ml-list"></div>
+        <div class="fg" style="margin-top:16px">
+            <label>New label</label>
+            <input type="text" id="ml-name" placeholder="e.g. Bug, Design, Blocked" maxlength="40" />
+            <div class="label-swatches" id="ml-swatches"></div>
+        </div>
+        <div class="modal-actions">
+            <button class="btn ghost" onclick="closeManageLabels()">Close</button>
+            <button class="btn" onclick="createLabelFromManager()">Create label</button>
+        </div>
+    </div>
+</div>
+
+<script src="js/api-client.js?v=3"></script>
 <script>
 const PROJECT_ID = <?= (int)$projectId ?>;
 const TEAM_ID = <?= (int)$teamId ?>;
 const MY_ROLE = '<?= htmlspecialchars($role) ?>';
 const IS_MANAGER = <?= $isManager ? 'true' : 'false' ?>;
 const MY_USER_ID = <?= (int)current_user_id() ?>;
+const LABEL_PALETTE = ['#4f46e5','#dc2626','#d97706','#16a34a','#0891b2','#7c3aed','#db2777','#78716c'];
 let members = [];
+let projectLabels = [];
+let tasksCache = [];
 let currentTaskId = null;
+let newTaskLabelSelection = []; // labels picked before a NEW task has been saved yet (applied right after creation)
 
 function esc(s) { return (s || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;'); }
-document.getElementById('back-link').href = 'team.php?id=' + TEAM_ID;
 
 function initials(name) {
     return (name || '?').split(' ').map(w => w[0]).join('').slice(0,2).toUpperCase();
@@ -160,37 +270,56 @@ async function loadProject() {
         const { project } = await Taskvel.request(`/api/projects.php?action=get&id=${PROJECT_ID}`);
         document.getElementById('proj-title').textContent = project.name;
         document.getElementById('proj-desc').textContent = project.description || '';
-        document.title = project.name + ' · Taskvel';
+        document.title = project.name + ' · Taskvel Pro';
     } catch (e) {}
     const { members: m } = await Taskvel.request(`/api/teams.php?action=members&team_id=${TEAM_ID}`);
     members = m;
     document.getElementById('t-assignee').innerHTML = '<option value="">Unassigned</option>' +
         members.map(mm => `<option value="${mm.id}">${esc(mm.name)}</option>`).join('');
-    await Promise.all([loadTasks(), loadSummary()]);
+    await Promise.all([loadTasks(), loadSummary(), loadProjectLabels()]);
+}
+
+async function loadProjectLabels() {
+    const { labels } = await Taskvel.request(`/api/project_tasks.php?action=labels&project_id=${PROJECT_ID}`);
+    projectLabels = labels;
+}
+
+function labelChipStyle(color) {
+    return `background:${color}22;color:${color};border-color:${color}55`;
 }
 
 async function loadTasks() {
     const { tasks } = await Taskvel.request(`/api/project_tasks.php?action=list&project_id=${PROJECT_ID}`);
+    tasksCache = tasks;
     const cols = { todo: [], in_progress: [], done: [] };
     tasks.forEach(t => cols[t.status].push(t));
     ['todo', 'in_progress', 'done'].forEach(status => {
         document.getElementById('cnt-' + status).textContent = cols[status].length;
         const el = document.getElementById('col-' + status);
         if (!cols[status].length) { el.innerHTML = `<div class="empty-col">Nothing here</div>`; return; }
-        el.innerHTML = cols[status].map(t => {
-            const today = new Date(); today.setHours(0,0,0,0);
-            const due = t.due_date ? new Date(t.due_date) : null;
-            const overdue = due && due < today && t.status !== 'done';
-            return `<div class="task-card" onclick="openEditTask(${t.id})">
-                <div class="task-title">${esc(t.title)}</div>
-                <div class="task-meta">
-                    <span class="pill pri-${t.priority}">${t.priority}</span>
-                    ${t.assignee_name ? `<span class="avatar" title="${esc(t.assignee_name)}">${initials(t.assignee_name)}</span>` : ''}
-                    ${t.due_date ? `<span class="due ${overdue ? 'overdue' : ''}">${t.due_date}</span>` : ''}
-                </div>
-            </div>`;
-        }).join('');
+        el.innerHTML = cols[status].map(t => cardHTML(t)).join('');
     });
+}
+
+function cardHTML(t) {
+    const today = new Date(); today.setHours(0,0,0,0);
+    const due = t.due_date ? new Date(t.due_date) : null;
+    const overdue = due && due < today && t.status !== 'done';
+    const labels = (t.labels || []).map(l => `<span class="label-dot-chip" style="${labelChipStyle(l.color)}">${esc(l.name)}</span>`).join('');
+    const subtaskStat = t.subtask_total > 0
+        ? `<span class="mini-stat ${t.subtask_done == t.subtask_total ? 'checked' : ''}">☑ ${t.subtask_done}/${t.subtask_total}</span>` : '';
+    const attachStat = t.attachment_count > 0 ? `<span class="mini-stat">📎 ${t.attachment_count}</span>` : '';
+    const blockedStat = t.blocked_by_open_count > 0 ? `<span class="mini-stat blocked">🔒 Blocked</span>` : '';
+    return `<div class="task-card" onclick="openEditTask(${t.id})">
+        ${labels ? `<div class="task-labels">${labels}</div>` : ''}
+        <div class="task-title">${esc(t.title)}</div>
+        <div class="task-meta">
+            <span class="pill pri-${t.priority}">${t.priority}</span>
+            ${t.assignee_name ? `<span class="avatar" title="${esc(t.assignee_name)}">${initials(t.assignee_name)}</span>` : ''}
+            ${t.due_date ? `<span class="due ${overdue ? 'overdue' : ''}">${t.due_date}</span>` : ''}
+            ${subtaskStat}${attachStat}${blockedStat}
+        </div>
+    </div>`;
 }
 
 async function loadSummary() {
@@ -208,29 +337,53 @@ async function loadSummary() {
 
 function openCreateTask() {
     currentTaskId = null;
+    newTaskLabelSelection = [];
     document.getElementById('task-modal-title').textContent = 'New task';
     document.getElementById('t-id').value = '';
     document.getElementById('t-title').value = '';
+    document.getElementById('t-title').disabled = false;
     document.getElementById('t-desc').value = '';
+    document.getElementById('t-desc').disabled = false;
     document.getElementById('t-priority').value = 'medium';
+    document.getElementById('t-priority').disabled = false;
     document.getElementById('t-due').value = '';
+    document.getElementById('t-due').disabled = false;
     document.getElementById('t-assignee').value = IS_MANAGER ? '' : MY_USER_ID;
     document.getElementById('t-assignee').disabled = !IS_MANAGER;
     document.getElementById('t-status').value = 'todo';
     document.getElementById('t-status').disabled = false;
     document.getElementById('t-delete-btn').style.display = 'none';
     document.getElementById('comments-section').style.display = 'none';
+    lockDetailSections(true);
     document.getElementById('task-overlay').classList.add('open');
     document.getElementById('t-title').focus();
 }
 
+function lockDetailSections(locked) {
+    document.getElementById('labels-locked').style.display = locked ? 'block' : 'none';
+    document.getElementById('labels-picker').style.display = locked ? 'none' : 'flex';
+    document.getElementById('subtasks-locked').style.display = locked ? 'block' : 'none';
+    document.getElementById('subtasks-body').style.display = locked ? 'none' : 'block';
+    document.getElementById('deps-locked').style.display = locked ? 'block' : 'none';
+    document.getElementById('deps-body').style.display = locked ? 'none' : 'block';
+    document.getElementById('attach-locked').style.display = locked ? 'block' : 'none';
+    document.getElementById('attach-body').style.display = locked ? 'none' : 'block';
+    if (locked) {
+        // A brand-new (unsaved) task can still preview label selection —
+        // it's applied automatically the moment the task is created.
+        document.getElementById('labels-locked').style.display = 'none';
+        document.getElementById('labels-picker').style.display = 'flex';
+        renderLabelPicker([]);
+    }
+}
+
 async function openEditTask(id) {
     currentTaskId = id;
-    const { tasks } = await Taskvel.request(`/api/project_tasks.php?action=list&project_id=${PROJECT_ID}`);
-    const t = tasks.find(x => x.id === id);
+    const t = tasksCache.find(x => x.id === id) || (await Taskvel.request(`/api/project_tasks.php?action=list&project_id=${PROJECT_ID}`)).tasks.find(x => x.id === id);
     if (!t) return;
     const isMine = t.assignee_id == MY_USER_ID;
     const canEditFully = IS_MANAGER;
+    const canEditSome = canEditFully || isMine || t.created_by == MY_USER_ID;
     document.getElementById('task-modal-title').textContent = canEditFully || isMine ? 'Edit task' : 'View task';
     document.getElementById('t-id').value = t.id;
     document.getElementById('t-title').value = t.title;
@@ -247,13 +400,15 @@ async function openEditTask(id) {
     document.getElementById('t-status').disabled = !(canEditFully || isMine);
     document.getElementById('t-delete-btn').style.display = (canEditFully || t.created_by == MY_USER_ID) ? 'inline-flex' : 'none';
     document.getElementById('comments-section').style.display = 'block';
-    await loadComments(id);
+    lockDetailSections(false);
+    renderLabelPicker(t.labels || []);
+    await Promise.all([loadComments(id), loadSubtasks(id), loadDependencies(id), loadAttachments(id)]);
     document.getElementById('task-overlay').classList.add('open');
 }
 
 function closeTaskModal() { document.getElementById('task-overlay').classList.remove('open'); }
 
-async function saveTask() {
+async function saveTask(force) {
     const title = document.getElementById('t-title').value.trim();
     if (!currentTaskId && !title) { alert('Enter a task title'); return; }
     const btn = document.getElementById('t-save-btn');
@@ -269,17 +424,35 @@ async function saveTask() {
         assignee_id: document.getElementById('t-assignee').value || null,
         status: document.getElementById('t-status').value,
     };
+    if (force) payload.force = true;
     try {
         if (currentTaskId) {
             payload.id = currentTaskId;
             await Taskvel.request('/api/project_tasks.php?action=update', { method:'POST', body: payload });
+            closeTaskModal();
         } else {
             payload.project_id = PROJECT_ID;
-            await Taskvel.request('/api/project_tasks.php?action=create', { method:'POST', body: payload });
+            const { task_id } = await Taskvel.request('/api/project_tasks.php?action=create', { method:'POST', body: payload });
+            // Apply any labels picked before the task existed, then flip the
+            // modal into edit mode so subtasks/attachments/dependencies can
+            // be added right away without a second click.
+            for (const labelId of newTaskLabelSelection) {
+                await Taskvel.request('/api/project_tasks.php?action=task-label-toggle', { method:'POST', body: { task_id, label_id: labelId, on: true } });
+            }
+            toast('Task created — add subtasks, files, or links below');
+            await loadTasks(); await loadSummary();
+            await openEditTask(task_id);
+            btn.disabled = false; btn.textContent = orig;
+            return;
         }
-        closeTaskModal();
         loadTasks(); loadSummary();
-    } catch (e) { alert(e.message || 'Could not save task'); } finally {
+    } catch (e) {
+        if (e.message && e.message.indexOf('blocked by') !== -1) {
+            if (confirm(e.message + '\n\nMark it done anyway?')) { btn.disabled = false; btn.textContent = orig; return saveTask(true); }
+        } else {
+            alert(e.message || 'Could not save task');
+        }
+    } finally {
         btn.disabled = false;
         btn.textContent = orig;
     }
@@ -311,6 +484,212 @@ async function submitComment() {
         inp.value = '';
         loadComments(currentTaskId);
     } catch (e) { alert(e.message); }
+}
+
+// ═══════════════════════ LABELS ═══════════════════════
+function renderLabelPicker(activeLabels) {
+    const activeIds = (activeLabels || []).map(l => l.id);
+    const picker = document.getElementById('labels-picker');
+    if (!projectLabels.length) {
+        picker.innerHTML = `<span style="font-size:12px;color:var(--ink3)">No labels yet — click "🏷 Labels" above to create one.</span>`;
+        return;
+    }
+    picker.innerHTML = projectLabels.map(l => {
+        const on = currentTaskId ? activeIds.includes(l.id) : newTaskLabelSelection.includes(l.id);
+        return `<span class="label-chip ${on ? 'on' : ''}" style="border-color:${l.color};${on ? `background:${l.color};color:#fff` : `color:${l.color}`}"
+                    onclick="toggleTaskLabel(${l.id})"><span class="dot" style="background:${on ? '#fff' : l.color}"></span>${esc(l.name)}</span>`;
+    }).join('');
+}
+
+async function toggleTaskLabel(labelId) {
+    if (!currentTaskId) {
+        // Not saved yet — just track the selection locally.
+        const i = newTaskLabelSelection.indexOf(labelId);
+        if (i === -1) newTaskLabelSelection.push(labelId); else newTaskLabelSelection.splice(i, 1);
+        renderLabelPicker([]);
+        return;
+    }
+    const t = tasksCache.find(x => x.id === currentTaskId);
+    const isOn = t && (t.labels || []).some(l => l.id === labelId);
+    try {
+        await Taskvel.request('/api/project_tasks.php?action=task-label-toggle', { method:'POST', body: { task_id: currentTaskId, label_id: labelId, on: !isOn } });
+        await loadTasks();
+        const updated = tasksCache.find(x => x.id === currentTaskId);
+        renderLabelPicker(updated ? updated.labels : []);
+    } catch (e) { alert(e.message); }
+}
+
+function buildSwatches(containerId, selected) {
+    const c = document.getElementById(containerId);
+    c.innerHTML = LABEL_PALETTE.map(color =>
+        `<span class="swatch ${color === selected ? 'on' : ''}" style="background:${color}" data-color="${color}" onclick="pickSwatch(this)"></span>`
+    ).join('');
+}
+function pickSwatch(el) {
+    el.parentElement.querySelectorAll('.swatch').forEach(s => s.classList.remove('on'));
+    el.classList.add('on');
+}
+function selectedSwatch(containerId) {
+    const on = document.querySelector(`#${containerId} .swatch.on`);
+    return on ? on.dataset.color : LABEL_PALETTE[0];
+}
+
+async function openManageLabels() {
+    await loadProjectLabels();
+    renderManageLabelsList();
+    buildSwatches('ml-swatches', LABEL_PALETTE[0]);
+    document.getElementById('ml-name').value = '';
+    document.getElementById('ml-overlay').classList.add('open');
+}
+function closeManageLabels() { document.getElementById('ml-overlay').classList.remove('open'); }
+
+function renderManageLabelsList() {
+    const list = document.getElementById('ml-list');
+    list.innerHTML = projectLabels.length ? projectLabels.map(l => `
+        <div class="manage-labels-row">
+            <span class="dot" style="width:10px;height:10px;border-radius:50%;background:${l.color};display:inline-block"></span>
+            <span class="lbl-name">${esc(l.name)}</span>
+            ${IS_MANAGER ? `<button onclick="deleteLabel(${l.id})" title="Delete label">✕</button>` : ''}
+        </div>`).join('') : '<div style="font-size:12.5px;color:var(--ink3)">No labels yet.</div>';
+}
+
+async function createLabelFromManager() {
+    const name = document.getElementById('ml-name').value.trim();
+    if (!name) return;
+    try {
+        await Taskvel.request('/api/project_tasks.php?action=label-create', { method:'POST', body:{ project_id: PROJECT_ID, name, color: selectedSwatch('ml-swatches') } });
+        document.getElementById('ml-name').value = '';
+        await loadProjectLabels();
+        renderManageLabelsList();
+        toast('Label created');
+    } catch (e) { alert(e.message); }
+}
+
+async function deleteLabel(id) {
+    if (!confirm('Delete this label? It will be removed from every task.')) return;
+    try {
+        await Taskvel.request(`/api/project_tasks.php?action=label-delete&id=${id}`, { method:'DELETE' });
+        await loadProjectLabels();
+        renderManageLabelsList();
+        loadTasks();
+    } catch (e) { alert(e.message); }
+}
+
+// ═══════════════════════ SUBTASKS ═══════════════════════
+async function loadSubtasks(taskId) {
+    const { subtasks } = await Taskvel.request(`/api/project_tasks.php?action=subtasks&task_id=${taskId}`);
+    renderSubtasks(subtasks);
+}
+function renderSubtasks(subtasks) {
+    const total = subtasks.length;
+    const done = subtasks.filter(s => s.done).length;
+    document.getElementById('subtask-count').textContent = total ? `${done}/${total}` : '';
+    document.getElementById('subtask-bar').style.width = total ? Math.round(done / total * 100) + '%' : '0%';
+    const list = document.getElementById('subtasks-list');
+    list.innerHTML = subtasks.length ? subtasks.map(s => `
+        <div class="subtask-row ${s.done ? 'done' : ''}">
+            <input type="checkbox" ${s.done ? 'checked' : ''} onchange="toggleSubtask(${s.id})" />
+            <span>${esc(s.title)}</span>
+            <button onclick="deleteSubtask(${s.id})" title="Remove">✕</button>
+        </div>`).join('') : '<div style="font-size:12.5px;color:var(--ink3);padding:6px 2px">No subtasks yet.</div>';
+}
+async function addSubtask() {
+    const inp = document.getElementById('subtask-input');
+    const title = inp.value.trim();
+    if (!title || !currentTaskId) return;
+    try {
+        await Taskvel.request('/api/project_tasks.php?action=subtask-add', { method:'POST', body:{ task_id: currentTaskId, title } });
+        inp.value = '';
+        loadSubtasks(currentTaskId);
+        loadTasks();
+    } catch (e) { alert(e.message); }
+}
+async function toggleSubtask(id) {
+    try { await Taskvel.request('/api/project_tasks.php?action=subtask-toggle', { method:'POST', body:{ id } }); loadSubtasks(currentTaskId); loadTasks(); }
+    catch (e) { alert(e.message); }
+}
+async function deleteSubtask(id) {
+    try { await Taskvel.request(`/api/project_tasks.php?action=subtask-delete&id=${id}`, { method:'DELETE' }); loadSubtasks(currentTaskId); loadTasks(); }
+    catch (e) { alert(e.message); }
+}
+
+// ═══════════════════════ DEPENDENCIES ═══════════════════════
+async function loadDependencies(taskId) {
+    const { blocked_by, blocks } = await Taskvel.request(`/api/project_tasks.php?action=dependencies&task_id=${taskId}`);
+    renderDependencies(blocked_by, blocks);
+    const sel = document.getElementById('dep-select');
+    const linkedIds = blocked_by.map(d => d.depends_on_id);
+    const options = tasksCache.filter(t => t.id !== taskId && !linkedIds.includes(t.id));
+    sel.innerHTML = options.length ? options.map(t => `<option value="${t.id}">${esc(t.title)}</option>`).join('') : '<option value="">No other tasks on this board</option>';
+}
+function renderDependencies(blockedBy, blocks) {
+    const list = document.getElementById('deps-list');
+    list.innerHTML = blockedBy.length ? blockedBy.map(d => `
+        <div class="dep-chip ${d.status !== 'done' ? 'blocked-warn' : ''}">
+            <span class="status-dot ${d.status}"></span>
+            <span class="t">${esc(d.title)}</span>
+            <button onclick="removeDependency(${d.id})" title="Unlink">✕</button>
+        </div>`).join('') : '<div style="font-size:12.5px;color:var(--ink3);padding:4px 2px 8px">Not blocked by anything.</div>';
+    document.getElementById('blocks-note').textContent = blocks.length
+        ? `Blocking ${blocks.length} other task${blocks.length > 1 ? 's' : ''}: ${blocks.map(b => b.title).join(', ')}` : '';
+}
+async function addDependency() {
+    const sel = document.getElementById('dep-select');
+    const dependsOnId = parseInt(sel.value, 10);
+    if (!dependsOnId || !currentTaskId) return;
+    try {
+        await Taskvel.request('/api/project_tasks.php?action=dependency-add', { method:'POST', body:{ task_id: currentTaskId, depends_on_id: dependsOnId } });
+        loadDependencies(currentTaskId);
+        loadTasks();
+    } catch (e) { alert(e.message); }
+}
+async function removeDependency(id) {
+    try { await Taskvel.request(`/api/project_tasks.php?action=dependency-delete&id=${id}`, { method:'DELETE' }); loadDependencies(currentTaskId); loadTasks(); }
+    catch (e) { alert(e.message); }
+}
+
+// ═══════════════════════ ATTACHMENTS ═══════════════════════
+function attachIcon(mime) {
+    if (!mime) return '📄';
+    if (mime.startsWith('image/')) return '🖼️';
+    if (mime === 'application/pdf') return '📕';
+    return '📄';
+}
+function fmtSize(bytes) {
+    if (bytes < 1024) return bytes + ' B';
+    if (bytes < 1024*1024) return Math.round(bytes/1024) + ' KB';
+    return (bytes/1024/1024).toFixed(1) + ' MB';
+}
+async function loadAttachments(taskId) {
+    const { attachments } = await Taskvel.attachments.listForProjectTask(taskId);
+    renderAttachments(attachments);
+}
+function renderAttachments(attachments) {
+    const list = document.getElementById('attach-list');
+    list.innerHTML = attachments.length ? attachments.map(a => `
+        <div class="attach-row">
+            <span class="ic">${attachIcon(a.mime_type)}</span>
+            <div class="info">
+                <a class="fname" href="${esc(a.file_path)}" target="_blank" rel="noopener">${esc(a.file_name)}</a>
+                <div class="fsize">${fmtSize(a.file_size)} · ${esc(a.uploaded_by_name || '')}</div>
+            </div>
+            <button onclick="deleteAttachment(${a.id})" title="Delete">✕</button>
+        </div>`).join('') : '<div style="font-size:12.5px;color:var(--ink3);padding:4px 2px 8px">No files attached yet.</div>';
+}
+async function uploadAttachment(file) {
+    if (!file || !currentTaskId) return;
+    try {
+        await Taskvel.attachments.upload(file, { projectTaskId: currentTaskId });
+        document.getElementById('attach-input').value = '';
+        loadAttachments(currentTaskId);
+        loadTasks();
+        toast('File uploaded');
+    } catch (e) { alert(e.message || 'Upload failed'); }
+}
+async function deleteAttachment(id) {
+    if (!confirm('Delete this file?')) return;
+    try { await Taskvel.attachments.remove(id); loadAttachments(currentTaskId); loadTasks(); }
+    catch (e) { alert(e.message); }
 }
 
 loadProject();
