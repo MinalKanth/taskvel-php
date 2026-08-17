@@ -30,29 +30,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     } else {
         $name = trim($_POST['name'] ?? '');
         $email = trim($_POST['email'] ?? '');
-        // $res = register_user($name, $email, $_POST['password'] ?? '');
-        // if ($res['ok']) {
-        //     // No auto-login anymore — the account exists but is unverified
-        //     // until the email link is clicked. Show a "check your email"
-        //     // state on this same page instead of redirecting in.
-        //     $registeredEmail = $res['email'];
-        // } else {
-        //     $error = $res['error'];
-        // }
         $res = register_user($name, $email, $_POST['password'] ?? '');
         if ($res['ok']) {
-            // ══ TEMP: auto-login right after register (uncomment original line
-            //    below and delete this whole TEMP block to restore the
-            //    "check your email" verification flow) ══
-            // $registeredEmail = $res['email'];
-
-            $loginRes = attempt_login($email, $_POST['password'] ?? '');
-            if ($loginRes['ok']) {
-                header('Location: taskvel-pro.php');
-                exit;
-            }
-            $registeredEmail = $res['email']; // fallback, shouldn't normally hit this
-            // ═══════════════════════════════════════════════════════════════
+            // No auto-login — the account exists but is unverified until the
+            // email link is clicked. Show a "check your email" state on this
+            // same page instead of redirecting in.
+            $registeredEmail = $res['email'];
         } else {
             $error = $res['error'];
         }

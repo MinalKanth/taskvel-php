@@ -185,28 +185,17 @@ function attempt_login(string $email, string $password): array
         audit_log($user['id'] ?? null, 'login_failed', ['email' => $email]);
         return ['ok' => false, 'error' => 'Invalid email or password.'];
     }
-    // if (!$user['is_active']) {
-    //     audit_log((int)$user['id'], 'login_disabled_account', ['email' => $email]);
-    //     return ['ok' => false, 'error' => 'This account has been disabled.'];
-    // }
-    // if (!$user['email_verified_at']) {
-    //     audit_log((int)$user['id'], 'login_unverified_email', ['email' => $email]);
-    //     // 'unverified' => true is what the login page uses to show the resend option.
-    //     return ['ok' => false, 'error' => 'Please verify your email before logging in.', 'unverified' => true, 'email' => $email];
-    // }
-
     if (!$user['is_active']) {
         audit_log((int)$user['id'], 'login_disabled_account', ['email' => $email]);
         return ['ok' => false, 'error' => 'This account has been disabled.'];
     }
 
-    // ══ TEMP: email verification requirement paused (uncomment to re-enable) ══
-    // if (!$user['email_verified_at']) {
-    //     audit_log((int)$user['id'], 'login_unverified_email', ['email' => $email]);
-    //     // 'unverified' => true is what the login page uses to show the resend option.
-    //     return ['ok' => false, 'error' => 'Please verify your email before logging in.', 'unverified' => true, 'email' => $email];
-    // }
-    // ════════════════════════════════════════════════════════════════════════
+    if (!$user['email_verified_at']) {
+        audit_log((int)$user['id'], 'login_unverified_email', ['email' => $email]);
+        // 'unverified' => true is what the login page uses to show the resend option.
+        return ['ok' => false, 'error' => 'Please verify your email before logging in.', 'unverified' => true, 'email' => $email];
+    }
+
     rate_limit_reset($limitKey);
     session_regenerate_id(true);
     $_SESSION['user_id'] = (int)$user['id'];
