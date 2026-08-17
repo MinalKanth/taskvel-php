@@ -107,32 +107,33 @@ function pro_head(string $title): void
                 .wrap { max-width:760px; }
             }
 
-        /* ═══════ HEADER ═══════ */
-        .pro-header { display:flex; justify-content:space-between; align-items:center; gap:12px; flex-wrap:wrap; margin-bottom:8px; }
-        .brand { display:flex; align-items:center; gap:11px; text-decoration:none; }
-        .brand .logo { width:36px; height:36px; border-radius:var(--r-sm); background:var(--ink); color:var(--bg);
-            display:flex; align-items:center; justify-content:center; font-family:var(--font-display); font-weight:700; font-size:16px; }
-        :root[data-theme="dark"] .brand .logo { background:var(--accent); color:var(--on-accent); }
-        .brand h1 { font-family:var(--font-display); font-size:18px; font-weight:700; letter-spacing:-.2px; }
-        .brand h1 span { color:var(--ink3); font-weight:400; }
-        .brand .tag { font-size:10px; color:var(--ink3); letter-spacing:.3px; }
-        .head-right { display:flex; align-items:center; gap:8px; }
-        .icon-btn { width:36px; height:36px; border-radius:var(--r-sm); border:1px solid var(--line); background:var(--bg-elev);
-            color:var(--ink2); font-size:15px; cursor:pointer; display:flex; align-items:center; justify-content:center;
-            transition:background .15s, border-color .15s, color .15s; }
-        .icon-btn:hover { background:var(--bg-sunk); border-color:var(--line2); color:var(--ink); }
-        .user-chip { font-size:11.5px; color:var(--ink3); padding:7px 11px; border:1px solid var(--line); border-radius:var(--r-sm);
-            background:var(--bg-elev); max-width:180px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+        /* ═══════ HEADER — identical component to taskvel-pro.php ═══════ */
+        .header { padding:6px 0 8px; }
+        .brand-row { display:flex; justify-content:space-between; align-items:flex-start; gap:12px; flex-wrap:wrap; }
+        .brand { display:flex; align-items:center; gap:12px; text-decoration:none; }
+        .logo { width:38px; height:38px; border-radius:var(--r-sm); background:var(--ink); color:var(--bg);
+            display:flex; align-items:center; justify-content:center; font-family:var(--font-display); font-weight:700; font-size:17px; flex-shrink:0; }
+        :root[data-theme="dark"] .logo { background:var(--accent); color:var(--on-accent); }
+        .brand-txt h1 { font-family:var(--font-display); font-size:19px; font-weight:700; letter-spacing:-.3px; line-height:1; color:var(--ink); }
+        .brand-txt h1 span { font-weight:400; color:var(--ink3); }
+        .brand-txt .tag { font-family:'JetBrains Mono',monospace; font-size:9.5px; color:var(--ink3); letter-spacing:1.2px; text-transform:uppercase; margin-top:4px; }
 
-        /* Nav pills */
-        .pro-nav { display:flex; gap:6px; margin:14px 0 24px; flex-wrap:wrap; }
-        .pro-nav a { text-decoration:none; font-family:var(--font-display); font-size:12.5px; font-weight:600;
-            padding:8px 14px; border-radius:var(--r-sm); border:1px solid var(--line); background:var(--bg-elev); color:var(--ink2);
-            transition:background .15s, border-color .15s, color .15s; }
-        .pro-nav a:hover { background:var(--bg-sunk); border-color:var(--line2); color:var(--ink); }
-        .pro-nav a.active { background:var(--ink); color:var(--bg); border-color:var(--ink); }
-        :root[data-theme="dark"] .pro-nav a.active { background:var(--accent); color:var(--on-accent); border-color:var(--accent); }
-        .crumb { font-size:12px; color:var(--ink3); margin-bottom:6px; }
+        .clock-chip { background:var(--bg-elev); border:1px solid var(--line); border-radius:var(--r-sm); padding:7px 12px;
+            text-align:right; min-width:104px; }
+        .clock-time { font-family:'JetBrains Mono',monospace; font-size:16px; font-weight:600; line-height:1; color:var(--ink); }
+        .clock-time .sec { font-size:12px; color:var(--ink3); }
+        .clock-date { font-size:9.5px; color:var(--ink3); margin-top:4px; font-family:'JetBrains Mono',monospace; letter-spacing:.3px; }
+
+        .head-right { display:flex; align-items:stretch; gap:6px; flex-wrap:wrap; justify-content:flex-end; }
+        .icon-btn { width:38px; border:1px solid var(--line); border-radius:var(--r-sm); background:var(--bg-elev);
+            color:var(--ink2); cursor:pointer; display:flex; align-items:center; justify-content:center;
+            transition:background .15s ease, border-color .15s ease, color .15s ease; flex-shrink:0; position:relative; text-decoration:none; }
+        .icon-btn:hover { background:var(--bg-sunk); border-color:var(--line2); color:var(--ink); }
+        .icon-btn.active { background:var(--ink); border-color:var(--ink); color:var(--bg); }
+        :root[data-theme="dark"] .icon-btn.active { background:var(--accent); border-color:var(--accent); color:var(--on-accent); }
+        .tt-icon { font-size:16px; line-height:1; display:block; }
+
+        .crumb { font-size:12px; color:var(--ink3); margin:10px 0 6px; }
         .crumb a { color:var(--ink3); text-decoration:none; font-weight:600; }
         .crumb a:hover { color:var(--ink); }
 
@@ -223,24 +224,27 @@ function pro_header(array $user, string $active = 'teams', string $crumbHtml = '
 {
     ?>
     <div class="aurora"><span class="a1"></span><span class="a2"></span></div>
-    <div class="pro-header">
-        <a class="brand" href="taskvel-pro.php">
-            <div class="logo">T</div>
-            <div>
-                <h1>Task<span>vel</span> Pro</h1>
-                <div class="tag">by Samal Consultancy</div>
+    <div class="header">
+        <div class="brand-row">
+            <a class="brand" href="taskvel-pro.php">
+                <div class="logo">T</div>
+                <div class="brand-txt">
+                    <h1>Task<span>vel</span> Pro</h1>
+                    <div class="tag">by Samal Consultancy</div>
+                </div>
+            </a>
+            <div class="head-right">
+                <a class="icon-btn <?= $active === 'tasks' ? 'active' : '' ?>" href="taskvel-pro.php" aria-label="My Tasks" title="My Tasks"><span class="tt-icon">✓</span></a>
+                <a class="icon-btn <?= $active === 'teams' ? 'active' : '' ?>" href="teams.php" aria-label="Teams" title="Teams"><span class="tt-icon">👥</span></a>
+                <a class="icon-btn <?= $active === 'checkin' ? 'active' : '' ?>" href="checkin.php" aria-label="Daily check-in" title="Daily check-in"><span class="tt-icon">📍</span></a>
+                <a class="icon-btn <?= $active === 'billing' ? 'active' : '' ?>" href="billing.php" aria-label="Billing" title="Billing"><span class="tt-icon">💳</span></a>
+                <button class="icon-btn" onclick="proToggleTheme()" title="Light / dark" aria-label="Toggle light or dark mode"><span class="tt-icon" id="pro-tt">☾</span></button>
+                <div class="clock-chip">
+                    <div class="clock-time" id="pro-clock"><span>--:--</span><span class="sec">:--</span></div>
+                    <div class="clock-date" id="pro-clock-date">—</div>
+                </div>
             </div>
-        </a>
-        <div class="head-right">
-            <span class="user-chip"><?= htmlspecialchars($user['email']) ?></span>
-            <button class="icon-btn" onclick="proToggleTheme()" title="Light / dark" aria-label="Toggle light or dark mode"><span id="pro-tt">☾</span></button>
         </div>
-    </div>
-    <div class="pro-nav">
-        <a href="taskvel-pro.php" class="<?= $active === 'tasks' ? 'active' : '' ?>">✓ My Tasks</a>
-        <a href="teams.php" class="<?= $active === 'teams' ? 'active' : '' ?>">👥 Teams</a>
-        <a href="checkin.php" class="<?= $active === 'checkin' ? 'active' : '' ?>">📍 Check-in</a>
-        <a href="billing.php" class="<?= $active === 'billing' ? 'active' : '' ?>">💳 Billing</a>
     </div>
     <?php if ($crumbHtml !== ''): ?><div class="crumb"><?= $crumbHtml ?></div><?php endif; ?>
     <div class="toast" id="pro-toast"></div>
@@ -258,6 +262,18 @@ function pro_header(array $user, string $active = 'teams', string $crumbHtml = '
             el.textContent = msg; el.classList.add('show');
             clearTimeout(el._t); el._t = setTimeout(() => el.classList.remove('show'), 2600);
         }
+        function proTickClock() {
+            var d = new Date(),
+                h = String(d.getHours()).padStart(2, '0'),
+                m = String(d.getMinutes()).padStart(2, '0'),
+                s = String(d.getSeconds()).padStart(2, '0');
+            var t = document.getElementById('pro-clock');
+            if (t) t.innerHTML = '<span>' + h + ':' + m + '</span><span class="sec">:' + s + '</span>';
+            var dt = document.getElementById('pro-clock-date');
+            if (dt) dt.textContent = d.toLocaleDateString('en-IN', { weekday: 'short', day: 'numeric', month: 'short' }).toUpperCase();
+        }
+        proTickClock();
+        setInterval(proTickClock, 1000);
     </script>
     <?php
 }
