@@ -92,7 +92,8 @@ function pro_head(string $title): void
         html[data-theme="dark"] { color-scheme: dark; }
         * { box-sizing:border-box; margin:0; padding:0; -webkit-tap-highlight-color:transparent; }
         body { font-family:var(--font-body); background:var(--bg); color:var(--ink); min-height:100vh;
-               -webkit-font-smoothing:antialiased; transition:background .2s, color .2s; }
+               -webkit-font-smoothing:antialiased; transition:background .2s, color .2s;
+               overflow-x:hidden; position:relative; }
         a { color:inherit; }
 
         .aurora { display:none; }
@@ -129,9 +130,20 @@ function pro_head(string $title): void
             color:var(--ink2); cursor:pointer; display:flex; align-items:center; justify-content:center;
             transition:background .15s ease, border-color .15s ease, color .15s ease; flex-shrink:0; position:relative; text-decoration:none; }
         .icon-btn:hover { background:var(--bg-sunk); border-color:var(--line2); color:var(--ink); }
-        .icon-btn.active { background:var(--ink); border-color:var(--ink); color:var(--bg); }
-        :root[data-theme="dark"] .icon-btn.active { background:var(--accent); border-color:var(--accent); color:var(--on-accent); }
         .tt-icon { font-size:16px; line-height:1; display:block; }
+        .icon-btn.labeled { width:auto; padding:0 12px; gap:6px; font-family:var(--font-display); font-size:12.5px; font-weight:600; }
+        .icon-btn .badge-dot { position:absolute; top:6px; right:6px; width:6px; height:6px; border-radius:50%; background:var(--bad); display:none; }
+        .icon-btn .badge-dot.show { display:block; }
+
+        /* Labeled primary navigation — must stay identical to the
+           .main-nav block in taskvel-pro.php's <style>. */
+        .main-nav { display:flex; gap:6px; margin:14px 0 22px; flex-wrap:wrap; }
+        .main-nav a { text-decoration:none; font-family:var(--font-display); font-size:12.5px; font-weight:600;
+            padding:8px 14px; border-radius:var(--r-sm); border:1px solid var(--line); background:var(--bg-elev); color:var(--ink2);
+            transition:background .15s ease, border-color .15s ease, color .15s ease; }
+        .main-nav a:hover { background:var(--bg-sunk); border-color:var(--line2); color:var(--ink); }
+        .main-nav a.active { background:var(--ink); color:var(--bg); border-color:var(--ink); }
+        :root[data-theme="dark"] .main-nav a.active { background:var(--accent); color:var(--on-accent); border-color:var(--accent); }
 
         .crumb { font-size:12px; color:var(--ink3); margin:10px 0 6px; }
         .crumb a { color:var(--ink3); text-decoration:none; font-weight:600; }
@@ -234,16 +246,39 @@ function pro_header(array $user, string $active = 'teams', string $crumbHtml = '
                 </div>
             </a>
             <div class="head-right">
-                <a class="icon-btn <?= $active === 'tasks' ? 'active' : '' ?>" href="taskvel-pro.php" aria-label="My Tasks" title="My Tasks"><span class="tt-icon">✓</span></a>
-                <a class="icon-btn <?= $active === 'teams' ? 'active' : '' ?>" href="teams.php" aria-label="Teams" title="Teams"><span class="tt-icon">👥</span></a>
-                <a class="icon-btn <?= $active === 'checkin' ? 'active' : '' ?>" href="checkin.php" aria-label="Daily check-in" title="Daily check-in"><span class="tt-icon">📍</span></a>
-                <a class="icon-btn <?= $active === 'billing' ? 'active' : '' ?>" href="billing.php" aria-label="Billing" title="Billing"><span class="tt-icon">💳</span></a>
+                <a class="icon-btn labeled" href="features.php" aria-label="View all features" title="Explore everything Taskvel can do">
+                    <span class="tt-icon">✦</span><span>Explore</span>
+                </a>
+                <a class="icon-btn" href="taskvel-pro.php#notif" aria-label="Notifications" title="Notifications">
+                    <span class="tt-icon">◔</span><span class="badge-dot" id="pro-notif-dot"></span>
+                </a>
+                <a class="icon-btn" href="taskvel-pro.php#hist" aria-label="Focus history" title="Focus history">
+                    <span class="tt-icon">▤</span>
+                </a>
+                <a class="icon-btn" href="taskvel-pro.php#export" aria-label="Export" title="Export">
+                    <span class="tt-icon">↓</span>
+                </a>
+                <a class="icon-btn" href="taskvel-pro.php#tmpl" aria-label="Templates" title="Templates">
+                    <span class="tt-icon">▧</span>
+                </a>
+                <a class="icon-btn" href="taskvel-pro.php#palette" aria-label="Choose colour theme" title="Colour theme">
+                    <span class="tt-icon">◑</span>
+                </a>
+                <button class="icon-btn" id="pro-mute-toggle" onclick="proToggleMute()" aria-label="Mute or unmute sounds" title="Mute completion chime">
+                    <span class="tt-icon" id="pro-mute-icon">🔊</span>
+                </button>
                 <button class="icon-btn" onclick="proToggleTheme()" title="Light / dark" aria-label="Toggle light or dark mode"><span class="tt-icon" id="pro-tt">☾</span></button>
                 <div class="clock-chip">
                     <div class="clock-time" id="pro-clock"><span>--:--</span><span class="sec">:--</span></div>
                     <div class="clock-date" id="pro-clock-date">—</div>
                 </div>
             </div>
+        </div>
+        <div class="main-nav">
+            <a href="taskvel-pro.php" class="<?= $active === 'tasks' ? 'active' : '' ?>">✓ My Tasks</a>
+            <a href="teams.php" class="<?= $active === 'teams' ? 'active' : '' ?>">👥 Teams</a>
+            <a href="checkin.php" class="<?= $active === 'checkin' ? 'active' : '' ?>">📍 Check-in</a>
+            <a href="billing.php" class="<?= $active === 'billing' ? 'active' : '' ?>">💳 Billing</a>
         </div>
     </div>
     <?php if ($crumbHtml !== ''): ?><div class="crumb"><?= $crumbHtml ?></div><?php endif; ?>
@@ -252,11 +287,28 @@ function pro_header(array $user, string $active = 'teams', string $crumbHtml = '
         function proToggleTheme() {
             var next = document.documentElement.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
             document.documentElement.setAttribute('data-theme', next);
-            try { localStorage.setItem('taskvel_theme_v1', next); } catch (e) {}
+            try {
+                localStorage.setItem('taskvel_theme_v1', next);
+                // Must stay in sync with taskvel-pro.php's LS_THEME_TS — that
+                // timestamp is what stops an incoming server pull from
+                // overwriting a just-made pick with an older saved value.
+                // Without stamping it here too, a theme change made on this
+                // page looks "stale" the moment you navigate to My Tasks.
+                localStorage.setItem('taskvel_theme_accent_ts_v1', String(Date.now()));
+            } catch (e) {}
             document.getElementById('pro-tt').textContent = next === 'dark' ? '☀' : '☾';
         }
         (function(){ var t=document.documentElement.getAttribute('data-theme');
             document.getElementById('pro-tt').textContent = t === 'dark' ? '☀' : '☾'; })();
+        // Same mute flag/key as taskvel-pro.php — chimes only ever play
+        // there, but the on/off state must stay in sync everywhere.
+        function proToggleMute() {
+            var next = localStorage.getItem('taskvel_muted_v1') !== '1';
+            try { localStorage.setItem('taskvel_muted_v1', next ? '1' : '0'); } catch (e) {}
+            document.getElementById('pro-mute-icon').textContent = next ? '🔇' : '🔊';
+        }
+        (function(){ if (localStorage.getItem('taskvel_muted_v1') === '1')
+            document.getElementById('pro-mute-icon').textContent = '🔇'; })();
         function toast(msg) {
             var el = document.getElementById('pro-toast');
             el.textContent = msg; el.classList.add('show');

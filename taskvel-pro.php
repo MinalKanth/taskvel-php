@@ -590,6 +590,48 @@ $user = current_user();
         display: block;
     }
 
+    /* Labeled primary navigation — kept visually separate from the
+       icon-only utility cluster above (notifications/export/templates/
+       theme/mute), the same grouping Asana/Jira use: primary destinations
+       always get a text label, only secondary tools stay icon-only. */
+    .main-nav {
+        display: flex;
+        gap: 6px;
+        margin: 14px 0 22px;
+        flex-wrap: wrap;
+    }
+
+    .main-nav a {
+        text-decoration: none;
+        font-family: 'Space Grotesk';
+        font-size: 12.5px;
+        font-weight: 600;
+        padding: 8px 14px;
+        border-radius: var(--r-sm);
+        border: 1px solid var(--line);
+        background: var(--bg-elev);
+        color: var(--ink2);
+        transition: background .15s ease, border-color .15s ease, color .15s ease;
+    }
+
+    .main-nav a:hover {
+        background: var(--bg-sunk);
+        border-color: var(--line2);
+        color: var(--ink);
+    }
+
+    .main-nav a.active {
+        background: var(--ink);
+        color: var(--bg);
+        border-color: var(--ink);
+    }
+
+    :root[data-theme="dark"] .main-nav a.active {
+        background: var(--accent);
+        color: var(--on-accent);
+        border-color: var(--accent);
+    }
+
     .clock-time {
         font-family: 'JetBrains Mono';
         font-size: 16px;
@@ -3778,258 +3820,7 @@ $user = current_user();
         display: none;
     }
 }
-/* =========================================================
-   RESPONSIVE HEADER CONTROLS
-   ========================================================= */
 
-.head-right {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    min-width: 0;
-}
-
-/* Keep all controls from shrinking unpredictably */
-.head-right > .icon-btn,
-.head-right > .clock-chip {
-    flex-shrink: 0;
-}
-
-
-/* =========================================================
-   TABLET
-   ========================================================= */
-
-@media (max-width: 1100px) {
-
-    .head-right {
-        gap: 6px;
-    }
-
-    .head-right .icon-btn {
-        width: 38px;
-        min-width: 38px;
-        height: 38px;
-    }
-
-    .head-right .clock-chip {
-        padding: 5px 9px;
-    }
-
-    .features-btn {
-        width: 72px;
-        min-width: 72px;
-    }
-}
-
-
-/* =========================================================
-   MOBILE
-   ========================================================= */
-
-@media (max-width: 768px) {
-
-    .head-right {
-        gap: 5px;
-
-        /*
-         * Keep everything on one line.
-         * User can swipe horizontally if the screen
-         * cannot fit every control.
-         */
-        max-width: 100%;
-        overflow-x: auto;
-        overflow-y: hidden;
-
-        padding: 3px 2px;
-
-        scrollbar-width: none;
-        -ms-overflow-style: none;
-
-        -webkit-overflow-scrolling: touch;
-    }
-
-    .head-right::-webkit-scrollbar {
-        display: none;
-    }
-
-
-    /* Standard icon buttons */
-
-    .head-right > .icon-btn {
-        width: 36px;
-        min-width: 36px;
-        height: 36px;
-
-        padding: 0;
-
-        border-radius: 11px;
-    }
-
-
-    /* Icon size */
-
-    .head-right .tt-icon {
-        font-size: 15px;
-    }
-
-
-    /* =====================================================
-       EXPLORE BUTTON
-       ===================================================== */
-
-    .head-right .features-btn {
-        width: 62px;
-        min-width: 62px;
-        height: 36px;
-
-        padding: 0 8px;
-
-        gap: 5px;
-
-        border-radius: 11px;
-    }
-
-    .head-right .features-spark {
-        font-size: 13px;
-    }
-
-    .head-right .features-label {
-        display: inline;
-
-        font-size: 8px;
-        letter-spacing: 0.06em;
-    }
-
-
-    /* =====================================================
-       CLOCK
-       ===================================================== */
-
-    .head-right .clock-chip {
-        min-width: 72px;
-
-        padding: 4px 7px;
-
-        border-radius: 10px;
-    }
-
-    .head-right .clock-time {
-        font-size: 12px;
-        line-height: 14px;
-    }
-
-    .head-right .clock-date {
-        font-size: 7px;
-        line-height: 10px;
-    }
-
-    .head-right .clock-time .sec {
-        font-size: 8px;
-    }
-}
-
-
-/* =========================================================
-   SMALL PHONES
-   ========================================================= */
-
-@media (max-width: 480px) {
-
-    .head-right {
-        gap: 4px;
-    }
-
-    .head-right > .icon-btn {
-        width: 34px;
-        min-width: 34px;
-        height: 34px;
-
-        border-radius: 10px;
-    }
-
-    .head-right .tt-icon {
-        font-size: 14px;
-    }
-
-
-    /* Compact Explore button */
-
-    .head-right .features-btn {
-        width: 58px;
-        min-width: 58px;
-        height: 34px;
-
-        padding: 0 6px;
-
-        gap: 4px;
-
-        border-radius: 10px;
-    }
-
-    .head-right .features-spark {
-        font-size: 12px;
-    }
-
-    .head-right .features-label {
-        font-size: 7px;
-    }
-
-
-    /* Compact clock */
-
-    .head-right .clock-chip {
-        min-width: 65px;
-
-        padding: 3px 6px;
-    }
-
-    .head-right .clock-time {
-        font-size: 11px;
-    }
-
-    .head-right .clock-date {
-        font-size: 6px;
-    }
-}
-
-
-/* =========================================================
-   VERY SMALL DEVICES
-   ========================================================= */
-
-@media (max-width: 360px) {
-
-    .head-right {
-        gap: 3px;
-    }
-
-    .head-right > .icon-btn {
-        width: 32px;
-        min-width: 32px;
-        height: 32px;
-    }
-
-    .head-right .features-btn {
-        width: 54px;
-        min-width: 54px;
-        height: 32px;
-    }
-
-    .head-right .features-label {
-        font-size: 6.5px;
-    }
-
-    .head-right .clock-chip {
-        min-width: 60px;
-    }
-}
-@media (max-width: 768px) {
-    .head-right {
-        flex: 1;
-        min-width: 0;
-    }
-}
     </style>
     <script>
     (function() {
@@ -4085,15 +3876,6 @@ $user = current_user();
                         aria-label="Focus history" title="Focus history">
                         <span class="tt-icon">▤</span>
                     </button>
-                    <button class="icon-btn" onclick="location.href='teams.php'" aria-label="Teams & shared projects"
-                        title="Teams — assign & track tasks with coworkers">
-                        <span class="tt-icon">👥</span>
-                    </button>
-                    <button class="icon-btn" onclick="location.href='checkin.php'" aria-label="Daily check-in"
-                        title="Daily Check-in — office mode: check in, report tasks, check out with a summary">
-                        <span class="tt-icon">📍</span>
-                    </button>
-                    
                     <button class="icon-btn" id="export-btn" onclick="togglePanel('export-panel')" aria-label="Export"
                         title="Export">
                         <span class="tt-icon">↓</span>
@@ -4119,6 +3901,13 @@ $user = current_user();
                         <div class="clock-date" id="clock-date">—</div>
                     </div>
                 </div>
+            </div>
+
+            <div class="main-nav">
+                <a href="taskvel-pro.php" class="active">✓ My Tasks</a>
+                <a href="teams.php">👥 Teams</a>
+                <a href="checkin.php">📍 Check-in</a>
+                <a href="billing.php">💳 Billing</a>
             </div>
 
             <!-- Theme picker panel -->
@@ -4770,7 +4559,8 @@ $user = current_user();
     // Cosmetic only — safe to stay global across accounts:
 
     const LS_THEME = 'taskvel_theme_v1',
-        LS_ACCENT = 'taskvel_accent_v1';
+        LS_ACCENT = 'taskvel_accent_v1',
+        LS_THEME_TS = 'taskvel_theme_accent_ts_v1';
 
     function todayKey(d) {
         d = d || new Date();
@@ -4927,6 +4717,7 @@ $user = current_user();
             dailyGoal,
             theme: localStorage.getItem(LS_THEME),
             accent: localStorage.getItem(LS_ACCENT),
+            themeAccentUpdatedAt: parseInt(localStorage.getItem(LS_THEME_TS)) || 0,
         };
     }
 
@@ -5009,13 +4800,24 @@ $user = current_user();
                 templates = state.templates;
                 saveTemplates();
             }
-            if (state.theme) {
-                document.documentElement.setAttribute('data-theme', state.theme);
-                localStorage.setItem(LS_THEME, state.theme);
-            }
-            if (state.accent) {
-                document.documentElement.setAttribute('data-accent', state.accent);
-                localStorage.setItem(LS_ACCENT, state.accent);
+            // Only apply the server's theme/accent if it's actually newer than
+            // what this device already has. Without this guard, a pull that
+            // lands right after this device just pushed a new pick (e.g. the
+            // keepalive push from clicking "My Tasks" hasn't finished writing
+            // server-side yet) would silently overwrite the pick you just made
+            // with the older server value — that's the "resets to yellow" bug.
+            const localThemeTs = parseInt(localStorage.getItem(LS_THEME_TS)) || 0;
+            const serverThemeTs = parseInt(state.themeAccentUpdatedAt) || 0;
+            if (serverThemeTs >= localThemeTs) {
+                if (state.theme) {
+                    document.documentElement.setAttribute('data-theme', state.theme);
+                    localStorage.setItem(LS_THEME, state.theme);
+                }
+                if (state.accent) {
+                    document.documentElement.setAttribute('data-accent', state.accent);
+                    localStorage.setItem(LS_ACCENT, state.accent);
+                }
+                if (serverThemeTs) localStorage.setItem(LS_THEME_TS, String(serverThemeTs));
             }
             localStorage.setItem(LS_R, JSON.stringify(remarks));
             localStorage.setItem(LS_NOTIF, JSON.stringify(notifications));
@@ -5305,7 +5107,8 @@ $user = current_user();
         const next = cur === 'dark' ? 'light' : 'dark';
         document.documentElement.setAttribute('data-theme', next);
         try {
-            localStorage.setItem(LS_THEME, next)
+            localStorage.setItem(LS_THEME, next);
+            localStorage.setItem(LS_THEME_TS, String(Date.now()));
         } catch (e) {}
         applyThemeIcon();
         schedulePush();
@@ -5326,7 +5129,8 @@ $user = current_user();
     function setAccent(name) {
         document.documentElement.setAttribute('data-accent', name);
         try {
-            localStorage.setItem(LS_ACCENT, name)
+            localStorage.setItem(LS_ACCENT, name);
+            localStorage.setItem(LS_THEME_TS, String(Date.now()));
         } catch (e) {}
         markActiveSwatch();
         applyThemeIcon();
@@ -8072,6 +7876,15 @@ $user = current_user();
         // this is what makes tasks/remarks/streaks/theme identical everywhere.
         await loadTasksFromServer();
         await pullStateFromServer();
+
+        // Arrived via a utility-icon link from Teams/Billing/Check-in (see
+        // includes/pro-shell.php) — open the matching panel now that tasks
+        // are loaded.
+        var jumpPanel = { notif: 'notif-panel', hist: 'hist-panel', export: 'export-panel', tmpl: 'tmpl-panel', palette: 'palette-panel' }[location.hash.replace('#', '')];
+        if (jumpPanel) {
+            togglePanel(jumpPanel);
+            history.replaceState(null, '', location.pathname);
+        }
         try {
             await Taskvel.settings.touchDevice(navigator.userAgent.slice(0, 60));
         } catch (e) {}
