@@ -23,57 +23,79 @@ function pro_head(string $title): void
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Sora:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;700&display=swap">
     <script>
-        // Same theme bootstrap as taskvel-pro.php — the Teams pages follow
-        // whatever theme the person picked in the main app.
+        // Same theme + accent bootstrap as taskvel-pro.php — these pages
+        // follow whatever theme AND colour accent the person picked in the
+        // main app, read from the exact same localStorage keys.
         (function() {
             try {
                 var savedTheme = localStorage.getItem('taskvel_theme_v1');
                 var theme = savedTheme || (window.matchMedia && window.matchMedia('(prefers-color-scheme:dark)').matches ? 'dark' : 'light');
                 document.documentElement.setAttribute('data-theme', theme);
-            } catch (e) { document.documentElement.setAttribute('data-theme', 'light'); }
+                var accent = localStorage.getItem('taskvel_accent_v1') || 'indigo';
+                document.documentElement.setAttribute('data-accent', accent);
+            } catch (e) {
+                document.documentElement.setAttribute('data-theme', 'light');
+                document.documentElement.setAttribute('data-accent', 'indigo');
+            }
         })();
     </script>
     <style>
-        /* ═══════ SAMAL DESIGN TOKENS (mirrors taskvel-pro.php) ═══════ */
+        /* ═══════ SHARED DESIGN TOKENS (mirrors taskvel-pro.php) ═══════ */
         :root {
-            --bg:#FAF8F3; --bg-elev:#ffffff; --bg-sunk:#F3F1E9;
-            --ink:#0A1128; --ink2:#3C4258; --ink3:#7A7F90; --ink4:#B9BCC6;
-            --line:#EAE7DD; --line2:#D8D6CE;
-            --accent:#C9A227; --accent-2:#0F4436;
-            --accent-soft:rgba(201,162,39,.12); --accent-glow:rgba(201,162,39,.30);
+            --bg:#f7f8fa; --bg-elev:#ffffff; --bg-sunk:#eef0f3;
+            --ink:#14161a; --ink2:#4b5563; --ink3:#8a8f98; --ink4:#c1c4cb;
+            --line:#e4e6ea; --line2:#d3d6dc;
+            --accent:#4f46e5; --accent-2:#6366f1;
+            --accent-soft:rgba(79,70,229,.08); --accent-glow:rgba(79,70,229,.18);
             --on-accent:#ffffff;
-            --good:#16a34a; --good-soft:rgba(22,163,74,.12);
-            --warn:#d97706; --warn-soft:rgba(217,119,6,.12);
-            --bad:#dc2626; --bad-soft:rgba(220,38,38,.12);
-            --shadow:0 12px 38px rgba(10,17,40,.12); --shadow-lg:0 24px 60px rgba(10,17,40,.18);
-            --ring:rgba(201,162,39,.25);
-            --r:16px; --r-lg:20px; --r-sm:10px;
+            --good:#16a34a; --good-soft:rgba(22,163,74,.10);
+            --warn:#d97706; --warn-soft:rgba(217,119,6,.10);
+            --bad:#dc2626; --bad-soft:rgba(220,38,38,.10);
+            --shadow-sm:0 1px 2px rgba(15,23,42,.05);
+            --shadow:0 6px 20px rgba(15,23,42,.08); --shadow-lg:0 20px 48px rgba(15,23,42,.14);
+            --ring:rgba(79,70,229,.15);
+            --r:10px; --r-lg:14px; --r-sm:8px;
             --ease:cubic-bezier(.22,1,.36,1);
             --font-display:'Space Grotesk',sans-serif; --font-body:'Sora',-apple-system,'Segoe UI',sans-serif;
         }
         :root[data-theme="dark"] {
-            --bg:#0A1128; --bg-elev:#121A36; --bg-sunk:#060B1C;
-            --ink:#FAF8F3; --ink2:#C3C8DC; --ink3:#8990AC; --ink4:#525A78;
-            --line:#1E2745; --line2:#2C365A;
-            --accent:#E8C766; --accent-2:#8FA0E8;
-            --accent-soft:rgba(232,199,102,.14); --accent-glow:rgba(232,199,102,.34);
-            --on-accent:#0A1128;
-            --shadow:0 12px 40px rgba(0,0,0,.6); --shadow-lg:0 24px 64px rgba(0,0,0,.72);
-            --ring:rgba(232,199,102,.3);
+            --bg:#0e0f13; --bg-elev:#17181d; --bg-sunk:#0a0b0e;
+            --ink:#f2f3f5; --ink2:#b4b8c0; --ink3:#7c8087; --ink4:#4b4e56;
+            --line:#24262c; --line2:#313339;
+            --accent:#818cf8; --accent-2:#a5b4fc;
+            --accent-soft:rgba(129,140,248,.12); --accent-glow:rgba(129,140,248,.22);
+            --on-accent:#0e0f13;
+            --shadow-sm:0 1px 2px rgba(0,0,0,.4);
+            --shadow:0 6px 20px rgba(0,0,0,.45); --shadow-lg:0 20px 48px rgba(0,0,0,.6);
+            --ring:rgba(129,140,248,.25);
         }
+
+        /* Accent variants — must stay byte-for-byte in sync with the same
+           blocks in taskvel-pro.php's <style>, otherwise the colour theme
+           you pick on the main app won't carry over to these pages. */
+        :root[data-accent="mono"] { --accent:#14161a; --accent-2:#4b5563; --accent-soft:rgba(20,22,26,.06); --accent-glow:rgba(20,22,26,.14); --on-accent:#ffffff; --ring:rgba(20,22,26,.12); }
+        :root[data-accent="mono"][data-theme="dark"] { --accent:#f2f3f5; --accent-2:#b4b8c0; --accent-soft:rgba(242,243,245,.10); --accent-glow:rgba(242,243,245,.16); --on-accent:#0e0f13; --ring:rgba(242,243,245,.16); }
+
+        :root[data-accent="indigo"] { --accent:#4f46e5; --accent-2:#6366f1; --accent-soft:rgba(79,70,229,.08); --accent-glow:rgba(79,70,229,.18); --on-accent:#ffffff; --ring:rgba(79,70,229,.15); }
+        :root[data-accent="indigo"][data-theme="dark"] { --accent:#818cf8; --accent-2:#a5b4fc; --accent-soft:rgba(129,140,248,.12); --accent-glow:rgba(129,140,248,.22); --on-accent:#0e0f13; --ring:rgba(129,140,248,.25); }
+
+        :root[data-accent="emerald"] { --accent:#059669; --accent-2:#0d9488; --accent-soft:rgba(5,150,105,.08); --accent-glow:rgba(5,150,105,.18); --on-accent:#ffffff; --ring:rgba(5,150,105,.16); }
+        :root[data-accent="emerald"][data-theme="dark"] { --accent:#34d399; --accent-2:#2dd4bf; --accent-soft:rgba(52,211,153,.12); --accent-glow:rgba(52,211,153,.22); --on-accent:#0e0f13; --ring:rgba(52,211,153,.22); }
+
+        :root[data-accent="amber"] { --accent:#d97706; --accent-2:#b45309; --accent-soft:rgba(217,119,6,.08); --accent-glow:rgba(217,119,6,.18); --on-accent:#ffffff; --ring:rgba(217,119,6,.16); }
+        :root[data-accent="amber"][data-theme="dark"] { --accent:#fbbf24; --accent-2:#fb923c; --accent-soft:rgba(251,191,36,.12); --accent-glow:rgba(251,191,36,.22); --on-accent:#0e0f13; --ring:rgba(251,191,36,.22); }
+
+        :root[data-accent="samal"] { --accent:#a3811f; --accent-2:#0f4436; --accent-soft:rgba(163,129,31,.08); --accent-glow:rgba(163,129,31,.18); --on-accent:#ffffff; --ring:rgba(163,129,31,.16); }
+        :root[data-accent="samal"][data-theme="dark"] { --accent:#e8c766; --accent-2:#8fa0e8; --accent-soft:rgba(232,199,102,.12); --accent-glow:rgba(232,199,102,.22); --on-accent:#0e0f13; --ring:rgba(232,199,102,.22); }
+
         html { color-scheme: light; }
         html[data-theme="dark"] { color-scheme: dark; }
         * { box-sizing:border-box; margin:0; padding:0; -webkit-tap-highlight-color:transparent; }
         body { font-family:var(--font-body); background:var(--bg); color:var(--ink); min-height:100vh;
-               -webkit-font-smoothing:antialiased; transition:background .3s, color .3s; }
+               -webkit-font-smoothing:antialiased; transition:background .2s, color .2s; }
         a { color:inherit; }
 
-        /* Aurora backdrop — same signature glow as taskvel-pro */
-        .aurora { position:fixed; inset:0; z-index:-1; overflow:hidden; pointer-events:none; }
-        .aurora span { position:absolute; border-radius:50%; filter:blur(90px); opacity:.5; }
-        .aurora .a1 { width:520px; height:520px; top:-180px; right:-120px; background:var(--accent-soft); }
-        .aurora .a2 { width:420px; height:420px; bottom:-160px; left:-140px; background:rgba(15,68,54,.10); }
-        :root[data-theme="dark"] .aurora .a2 { background:rgba(143,160,232,.10); }
+        .aurora { display:none; }
 
         .wrap { max-width:560px; margin:0 auto; padding:22px 18px 90px; }
 
@@ -88,65 +110,65 @@ function pro_head(string $title): void
         /* ═══════ HEADER ═══════ */
         .pro-header { display:flex; justify-content:space-between; align-items:center; gap:12px; flex-wrap:wrap; margin-bottom:8px; }
         .brand { display:flex; align-items:center; gap:11px; text-decoration:none; }
-        .brand .logo { width:42px; height:42px; border-radius:12px; background:var(--ink); color:var(--accent);
-            display:flex; align-items:center; justify-content:center; font-family:var(--font-display); font-weight:700; font-size:22px;
-            box-shadow:var(--shadow); }
+        .brand .logo { width:36px; height:36px; border-radius:var(--r-sm); background:var(--ink); color:var(--bg);
+            display:flex; align-items:center; justify-content:center; font-family:var(--font-display); font-weight:700; font-size:16px; }
         :root[data-theme="dark"] .brand .logo { background:var(--accent); color:var(--on-accent); }
-        .brand h1 { font-family:var(--font-display); font-size:20px; font-weight:700; letter-spacing:-.3px; }
-        .brand h1 span { color:var(--accent); }
-        .brand .tag { font-size:10.5px; color:var(--ink3); letter-spacing:.3px; }
+        .brand h1 { font-family:var(--font-display); font-size:18px; font-weight:700; letter-spacing:-.2px; }
+        .brand h1 span { color:var(--ink3); font-weight:400; }
+        .brand .tag { font-size:10px; color:var(--ink3); letter-spacing:.3px; }
         .head-right { display:flex; align-items:center; gap:8px; }
-        .icon-btn { width:38px; height:38px; border-radius:11px; border:1px solid var(--line2); background:var(--bg-elev);
-            color:var(--ink2); font-size:16px; cursor:pointer; display:flex; align-items:center; justify-content:center;
-            transition:transform .2s var(--ease), border-color .2s; }
-        .icon-btn:hover { transform:translateY(-2px); border-color:var(--accent); color:var(--accent); }
-        .user-chip { font-size:11.5px; color:var(--ink3); padding:8px 12px; border:1px solid var(--line); border-radius:11px;
+        .icon-btn { width:36px; height:36px; border-radius:var(--r-sm); border:1px solid var(--line); background:var(--bg-elev);
+            color:var(--ink2); font-size:15px; cursor:pointer; display:flex; align-items:center; justify-content:center;
+            transition:background .15s, border-color .15s, color .15s; }
+        .icon-btn:hover { background:var(--bg-sunk); border-color:var(--line2); color:var(--ink); }
+        .user-chip { font-size:11.5px; color:var(--ink3); padding:7px 11px; border:1px solid var(--line); border-radius:var(--r-sm);
             background:var(--bg-elev); max-width:180px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
 
-        /* Nav pills — makes Teams feel like a section OF Taskvel Pro */
-        .pro-nav { display:flex; gap:8px; margin:14px 0 24px; flex-wrap:wrap; }
+        /* Nav pills */
+        .pro-nav { display:flex; gap:6px; margin:14px 0 24px; flex-wrap:wrap; }
         .pro-nav a { text-decoration:none; font-family:var(--font-display); font-size:12.5px; font-weight:600;
-            padding:9px 16px; border-radius:999px; border:1px solid var(--line2); background:var(--bg-elev); color:var(--ink2);
-            transition:all .2s var(--ease); }
-        .pro-nav a:hover { border-color:var(--accent); color:var(--accent); transform:translateY(-1px); }
+            padding:8px 14px; border-radius:var(--r-sm); border:1px solid var(--line); background:var(--bg-elev); color:var(--ink2);
+            transition:background .15s, border-color .15s, color .15s; }
+        .pro-nav a:hover { background:var(--bg-sunk); border-color:var(--line2); color:var(--ink); }
         .pro-nav a.active { background:var(--ink); color:var(--bg); border-color:var(--ink); }
         :root[data-theme="dark"] .pro-nav a.active { background:var(--accent); color:var(--on-accent); border-color:var(--accent); }
         .crumb { font-size:12px; color:var(--ink3); margin-bottom:6px; }
         .crumb a { color:var(--ink3); text-decoration:none; font-weight:600; }
-        .crumb a:hover { color:var(--accent); }
+        .crumb a:hover { color:var(--ink); }
 
         /* ═══════ SHARED COMPONENTS ═══════ */
-        h1.page-title { font-family:var(--font-display); font-size:26px; font-weight:700; letter-spacing:-.4px; margin-bottom:4px;
+        h1.page-title { font-family:var(--font-display); font-size:22px; font-weight:700; letter-spacing:-.2px; margin-bottom:4px;
             display:flex; align-items:center; gap:10px; flex-wrap:wrap; }
         .sub { color:var(--ink3); font-size:13.5px; margin-bottom:20px; line-height:1.5; }
         section { margin-top:30px; }
-        section > h2 { font-family:var(--font-display); font-size:14px; font-weight:700; text-transform:uppercase;
-            letter-spacing:1px; color:var(--ink3); margin-bottom:13px; display:flex; justify-content:space-between; align-items:center; }
-        .btn { display:inline-flex; align-items:center; gap:6px; padding:11px 18px; border-radius:12px; border:none;
-            background:var(--accent); color:var(--on-accent); font-family:var(--font-display); font-weight:700; font-size:13.5px;
-            cursor:pointer; box-shadow:0 8px 22px -8px var(--accent-glow); transition:transform .2s var(--ease), box-shadow .2s; }
-        .btn:hover { transform:translateY(-2px); box-shadow:0 12px 28px -8px var(--accent-glow); }
-        .btn.ghost { background:var(--bg-elev); color:var(--ink); border:1px solid var(--line2); box-shadow:none; }
-        .btn.ghost:hover { border-color:var(--accent); color:var(--accent); }
-        .btn.danger { background:var(--bad); box-shadow:0 8px 22px -8px rgba(220,38,38,.4); }
-        .btn.warn { background:var(--warn); box-shadow:0 8px 22px -8px rgba(217,119,6,.4); }
-        .btn.sm { padding:7px 12px; font-size:11.5px; border-radius:9px; }
-        .btn.sm { padding:7px 12px; font-size:11.5px; border-radius:9px; }
+        section > h2 { font-family:var(--font-display); font-size:12.5px; font-weight:700; text-transform:uppercase;
+            letter-spacing:.5px; color:var(--ink3); margin-bottom:12px; }
 
-        .card { background:var(--bg-elev); border:1px solid var(--line); border-radius:var(--r); padding:16px 18px;
-            transition:transform .22s var(--ease), box-shadow .22s, border-color .22s; }
+        .btn { display:inline-flex; align-items:center; justify-content:center; gap:6px; font-family:var(--font-display);
+            font-size:13px; font-weight:600; padding:9px 16px; border-radius:var(--r-sm); border:1px solid var(--accent);
+            background:var(--accent); color:var(--on-accent); cursor:pointer; text-decoration:none;
+            transition:background .15s, border-color .15s; }
+        .btn:hover { background:var(--accent-2); border-color:var(--accent-2); }
+        .btn.ghost { background:var(--bg-elev); color:var(--ink); border-color:var(--line2); }
+        .btn.ghost:hover { background:var(--bg-sunk); }
+        .btn.danger { background:var(--bad); border-color:var(--bad); }
+        .btn.danger:hover { background:#b91c1c; border-color:#b91c1c; }
+        .btn.warn { background:var(--warn); border-color:var(--warn); }
+        .btn.sm { padding:6px 11px; font-size:11.5px; border-radius:var(--r-sm); }
+
+        .card { background:var(--bg-elev); border:1px solid var(--line); border-radius:var(--r); padding:15px 16px;
+            transition:border-color .15s ease, box-shadow .15s ease; }
         a.card { text-decoration:none; color:inherit; display:block; cursor:pointer; }
-        a.card:hover, .card.hover:hover { transform:translateY(-3px); box-shadow:var(--shadow); border-color:var(--accent); }
-        .card-list { display:flex; flex-direction:column; gap:11px; }
+        a.card:hover, .card.hover:hover { border-color:var(--line2); box-shadow:var(--shadow-sm); }
+        .card-list { display:flex; flex-direction:column; gap:8px; }
 
-        .role-badge { font-family:var(--font-display); font-size:10px; font-weight:700; padding:4px 11px; border-radius:999px;
-            text-transform:uppercase; letter-spacing:.6px; }
-        .role-owner { background:var(--accent-soft); color:var(--accent); border:1px solid var(--accent-glow); }
-        .role-manager { background:rgba(15,68,54,.10); color:var(--accent-2); border:1px solid rgba(15,68,54,.22); }
-        :root[data-theme="dark"] .role-manager { background:rgba(143,160,232,.12); border-color:rgba(143,160,232,.3); }
+        .role-badge { font-family:var(--font-display); font-size:9.5px; font-weight:700; padding:3px 10px; border-radius:999px;
+            text-transform:uppercase; letter-spacing:.5px; }
+        .role-owner { background:var(--accent-soft); color:var(--accent); border:1px solid transparent; }
+        .role-manager { background:var(--bg-sunk); color:var(--ink2); border:1px solid var(--line2); }
         .role-member { background:var(--bg-sunk); color:var(--ink3); border:1px solid var(--line); }
 
-        .avatar { width:26px; height:26px; border-radius:50%; background:var(--ink); color:var(--accent); font-size:10px;
+        .avatar { width:24px; height:24px; border-radius:50%; background:var(--ink); color:var(--bg); font-size:9.5px;
             font-family:var(--font-display); font-weight:700; display:inline-flex; align-items:center; justify-content:center;
             border:2px solid var(--bg-elev); flex-shrink:0; }
         :root[data-theme="dark"] .avatar { background:var(--accent); color:var(--on-accent); }
@@ -156,22 +178,22 @@ function pro_head(string $title): void
 
         .empty { text-align:center; padding:44px 20px; color:var(--ink3); font-size:13.5px;
             background:var(--bg-sunk); border:1px dashed var(--line2); border-radius:var(--r); }
-        .empty .ic { font-size:38px; margin-bottom:10px; opacity:.55; display:block; }
+        .empty .ic { font-size:32px; margin-bottom:10px; opacity:.5; display:block; }
 
         /* ═══════ MODALS ═══════ */
-        .modal-overlay { position:fixed; inset:0; background:rgba(10,17,40,.55); backdrop-filter:blur(4px);
+        .modal-overlay { position:fixed; inset:0; background:rgba(15,23,42,.45); backdrop-filter:blur(2px);
             display:none; align-items:center; justify-content:center; z-index:100; padding:16px; }
-        .modal-overlay.open { display:flex; animation:fadeIn .18s var(--ease); }
+        .modal-overlay.open { display:flex; animation:fadeIn .15s var(--ease); }
         @keyframes fadeIn { from { opacity:0; } to { opacity:1; } }
-        .modal { background:var(--bg-elev); border:1px solid var(--line); border-radius:var(--r-lg); padding:26px;
-            width:min(480px,94vw); max-height:88vh; overflow-y:auto; box-shadow:var(--shadow-lg); animation:pop .22s var(--ease); }
-        @keyframes pop { from { transform:translateY(14px) scale(.98); opacity:0; } to { transform:none; opacity:1; } }
-        .modal h2 { font-family:var(--font-display); font-size:19px; font-weight:700; margin-bottom:18px; }
+        .modal { background:var(--bg-elev); border:1px solid var(--line); border-radius:var(--r-lg); padding:24px;
+            width:min(480px,94vw); max-height:88vh; overflow-y:auto; box-shadow:var(--shadow-lg); animation:pop .15s var(--ease); }
+        @keyframes pop { from { transform:translateY(8px); opacity:0; } to { transform:none; opacity:1; } }
+        .modal h2 { font-family:var(--font-display); font-size:18px; font-weight:700; margin-bottom:18px; }
         .modal label { font-family:var(--font-display); font-size:10.5px; color:var(--ink3); text-transform:uppercase;
-            letter-spacing:.8px; display:block; margin-bottom:6px; font-weight:600; }
+            letter-spacing:.6px; display:block; margin-bottom:6px; font-weight:600; }
         .fg { margin-bottom:14px; }
-        .modal input, .modal select, .modal textarea { width:100%; padding:11px 13px; border:1px solid var(--line2);
-            border-radius:11px; font-size:14px; font-family:var(--font-body); background:var(--bg); color:var(--ink); }
+        .modal input, .modal select, .modal textarea { width:100%; padding:10px 12px; border:1px solid var(--line2);
+            border-radius:var(--r-sm); font-size:14px; font-family:var(--font-body); background:var(--bg); color:var(--ink); }
         .modal input:focus, .modal select:focus, .modal textarea:focus { outline:none; border-color:var(--accent);
             box-shadow:0 0 0 3px var(--ring); }
         .modal textarea { resize:vertical; min-height:70px; }
@@ -182,17 +204,16 @@ function pro_head(string $title): void
 
         /* Attendee picker chips */
         .chip-picker { display:flex; flex-wrap:wrap; gap:7px; }
-        .chip-picker .chip { font-family:var(--font-display); font-size:12px; font-weight:600; padding:8px 13px;
+        .chip-picker .chip { font-family:var(--font-display); font-size:12px; font-weight:600; padding:7px 12px;
             border-radius:999px; border:1px solid var(--line2); background:var(--bg); color:var(--ink2); cursor:pointer;
-            transition:all .18s var(--ease); user-select:none; }
-        .chip-picker .chip:hover { border-color:var(--accent); }
-        .chip-picker .chip.on { background:var(--accent); color:var(--on-accent); border-color:var(--accent);
-            box-shadow:0 6px 16px -6px var(--accent-glow); }
-        .chip-picker .chip.locked { opacity:.75; cursor:default; }
+            transition:border-color .15s, background .15s; user-select:none; }
+        .chip-picker .chip:hover { border-color:var(--line2); background:var(--bg-sunk); }
+        .chip-picker .chip.on { background:var(--accent); color:var(--on-accent); border-color:var(--accent); }
+        .chip-picker .chip.locked { opacity:.65; cursor:default; }
 
-        .toast { position:fixed; left:50%; bottom:26px; transform:translateX(-50%) translateY(80px); opacity:0;
+        .toast { position:fixed; left:50%; bottom:26px; transform:translateX(-50%) translateY(60px); opacity:0;
             background:var(--ink); color:var(--bg); font-family:var(--font-display); font-size:13px; font-weight:600;
-            padding:12px 20px; border-radius:12px; box-shadow:var(--shadow-lg); z-index:200; transition:all .3s var(--ease); }
+            padding:11px 18px; border-radius:var(--r-sm); box-shadow:var(--shadow-lg); z-index:200; transition:all .2s var(--ease); }
         .toast.show { transform:translateX(-50%); opacity:1; }
     </style>
     <?php

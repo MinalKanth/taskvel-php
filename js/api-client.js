@@ -49,6 +49,17 @@ const Taskvel = (() => {
             headers,
             body: body ? JSON.stringify(body) : undefined,
             credentials: 'same-origin',
+            // `keepalive` lets a request finish even if the page is being
+            // navigated away from or closed right as it fires — e.g. the
+            // debounced state push in taskvel-pro.php that runs on
+            // pagehide/visibilitychange when you click to Teams, Billing,
+            // etc. Without this, the browser aborts the in-flight POST the
+            // instant the page unloads, so a just-picked accent/theme (or
+            // any other pending change) never actually reaches the server,
+            // and the next pull silently overwrites it back to the old
+            // saved value. GET requests are unaffected (keepalive only
+            // applies to the state-changing calls).
+            keepalive: method !== 'GET',
         });
         if (res.status === 401) {
             // Session expired (or was never valid) — auto-logout to a clean

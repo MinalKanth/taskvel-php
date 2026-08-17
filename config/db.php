@@ -67,6 +67,7 @@ define('SMTP_HOST', getenv('SMTP_HOST') ?: 'smtp.gmail.com');
 define('SMTP_PORT', getenv('SMTP_PORT') ?: 587);
 define('SMTP_USER', getenv('SMTP_USER') ?: 'minal.viprak@gmail.com');
 define('SMTP_PASS', getenv('SMTP_PASS') ?: 'fabfkythogdyzvus');
+define('SMTP_SECURE', getenv('SMTP_SECURE') ?: 'ssl'); // port 465 = implicit SSL on Hostinger
 // define('SMTP_FROM', getenv('SMTP_FROM') ?: 'noreply@taskvel.app');
 // define('SMTP_FROM_NAME', 'Taskvel');
 // define('SMTP_HOST', getenv('SMTP_HOST') ?: 'smtp.gmail.com');

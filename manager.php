@@ -12,10 +12,10 @@ $user = current_user();
 <title>Manager Dashboard · Taskvel</title>
 <style>
     :root {
-        --bg:#f6f6f4; --bg-elev:#fff; --bg-sunk:#ededea; --ink:#0a0a0a; --ink2:#3d3d3b; --ink3:#7c7c78;
-        --line:#e6e5e0; --line2:#d4d3cd; --accent:#4f46e5; --accent-soft:rgba(79,70,229,.1); --on-accent:#fff;
-        --good:#059669; --good-soft:rgba(5,150,105,.1); --warn:#d97706; --warn-soft:rgba(217,119,6,.1); --bad:#dc2626; --bad-soft:rgba(220,38,38,.1);
-        --shadow:0 10px 34px rgba(10,10,10,.08); --r:14px; --ease:cubic-bezier(.22,1,.36,1);
+        --bg:#f7f8fa; --bg-elev:#fff; --bg-sunk:#eef0f3; --ink:#14161a; --ink2:#4b5563; --ink3:#8a8f98;
+        --line:#e4e6ea; --line2:#d3d6dc; --accent:#4f46e5; --accent-soft:rgba(79,70,229,.08); --on-accent:#fff;
+        --good:#16a34a; --good-soft:rgba(22,163,74,.10); --warn:#d97706; --warn-soft:rgba(217,119,6,.10); --bad:#dc2626; --bad-soft:rgba(220,38,38,.10);
+        --shadow:0 6px 20px rgba(15,23,42,.08); --r:10px; --ease:cubic-bezier(.22,1,.36,1);
     }
     * { box-sizing:border-box; }
     body { margin:0; font-family:-apple-system,'Segoe UI',Arial,sans-serif; background:var(--bg); color:var(--ink); }
@@ -24,8 +24,10 @@ $user = current_user();
     .topbar a.back { color:var(--ink3); text-decoration:none; font-size:13px; font-weight:600; }
     h1 { font-size:22px; font-weight:800; margin:0 0 4px; }
     .sub { color:var(--ink3); font-size:13.5px; margin-bottom:18px; }
-    .btn { display:inline-flex; align-items:center; gap:6px; padding:9px 16px; border-radius:10px; border:none;
-        background:var(--accent); color:var(--on-accent); font-weight:700; font-size:13px; cursor:pointer; }
+    .btn { display:inline-flex; align-items:center; gap:6px; padding:9px 16px; border-radius:8px; border:none;
+        background:var(--accent); color:var(--on-accent); font-weight:600; font-size:13px; cursor:pointer;
+        transition:background .15s ease; }
+    .btn:hover { background:#4338ca; }
     .btn.ghost { background:var(--bg-elev); color:var(--ink); border:1px solid var(--line2); }
     .btn.sm { padding:6px 11px; font-size:11.5px; }
     .btn.good { background:var(--good); } .btn.bad { background:var(--bad); }

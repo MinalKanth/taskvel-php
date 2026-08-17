@@ -1,6 +1,8 @@
 <?php
 require_once __DIR__ . '/../config/db.php';
-
+require_once __DIR__ . '/../PHPMailer-master/src/Exception.php';
+require_once __DIR__ . '/../PHPMailer-master/src/PHPMailer.php';
+require_once __DIR__ . '/../PHPMailer-master/src/SMTP.php';
 /**
  * Sends an HTML email.
  * If SMTP_HOST is set, uses a minimal raw SMTP client (no libraries needed).
@@ -13,15 +15,41 @@ require_once __DIR__ . '/../config/db.php';
  */
 function send_mail(string $to, string $subject, string $htmlBody): bool
 {
-    if (SMTP_HOST !== '') {
-        return smtp_send($to, $subject, $htmlBody);
+    if (SMTP_HOST === '') {
+        $headers = "MIME-Version: 1.0\r\n";
+        $headers .= "Content-type: text/html; charset=UTF-8\r\n";
+        $headers .= 'From: ' . SMTP_FROM_NAME . ' <' . SMTP_FROM . ">\r\n";
+        return mail($to, $subject, $htmlBody, $headers);
     }
 
-    $headers = "MIME-Version: 1.0\r\n";
-    $headers .= "Content-type: text/html; charset=UTF-8\r\n";
-    $headers .= 'From: ' . SMTP_FROM_NAME . ' <' . SMTP_FROM . ">\r\n";
+    $mail = new PHPMailer\PHPMailer\PHPMailer(true);
+    try {
+        $mail->isSMTP();
+        $mail->Host       = SMTP_HOST;
+        $mail->SMTPAuth   = true;
+        $mail->Username   = SMTP_USER;
+        $mail->Password   = SMTP_PASS;
+        $mail->Port       = SMTP_PORT;
+        if (SMTP_SECURE === 'ssl') {
+            $mail->SMTPSecure = PHPMailer\PHPMailer\PHPMailer::ENCRYPTION_SMTPS;
+        } elseif (SMTP_SECURE === 'tls') {
+            $mail->SMTPSecure = PHPMailer\PHPMailer\PHPMailer::ENCRYPTION_STARTTLS;
+        }
+        $mail->setFrom(
+            SMTP_FROM,
+            SMTP_FROM_NAME
+        );
 
-    return mail($to, $subject, $htmlBody, $headers);
+        $mail->addAddress($to);
+        $mail->isHTML(true);
+        $mail->Subject = $subject;
+        $mail->Body    = $htmlBody;
+
+        return $mail->send();
+    } catch (\PHPMailer\PHPMailer\Exception $e) {
+        error_log('PHPMailer send failed: ' . $mail->ErrorInfo);
+        return false;
+    }
 }
 
 function send_verification_email(string $email, string $name, string $token): void

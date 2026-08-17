@@ -1659,8 +1659,9 @@
     }
 
     .add-btn:hover {
-        transform: translateY(-3px) rotate(90deg) scale(1.05);
-        box-shadow: 0 10px 26px -6px var(--accent-glow);
+        transform: translateY(-2px);
+        box-shadow: var(--shadow);
+        background: var(--accent-2);
     }
 
     .add-btn:active {
@@ -1728,32 +1729,31 @@
     }
 
     .tab {
-        padding: 8px 16px;
+        padding: 7px 14px;
         font-size: 12.5px;
         font-weight: 500;
         font-family: 'Space Grotesk';
         border: 1px solid var(--line);
-        border-radius: 20px;
+        border-radius: var(--r-sm);
         background: var(--bg-elev);
         color: var(--ink2);
         cursor: pointer;
         white-space: nowrap;
         flex-shrink: 0;
-        transition: all .28s var(--spring);
+        transition: background .15s ease, border-color .15s ease, color .15s ease;
     }
 
     .tab:hover {
-        border-color: var(--accent);
-        color: var(--accent);
-        transform: translateY(-2px);
+        border-color: var(--line2);
+        background: var(--bg-sunk);
+        color: var(--ink);
     }
 
     .tab.active {
-        background: var(--accent);
-        color: var(--on-accent);
-        border-color: var(--accent);
+        background: var(--ink);
+        color: var(--bg);
+        border-color: var(--ink);
         font-weight: 600;
-        box-shadow: 0 6px 16px -6px var(--accent-glow);
     }
 
     .tab .cnt {
