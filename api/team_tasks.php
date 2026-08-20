@@ -13,6 +13,20 @@ $in = body();
 
 switch ("$method:$action") {
 
+    // Cross-team "assigned to me" feed for team tasks (the lighter-weight
+    // task type, outside a Project) — mirrors project_tasks.php's
+    // GET:my-tasks so the My Work view can merge both sources.
+    case 'GET:my-tasks':
+        $stmt = $pdo->prepare('SELECT tt.*, t.name AS team_name
+                               FROM team_tasks tt
+                               JOIN teams t ON t.id = tt.team_id
+                               JOIN team_members tm ON tm.team_id = t.id AND tm.user_id = ?
+                               WHERE tt.assignee_id = ?
+                               ORDER BY tt.due_date IS NULL, tt.due_date ASC, FIELD(tt.priority,\'urgent\',\'high\',\'medium\',\'low\')');
+        $stmt->execute([$uid, $uid]);
+        json_response(['tasks' => $stmt->fetchAll()]);
+        break;
+
     // All tasks for a team (any member can view).
     case 'GET:list':
         $teamId = (int)($_GET['team_id'] ?? 0);

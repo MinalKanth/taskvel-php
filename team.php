@@ -105,6 +105,7 @@ if (!$role) { header('Location: teams.php'); exit; }
         <button class="btn danger sm" onclick="deleteTeam()">Delete this team</button>
     </section>
     <?php endif; ?>
+    <?php pro_footer($user); ?>
 </div>
 
 <!-- Invite member modal -->

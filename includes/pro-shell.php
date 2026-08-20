@@ -98,23 +98,28 @@ function pro_head(string $title): void
 
         .aurora { display:none; }
 
-        .wrap { max-width:560px; margin:0 auto; padding:22px 18px 90px; }
+        .wrap { max-width:560px; margin:0 auto; padding:0 18px 90px; }
 
             @media (min-width: 720px) {
-                .wrap { max-width:660px; padding:22px 24px 90px; }
+                .wrap { max-width:660px; padding:0 24px 90px; }
             }
 
             @media (min-width: 980px) {
                 .wrap { max-width:760px; }
             }
 
-        /* ═══════ HEADER — identical component to taskvel-pro.php ═══════ */
-        .header { padding:6px 0 8px; }
-        .brand-row { display:flex; justify-content:space-between; align-items:flex-start; gap:12px; flex-wrap:wrap; }
+        /* ═══════ HEADER — kept byte-for-byte visually identical to
+           taskvel-pro.php's own header CSS, including its responsive
+           breakpoints, so the app doesn't visibly "reset" size/style
+           when you navigate from My Tasks to any other page. ═══════ */
+        .header { padding:24px 0 8px; position:sticky; top:0; z-index:40; background:var(--bg); border-bottom:1px solid transparent; }
+        .brand-row { display:flex; justify-content:space-between; align-items:flex-start; gap:12px; }
         .brand { display:flex; align-items:center; gap:12px; text-decoration:none; }
-        .logo { width:38px; height:38px; border-radius:var(--r-sm); background:var(--ink); color:var(--bg);
-            display:flex; align-items:center; justify-content:center; font-family:var(--font-display); font-weight:700; font-size:17px; flex-shrink:0; }
-        :root[data-theme="dark"] .logo { background:var(--accent); color:var(--on-accent); }
+        .logo { width:38px; height:38px; border-radius:11px; background:linear-gradient(150deg, var(--accent), var(--accent-2));
+            display:flex; align-items:center; justify-content:center; font-family:var(--font-display); font-weight:700; font-size:17px;
+            color:var(--on-accent); flex-shrink:0; position:relative; overflow:hidden;
+            box-shadow:0 1px 0 rgba(255,255,255,.22) inset, 0 6px 16px -8px var(--accent-glow); transition:box-shadow .3s var(--ease); }
+        .logo::after { content:''; position:absolute; inset:0; border-radius:inherit; border:1px solid rgba(255,255,255,.14); pointer-events:none; }
         .brand-txt h1 { font-family:var(--font-display); font-size:19px; font-weight:700; letter-spacing:-.3px; line-height:1; color:var(--ink); }
         .brand-txt h1 span { font-weight:400; color:var(--ink3); }
         .brand-txt .tag { font-family:'JetBrains Mono',monospace; font-size:9.5px; color:var(--ink3); letter-spacing:1.2px; text-transform:uppercase; margin-top:4px; }
@@ -126,14 +131,44 @@ function pro_head(string $title): void
         .clock-date { font-size:9.5px; color:var(--ink3); margin-top:4px; font-family:'JetBrains Mono',monospace; letter-spacing:.3px; }
 
         .head-right { display:flex; align-items:stretch; gap:6px; flex-wrap:wrap; justify-content:flex-end; }
-        .icon-btn { width:38px; border:1px solid var(--line); border-radius:var(--r-sm); background:var(--bg-elev);
-            color:var(--ink2); cursor:pointer; display:flex; align-items:center; justify-content:center;
-            transition:background .15s ease, border-color .15s ease, color .15s ease; flex-shrink:0; position:relative; text-decoration:none; }
-        .icon-btn:hover { background:var(--bg-sunk); border-color:var(--line2); color:var(--ink); }
+
+        /* Grouped utility icons — one rounded pill container, matching
+           the .icon-toolbar grouping on taskvel-pro.php, instead of each
+           icon being its own separate bordered box. */
+        .icon-toolbar { display:flex; align-items:center; gap:2px; padding:4px; background:var(--bg-elev);
+            border:1px solid var(--line); border-radius:12px; flex-shrink:0; }
+        .icon-toolbar-div { width:1px; height:18px; background:var(--line); margin:0 4px; flex-shrink:0; }
+        .icon-btn { width:34px; height:34px; border:1px solid transparent; border-radius:9px; background:transparent;
+            color:var(--ink3); cursor:pointer; display:flex; align-items:center; justify-content:center;
+            transition:background .18s var(--ease), color .18s var(--ease); flex-shrink:0; position:relative; overflow:hidden; text-decoration:none; }
+        .icon-btn:hover { background:var(--bg-sunk); color:var(--ink); }
+        .icon-btn:active { transform:scale(.96); }
         .tt-icon { font-size:16px; line-height:1; display:block; }
-        .icon-btn.labeled { width:auto; padding:0 12px; gap:6px; font-family:var(--font-display); font-size:12.5px; font-weight:600; }
         .icon-btn .badge-dot { position:absolute; top:6px; right:6px; width:6px; height:6px; border-radius:50%; background:var(--bad); display:none; }
         .icon-btn .badge-dot.show { display:block; }
+
+        /* Premium Explore Features Button — must stay byte-for-byte
+           identical to the .features-btn block in taskvel-pro.php's own
+           <style>, otherwise Explore renders as a plain white pill here
+           instead of the accent gradient pill it is on the main page.
+           NOTE: this block must come AFTER .icon-btn above — the button
+           carries both classes ("icon-btn features-btn"), and CSS gives
+           the later rule priority when specificity is equal. */
+        .features-btn {
+            position: relative; width: auto; min-width: 0; height: 34px; padding: 0 13px;
+            display: inline-flex; align-items: center; justify-content: center; gap: 6px; overflow: hidden;
+            border: 1px solid var(--accent); border-radius: 9px; background: var(--accent); color: var(--on-accent);
+            box-shadow: 0 4px 14px -6px var(--accent-glow); cursor: pointer; text-decoration:none;
+            transition: transform .18s var(--ease), box-shadow .18s var(--ease), background .18s var(--ease);
+        }
+        .features-spark { position: relative; font-size: 12px; line-height: 1; color: var(--on-accent); }
+        .features-label { position: relative; font-size: 10.5px; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; color: var(--on-accent); }
+        .features-btn:hover { transform: translateY(-1px); box-shadow: 0 8px 20px -8px var(--accent-glow); }
+        .features-btn:active { transform: translateY(0) scale(.97); }
+        @media (max-width: 700px) {
+            .features-btn { width: 42px; min-width: 42px; padding: 0; }
+            .features-label { display: none; }
+        }
 
         /* Labeled primary navigation — must stay identical to the
            .main-nav block in taskvel-pro.php's <style>. */
@@ -142,8 +177,28 @@ function pro_head(string $title): void
             padding:8px 14px; border-radius:var(--r-sm); border:1px solid var(--line); background:var(--bg-elev); color:var(--ink2);
             transition:background .15s ease, border-color .15s ease, color .15s ease; }
         .main-nav a:hover { background:var(--bg-sunk); border-color:var(--line2); color:var(--ink); }
-        .main-nav a.active { background:var(--ink); color:var(--bg); border-color:var(--ink); }
-        :root[data-theme="dark"] .main-nav a.active { background:var(--accent); color:var(--on-accent); border-color:var(--accent); }
+        .main-nav a.active { background:var(--accent); color:var(--on-accent); border-color:var(--accent); }
+
+        /* ── Responsive — mirrors taskvel-pro.php's breakpoints exactly,
+           so the header scales the same way on every page. ── */
+        @media (max-width: 380px) {
+            .header { padding:18px 0 6px; }
+            .brand-row { flex-wrap:wrap; }
+            .logo { width:38px; height:38px; font-size:18px; border-radius:10px; }
+            .brand-txt h1 { font-size:20px; }
+            .head-right { gap:7px; }
+            .tt-icon { font-size:16px; }
+            .clock-chip { min-width:0; padding:7px 11px; flex-grow:1; }
+            .clock-time { font-size:16px; }
+        }
+        @media (max-width: 340px) {
+            .brand-txt .tag { display:none; }
+            .clock-date { display:none; }
+        }
+        @media (min-width: 720px) {
+            .header { padding:32px 0 10px; }
+            .brand-txt h1 { font-size:25px; }
+        }
 
         .crumb { font-size:12px; color:var(--ink3); margin:10px 0 6px; }
         .crumb a { color:var(--ink3); text-decoration:none; font-weight:600; }
@@ -212,6 +267,26 @@ function pro_head(string $title): void
         .modal textarea { resize:vertical; min-height:70px; }
         .modal-actions { display:flex; gap:8px; margin-top:8px; }
         .modal-actions .btn { flex:1; justify-content:center; }
+
+        /* ── Global search ── */
+        .gs-modal { width:min(560px,94vw); padding:16px; max-height:74vh; display:flex; flex-direction:column; }
+        .gs-input { width:100%; padding:13px 14px; border:1px solid var(--line2); border-radius:var(--r-sm); font-size:15px;
+            background:var(--bg-sunk); color:var(--ink); margin-bottom:12px; }
+        .gs-input:focus { outline:none; border-color:var(--accent); background:var(--bg-elev); }
+        .gs-results { overflow-y:auto; flex:1; }
+        .gs-hint { font-size:12.5px; color:var(--ink3); padding:16px 6px; text-align:center; }
+        .gs-group { margin-bottom:10px; }
+        .gs-group-title { font-family:var(--font-display); font-size:10px; text-transform:uppercase; letter-spacing:.6px;
+            color:var(--ink3); font-weight:700; padding:4px 8px; }
+        .gs-row { display:flex; align-items:center; gap:9px; padding:9px 8px; border-radius:8px; text-decoration:none;
+            color:var(--ink); transition:background .12s var(--ease); }
+        .gs-row:hover { background:var(--bg-sunk); }
+        .gs-dot { width:7px; height:7px; border-radius:50%; flex-shrink:0; background:var(--ink4); }
+        .gs-dot.todo { background:var(--ink4); }
+        .gs-dot.in_progress { background:var(--warn); }
+        .gs-dot.done { background:var(--good); }
+        .gs-t { flex:1; font-size:13.5px; font-weight:600; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+        .gs-sub { font-size:11px; color:var(--ink3); font-family:var(--font-display); flex-shrink:0; }
         .row2 { display:grid; grid-template-columns:1fr 1fr; gap:10px; }
         @media (max-width:480px) { .row2 { grid-template-columns:1fr; } }
 
@@ -228,6 +303,23 @@ function pro_head(string $title): void
             background:var(--ink); color:var(--bg); font-family:var(--font-display); font-size:13px; font-weight:600;
             padding:11px 18px; border-radius:var(--r-sm); box-shadow:var(--shadow-lg); z-index:200; transition:all .2s var(--ease); }
         .toast.show { transform:translateX(-50%); opacity:1; }
+
+        /* Header gets its own fixed-width shell, deliberately decoupled
+           from each page's .wrap — some pages (My Work's table, the
+           project board) widen .wrap for their content, and if the
+           header lived inside that same element it would get a
+           different amount of room on every page and wrap differently.
+           This keeps the header pixel-identical everywhere regardless
+           of what width a given page's content needs. */
+        .header-shell { max-width:560px; margin:0 auto; }
+        @media (min-width: 720px) { .header-shell { max-width:660px; } }
+        @media (min-width: 980px) { .header-shell { max-width:760px; } }
+
+        /* ═══════ FOOTER — mirrors taskvel-pro.php's .foot block ═══════ */
+        .foot { text-align:center; padding:42px 20px 10px; color:var(--ink3); }
+        .foot .n { font-family:var(--font-body); font-size:16px; font-weight:700; color:var(--accent); letter-spacing:-.3px; }
+        .foot .d { font-size:10px; font-family:'JetBrains Mono',monospace; letter-spacing:2px; margin-top:6px; text-transform:uppercase; }
+        .foot .k { font-size:10px; font-family:'JetBrains Mono',monospace; margin-top:16px; color:var(--ink3); }
     </style>
     <?php
 }
@@ -235,6 +327,7 @@ function pro_head(string $title): void
 function pro_header(array $user, string $active = 'teams', string $crumbHtml = ''): void
 {
     ?>
+    <div class="header-shell">
     <div class="aurora"><span class="a1"></span><span class="a2"></span></div>
     <div class="header">
         <div class="brand-row">
@@ -246,28 +339,32 @@ function pro_header(array $user, string $active = 'teams', string $crumbHtml = '
                 </div>
             </a>
             <div class="head-right">
-                <a class="icon-btn labeled" href="features.php" aria-label="View all features" title="Explore everything Taskvel can do">
-                    <span class="tt-icon">✦</span><span>Explore</span>
+                <a class="icon-btn features-btn" href="features.php" aria-label="View all features" title="Explore everything Taskvel can do">
+                    <span class="features-spark">✦</span>
+                    <span class="features-label">Explore</span>
                 </a>
-                <a class="icon-btn" href="taskvel-pro.php#notif" aria-label="Notifications" title="Notifications">
-                    <span class="tt-icon">◔</span><span class="badge-dot" id="pro-notif-dot"></span>
-                </a>
-                <a class="icon-btn" href="taskvel-pro.php#hist" aria-label="Focus history" title="Focus history">
-                    <span class="tt-icon">▤</span>
-                </a>
-                <a class="icon-btn" href="taskvel-pro.php#export" aria-label="Export" title="Export">
-                    <span class="tt-icon">↓</span>
-                </a>
-                <a class="icon-btn" href="taskvel-pro.php#tmpl" aria-label="Templates" title="Templates">
-                    <span class="tt-icon">▧</span>
-                </a>
-                <a class="icon-btn" href="taskvel-pro.php#palette" aria-label="Choose colour theme" title="Colour theme">
-                    <span class="tt-icon">◑</span>
-                </a>
-                <button class="icon-btn" id="pro-mute-toggle" onclick="proToggleMute()" aria-label="Mute or unmute sounds" title="Mute completion chime">
-                    <span class="tt-icon" id="pro-mute-icon">🔊</span>
-                </button>
-                <button class="icon-btn" onclick="proToggleTheme()" title="Light / dark" aria-label="Toggle light or dark mode"><span class="tt-icon" id="pro-tt">☾</span></button>
+                <div class="icon-toolbar">
+                    <a class="icon-btn" href="taskvel-pro.php#notif" aria-label="Notifications" title="Notifications">
+                        <span class="tt-icon">◔</span><span class="badge-dot" id="pro-notif-dot"></span>
+                    </a>
+                    <a class="icon-btn" href="taskvel-pro.php#hist" aria-label="Focus history" title="Focus history">
+                        <span class="tt-icon">▤</span>
+                    </a>
+                    <a class="icon-btn" href="taskvel-pro.php#export" aria-label="Export" title="Export">
+                        <span class="tt-icon">↓</span>
+                    </a>
+                    <a class="icon-btn" href="taskvel-pro.php#tmpl" aria-label="Templates" title="Templates">
+                        <span class="tt-icon">▧</span>
+                    </a>
+                    <span class="icon-toolbar-div"></span>
+                    <a class="icon-btn" href="taskvel-pro.php#palette" aria-label="Choose colour theme" title="Colour theme">
+                        <span class="tt-icon">◑</span>
+                    </a>
+                    <button class="icon-btn" id="pro-mute-toggle" onclick="proToggleMute()" aria-label="Mute or unmute sounds" title="Mute completion chime">
+                        <span class="tt-icon" id="pro-mute-icon">🔊</span>
+                    </button>
+                    <button class="icon-btn" onclick="proToggleTheme()" title="Light / dark" aria-label="Toggle light or dark mode"><span class="tt-icon" id="pro-tt">☾</span></button>
+                </div>
                 <div class="clock-chip">
                     <div class="clock-time" id="pro-clock"><span>--:--</span><span class="sec">:--</span></div>
                     <div class="clock-date" id="pro-clock-date">—</div>
@@ -276,13 +373,25 @@ function pro_header(array $user, string $active = 'teams', string $crumbHtml = '
         </div>
         <div class="main-nav">
             <a href="taskvel-pro.php" class="<?= $active === 'tasks' ? 'active' : '' ?>">✓ My Tasks</a>
+            <a href="my-work.php" class="<?= $active === 'mywork' ? 'active' : '' ?>">🗂 My Work</a>
             <a href="teams.php" class="<?= $active === 'teams' ? 'active' : '' ?>">👥 Teams</a>
             <a href="checkin.php" class="<?= $active === 'checkin' ? 'active' : '' ?>">📍 Check-in</a>
             <a href="billing.php" class="<?= $active === 'billing' ? 'active' : '' ?>">💳 Billing</a>
         </div>
     </div>
+    </div>
     <?php if ($crumbHtml !== ''): ?><div class="crumb"><?= $crumbHtml ?></div><?php endif; ?>
     <div class="toast" id="pro-toast"></div>
+
+    <!-- Global search -->
+    <div class="modal-overlay" id="gs-overlay" onclick="if(event.target===this)closeGlobalSearch()">
+        <div class="modal gs-modal">
+            <input type="text" id="gs-input" class="gs-input" placeholder="Search tasks, projects, teams…" autocomplete="off"
+                oninput="gsDebouncedSearch()" onkeydown="if(event.key==='Escape')closeGlobalSearch()" />
+            <div id="gs-results" class="gs-results"><div class="gs-hint">Type at least 2 characters — searches your personal tasks, project tasks, team tasks, projects, and teams.</div></div>
+        </div>
+    </div>
+
     <script>
         function proToggleTheme() {
             var next = document.documentElement.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
@@ -326,6 +435,66 @@ function pro_header(array $user, string $active = 'teams', string $crumbHtml = '
         }
         proTickClock();
         setInterval(proTickClock, 1000);
+
+        // ═══════════════════════ GLOBAL SEARCH ═══════════════════════
+        let gsTimer = null;
+        function openGlobalSearch() {
+            document.getElementById('gs-overlay').classList.add('open');
+            const inp = document.getElementById('gs-input');
+            inp.value = '';
+            document.getElementById('gs-results').innerHTML = '<div class="gs-hint">Type at least 2 characters — searches your personal tasks, project tasks, team tasks, projects, and teams.</div>';
+            setTimeout(() => inp.focus(), 50);
+        }
+        function closeGlobalSearch() {
+            document.getElementById('gs-overlay').classList.remove('open');
+        }
+        function gsDebouncedSearch() {
+            clearTimeout(gsTimer);
+            gsTimer = setTimeout(gsRunSearch, 220);
+        }
+        function gsEsc(s) { return (s || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+        async function gsRunSearch() {
+            const q = document.getElementById('gs-input').value.trim();
+            const results = document.getElementById('gs-results');
+            if (q.length < 2) {
+                results.innerHTML = '<div class="gs-hint">Type at least 2 characters — searches your personal tasks, project tasks, team tasks, projects, and teams.</div>';
+                return;
+            }
+            results.innerHTML = '<div class="gs-hint">Searching…</div>';
+            try {
+                const res = await fetch('api/search.php?q=' + encodeURIComponent(q), { credentials: 'same-origin' });
+                const data = await res.json();
+                renderGlobalSearch(data, q);
+            } catch (e) {
+                results.innerHTML = '<div class="gs-hint">Search failed — try again.</div>';
+            }
+        }
+        function gsGroup(title, items, renderRow) {
+            if (!items || !items.length) return '';
+            return `<div class="gs-group"><div class="gs-group-title">${title}</div>${items.map(renderRow).join('')}</div>`;
+        }
+        function renderGlobalSearch(data, q) {
+            const results = document.getElementById('gs-results');
+            const statusDot = s => `<span class="gs-dot ${s}"></span>`;
+            const html =
+                gsGroup('Personal tasks', data.personal_tasks, t =>
+                    `<a class="gs-row" href="taskvel-pro.php">${statusDot(t.status)}<span class="gs-t">${gsEsc(t.title)}</span><span class="gs-sub">Personal</span></a>`) +
+                gsGroup('Project tasks', data.project_tasks, t =>
+                    `<a class="gs-row" href="project.php?id=${t.project_id}">${statusDot(t.status)}<span class="gs-t">${gsEsc(t.title)}</span><span class="gs-sub">${gsEsc(t.project_name)}</span></a>`) +
+                gsGroup('Team tasks', data.team_tasks, t =>
+                    `<a class="gs-row" href="team.php?id=${t.team_id}">${statusDot(t.status)}<span class="gs-t">${gsEsc(t.title)}</span><span class="gs-sub">${gsEsc(t.team_name)}</span></a>`) +
+                gsGroup('Projects', data.projects, p =>
+                    `<a class="gs-row" href="project.php?id=${p.id}"><span class="gs-dot" style="background:${p.color || '#4f46e5'}"></span><span class="gs-t">${gsEsc(p.name)}</span><span class="gs-sub">${gsEsc(p.team_name)}</span></a>`) +
+                gsGroup('Teams', data.teams, t =>
+                    `<a class="gs-row" href="team.php?id=${t.id}"><span class="gs-dot" style="background:var(--accent)"></span><span class="gs-t">${gsEsc(t.name)}</span><span class="gs-sub">${gsEsc(t.role)}</span></a>`);
+            results.innerHTML = html || `<div class="gs-hint">No results for "${gsEsc(q)}".</div>`;
+        }
+        document.addEventListener('keydown', function(e) {
+            if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'k') {
+                e.preventDefault();
+                openGlobalSearch();
+            }
+        });
     </script>
     <?php
 }

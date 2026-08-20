@@ -27,6 +27,7 @@ $user = current_user();
     <div class="sub" id="team-limit-note" style="margin-top:8px"></div>
 
     <div class="card-list" id="team-list" style="margin-top:22px"></div>
+    <?php pro_footer($user); ?>
 </div>
 
 <div class="modal-overlay" id="ct-overlay" onclick="if(event.target===this)closeCreateTeam()">

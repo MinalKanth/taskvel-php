@@ -127,6 +127,7 @@ $user = current_user();
         <button class="btn danger" id="checkout-btn" onclick="checkOut()">🚪 Check out for the day</button>
     </div>
     <div id="summary-area"></div>
+    <?php pro_footer($user); ?>
 </div>
 
 <script src="js/api-client.js?v=2"></script>

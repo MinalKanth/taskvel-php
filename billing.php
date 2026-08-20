@@ -38,6 +38,7 @@ $user = current_user();
 
     <div id="plan-section" style="margin-top:20px"></div>
     <div id="org-section" style="margin-top:20px"></div>
+    <?php pro_footer($user); ?>
 </div>
 
 <!-- Create organization modal -->

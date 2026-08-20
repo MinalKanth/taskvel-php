@@ -26,6 +26,7 @@
 [Overview](#-overview) •
 [Features](#-features) •
 [Team Tasks & Progress Updates](#-team-tasks--progress-updates) •
+[Global Search & My Work](#-global-search--my-work) •
 [Billing & Enterprise Licensing](#-billing--enterprise-licensing) •
 [Every Function, Explained](#-every-function-explained) •
 [Tech Stack](#-tech-stack) •
@@ -147,6 +148,7 @@ Flip a switch and Taskvel becomes a **real collaborative project tool**:
 | 🎚️ Three-tier permissions | Owner → full control · Manager → create/edit/assign/delete · Member → owns assigned work |
 | 📁 Multiple projects per team | Marketing, Engineering, Ops — as many boards as you need |
 | 🗂️ Kanban flow | A clean Todo → In Progress → Done board everyone instantly understands |
+| 📋 Board / List views | Toggle any project between the Kanban board and a sortable, filterable table view — search by title, filter by status/assignee/priority, sort any column, click through to the same task detail either way |
 | 🎯 Intentional assignment | Managers delegate to anyone; members can self-assign |
 | ✅ Direct Team Tasks | Assign a task straight to a teammate — due date, priority, status, and progress % — without needing to create a Project first (see [Team Tasks & Progress Updates](#-team-tasks--progress-updates)) |
 | 📊 Per-person progress strip | See exactly who's completed what, at a glance |
@@ -164,6 +166,20 @@ A lighter-weight sibling to full Projects, for the common case of *"just assign 
 - **Update Progress** — the assignee (or a manager) posts a status + percentage-complete update with optional notes and file attachments
 - **Full history timeline** per task — every update is kept, not just the latest state, with who posted it, what changed, and any attached files
 - **Email the "senior"** — the task's creator (and the team owner, if different) get notified by email when progress is posted, in addition to the in-app notification; recipients can turn the email off from Billing & Plan without losing in-app alerts
+
+### 🔍 Global Search & 🗂️ My Work
+
+Two things every team member needs the moment work is spread across more than one project: a way to *find* anything without remembering where it lives, and a single place to see *everything assigned to you* without checking five different pages.
+
+| Capability | Description |
+|---|---|
+| ⌘K / Ctrl+K global search | Available from every page in the app (header search icon or the keyboard shortcut) — searches your personal tasks, every project task and team task across every team you belong to, plus projects and teams by name, all in one debounced, instant panel |
+| 🗂️ My Work — unified task feed | One page (`my-work.php`) that merges personal tasks, project tasks, and team tasks assigned to you into a single list, bucketed the way you'd expect: **Overdue → Due today → Upcoming (7 days) → Later → No due date** |
+| ✅ One-click complete from My Work | Mark anything done directly from the unified feed — updates the task in its native system (personal/project/team) immediately, with optimistic UI |
+| 🔎 Filter & search within My Work | Free-text search, filter by source (Personal / Projects / Team tasks), and a show/hide-completed toggle |
+| 📋 List/Table view for project boards | Any project can be viewed as a sortable, filterable table instead of the Kanban board — same task data, click any column to sort, filter by status/assignee/priority, persisted per-browser so it remembers your last choice |
+
+None of this requires a new database migration — search and My Work read from the same `tasks`, `project_tasks`, and `team_tasks` tables everything else already uses, scoped by your existing team memberships.
 
 ### 📍 Daily Check-in *(optional "office mode")*
 

@@ -1,8 +1,22 @@
 <?php
+// require_once __DIR__ . '/../config/db.php';
+// require_once __DIR__ . '/../PHPMailer-master/src/Exception.php';
+// require_once __DIR__ . '/../PHPMailer-master/src/PHPMailer.php';
+// require_once __DIR__ . '/../PHPMailer-master/src/SMTP.php';
+
+
 require_once __DIR__ . '/../config/db.php';
-require_once __DIR__ . '/../PHPMailer-master/src/Exception.php';
-require_once __DIR__ . '/../PHPMailer-master/src/PHPMailer.php';
-require_once __DIR__ . '/../PHPMailer-master/src/SMTP.php';
+
+$__phpmailerDir = __DIR__ . '/../PHPMailer-master/src';
+$__hasPhpMailer = is_file($__phpmailerDir . '/Exception.php')
+    && is_file($__phpmailerDir . '/PHPMailer.php')
+    && is_file($__phpmailerDir . '/SMTP.php');
+if ($__hasPhpMailer) {
+    require_once $__phpmailerDir . '/Exception.php';
+    require_once $__phpmailerDir . '/PHPMailer.php';
+    require_once $__phpmailerDir . '/SMTP.php';
+}
+
 /**
  * Sends an HTML email.
  * If SMTP_HOST is set, uses a minimal raw SMTP client (no libraries needed).
@@ -13,9 +27,11 @@ require_once __DIR__ . '/../PHPMailer-master/src/SMTP.php';
  * and replacing the body of this function with PHPMailer's send() call —
  * the function signature below can stay identical so nothing else changes.
  */
+// NEW:
 function send_mail(string $to, string $subject, string $htmlBody): bool
 {
-    if (SMTP_HOST === '') {
+    global $__hasPhpMailer;
+    if (SMTP_HOST === '' || !$__hasPhpMailer) {
         $headers = "MIME-Version: 1.0\r\n";
         $headers .= "Content-type: text/html; charset=UTF-8\r\n";
         $headers .= 'From: ' . SMTP_FROM_NAME . ' <' . SMTP_FROM . ">\r\n";

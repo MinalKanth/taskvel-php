@@ -43,7 +43,8 @@ switch ("$method:$action") {
         $base = APP_BASE_URL ?: ((!empty($_SERVER['HTTPS']) ? 'https://' : 'http://') . ($_SERVER['HTTP_HOST'] ?? ''));
         try {
             $url = create_stripe_checkout_session(
-                [['price' => STRIPE_PRICE_PRO, 'quantity' => 1]],
+                // NEW:
+[['amount' => STRIPE_PRICE_PRO, 'product_name' => 'Taskvel Pro', 'interval' => 'month', 'quantity' => 1]],
                 'subscription',
                 "user:$uid",
                 "$base/billing.php?checkout=success",
@@ -71,7 +72,8 @@ switch ("$method:$action") {
         $base = APP_BASE_URL ?: ((!empty($_SERVER['HTTPS']) ? 'https://' : 'http://') . ($_SERVER['HTTP_HOST'] ?? ''));
         try {
             $url = create_stripe_checkout_session(
-                [['price' => $price, 'quantity' => $seats]],
+                // NEW:
+[['amount' => $price, 'product_name' => 'Taskvel Pro — Organization seat', 'interval' => $cycle === 'yearly' ? 'year' : 'month', 'quantity' => $seats]],
                 'subscription',
                 // Seat count is encoded here (not just "org:$orgId") so the
                 // webhook can apply the exact quantity purchased without a

@@ -4292,6 +4292,7 @@ $user = current_user();
 
             <div class="main-nav">
                 <a href="taskvel-pro.php" class="active">✓ My Tasks</a>
+                <a href="my-work.php">🗂 My Work</a>
                 <a href="teams.php">👥 Teams</a>
                 <a href="checkin.php">📍 Check-in</a>
                 <a href="billing.php">💳 Billing</a>
@@ -4659,6 +4660,8 @@ $user = current_user();
             </div>
         </div>
         <div class="fg"><label>Deadline (optional — auto-escalates)</label><input type="date" id="f-deadline" /></div>
+        <div class="fg"><label>Time estimate (optional, minutes)</label><input type="number" id="f-estimate" min="0" placeholder="e.g. 45" /></div>
+        <div class="fg"><label style="display:flex;align-items:center;gap:8px;cursor:pointer" onclick="document.getElementById('f-milestone').click()"><input type="checkbox" id="f-milestone" style="width:auto;margin:0" /> Mark as milestone (Launch Day, review, etc.)</label></div>
         <div class="fg"><label>Repeats</label>
             <div class="opts recur-row">
                 <button class="opt sel" onclick="pick(this,'recur','none')">Never</button>
@@ -4708,6 +4711,8 @@ $user = current_user();
             </div>
         </div>
         <div class="fg"><label>Deadline</label><input type="date" id="e-deadline" /></div>
+        <div class="fg"><label>Time estimate (minutes)</label><input type="number" id="e-estimate" min="0" placeholder="e.g. 45" /></div>
+        <div class="fg"><label style="display:flex;align-items:center;gap:8px;cursor:pointer" onclick="document.getElementById('e-milestone').click()"><input type="checkbox" id="e-milestone" style="width:auto;margin:0" /> Mark as milestone</label></div>
         <div class="fg"><label>Repeats</label>
             <div class="opts recur-row">
                 <button class="opt" onclick="pickE(this,'recur','none')">Never</button>
@@ -4734,6 +4739,11 @@ $user = current_user();
                     oninput="searchBlockCandidates(this.value)" /></div>
             <div class="block-results" id="e-block-results"></div>
             <div class="tag-pills-edit" id="e-blocked-pills"></div>
+        </div>
+        <div class="fg"><label>Custom fields</label>
+            <div class="sub" style="margin:0 0 8px">Add anything specific — Client, Budget, Story Points…</div>
+            <div class="tag-input-row"><input type="text" id="e-field-key" placeholder="Field name" style="flex:1" /><input type="text" id="e-field-val" placeholder="Value" style="flex:1" /><button class="tag-add-btn" onclick="addCustomField()">Add</button></div>
+            <div class="tag-pills-edit" id="e-fields"></div>
         </div>
         <div class="fg"><label>Steps</label>
             <div id="e-steps"></div>
@@ -5408,6 +5418,13 @@ $user = current_user();
             timeSpent: t.timeSpent || 0,
             timeTrackingStarted: t.timeTrackingStarted || null,
             updatedAt: t.updatedAt || Date.now(),
+            blockedBy: t.blockedBy || [],
+            activity: t.activity || [],
+            status: t.status || 'todo',
+            estimateMins: t.estimateMins || 0,
+            isMilestone: !!t.isMilestone,
+            parentId: t.parentId || null,
+            fields: t.fields || [],
         };
     }
     async function upsertTaskOnServer(t) {
@@ -5827,6 +5844,14 @@ $user = current_user();
         return (s || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;')
     }
 
+    // Highlights @name mentions in remark text — purely visual (no user directory
+    // lookup needed since Taskvel Pro is single-account today), escapes first so
+    // this is still safe against HTML injection.
+    function highlightMentions(s) {
+        return esc(s).replace(/@([A-Za-z0-9_.]{2,30})/g,
+            '<span style="color:var(--accent);font-weight:700">@$1</span>');
+    }
+
     // ── Colour-coded progress: red = danger (urgent + behind), yellow = caution, green = on track ──
     function progressClass(t) {
         const pct = t.steps.length ? (t.steps.filter(s => s.done).length / t.steps.length * 100) : (t.done ? 100 : 0);
@@ -5947,6 +5972,92 @@ $user = current_user();
                     <div class="act-meta">${esc(e.who || 'You')} · ${fmt(new Date(e.ts).toISOString())}</div>
                 </div>
             </div>`).join('');
+    }
+
+    // ════════════════════════════════════════════
+    // CUSTOM FIELDS — free-form key/value pairs per task (Client, Budget, Story Points…)
+    // ════════════════════════════════════════════
+    let editCustomFields = [];
+
+    function addCustomField() {
+        const kEl = document.getElementById('e-field-key');
+        const vEl = document.getElementById('e-field-val');
+        const k = kEl.value.trim();
+        const v = vEl.value.trim();
+        if (!k) {
+            toast('Enter a field name first');
+            return;
+        }
+        editCustomFields = editCustomFields.filter(f => f.key.toLowerCase() !== k.toLowerCase());
+        editCustomFields.push({ key: k, value: v });
+        kEl.value = '';
+        vEl.value = '';
+        renderCustomFields();
+    }
+
+    function removeCustomField(i) {
+        editCustomFields.splice(i, 1);
+        renderCustomFields();
+    }
+
+    function renderCustomFields() {
+        const box = document.getElementById('e-fields');
+        if (!box) return;
+        box.innerHTML = editCustomFields.map((f, i) =>
+            `<span class="tagpill-x">${esc(f.key)}: ${esc(f.value)}<button onclick="removeCustomField(${i})" aria-label="Remove field">✕</button></span>`
+        ).join('');
+    }
+
+    // ════════════════════════════════════════════
+    // SUBTASK → TASK PROMOTION — turns one checklist step into its own
+    // full task (own deadline, priority, activity log), linked back to the
+    // parent via parentId, and removes it from the parent's checklist.
+    // ════════════════════════════════════════════
+    function promoteStepToTask(i) {
+        const t = tasks.find(t => t.id === editingId);
+        if (!t) return;
+        const inputEl = document.getElementById('est-' + i);
+        const text = inputEl ? inputEl.value.trim() : (t.steps[i] && t.steps[i].text);
+        if (!text) {
+            toast('Step is empty');
+            return;
+        }
+        if (!confirm(`Promote "${text}" to its own task?`)) return;
+
+        const child = {
+            id: Date.now(),
+            name: text,
+            person: t.person || '',
+            collab: '',
+            urgency: 'medium',
+            damage: 'moderate',
+            rank: 'medium',
+            score: score('medium', 'moderate'),
+            deadline: null,
+            recur: 'none',
+            tags: (t.tags || []).slice(),
+            links: [],
+            pinned: false,
+            selectedForToday: false,
+            steps: [],
+            done: false,
+            addedOn: new Date().toISOString(),
+            order: Date.now(),
+            updatedAt: Date.now(),
+            parentId: t.id,
+            activity: [{ ts: Date.now(), who: TV_UNAME, text: `Promoted from a step in "${t.name}"` }]
+        };
+        tasks.push(child);
+        upsertTaskOnServer(child);
+
+        rmEStep(i);
+        logTaskActivity(t, `Promoted step "${text}" to its own task`);
+        touch(t);
+        save();
+        upsertTaskOnServer(t);
+        render();
+        renderTabs();
+        toast('Step promoted to a new task ✓');
     }
 
     // ════════════════════════════════════════════
@@ -6789,7 +6900,7 @@ $user = current_user();
         const prog = (t.steps.length || t.done) ? `<div class="prog ${pcls}"><i style="width:${pct}%"></i></div>` : '';
         const tr = remarks.filter(r => r.taskId == t.id);
         const rmk = tr.length ?
-            `<div class="card-rmk">${tr.map(r => `<div class="rmk-item"><div><div class="t">${esc(r.text)}</div><div class="d">${fmt(r.createdAt)}</div></div><button class="rmk-x" onclick="delRemark(${r.id})">✕</button></div>`).join('')}</div>` :
+            `<div class="card-rmk">${tr.map(r => `<div class="rmk-item"><div><div class="t">${highlightMentions(r.text)}</div><div class="d">${fmt(r.createdAt)}</div></div><button class="rmk-x" onclick="delRemark(${r.id})">✕</button></div>`).join('')}</div>` :
             '';
         const tagsHtml = (t.tags || []).length ?
             `<div class="tag-row">${t.tags.map(tg => `<span class="tagpill">#${esc(tg)}</span>`).join('')}</div>` : '';
@@ -6799,6 +6910,18 @@ $user = current_user();
         const recurHtml = (t.recur && t.recur !== 'none') ? `<span class="recur-badge">↻ ${t.recur}</span>` : '';
         const collabHtml = t.collab ? `<span class="collab-badge">⟐ ${esc(t.collab)}</span>` : '';
         const timeHtml = t.timeSpent ? `<span class="dl dl-safe">⏱ ${formatTime(t.timeSpent)}</span>` : '';
+        const estHtml = t.estimateMins ? (() => {
+            const actualMins = Math.round((t.timeSpent || 0) / 60000);
+            const over = actualMins > t.estimateMins;
+            return `<span class="dl ${over ? 'dl-overdue' : 'dl-safe'}">◷ ${actualMins}m / ${t.estimateMins}m est</span>`;
+        })() : '';
+        const milestoneHtml = t.isMilestone ? `<span class="badge" style="background:rgba(163,129,31,.14);color:#a3811f;border-color:transparent">◈ Milestone</span>` : '';
+        const fieldsHtml = (t.fields || []).length ?
+            `<div class="tag-row">${t.fields.map(f => `<span class="tagpill" style="background:var(--bg-sunk);color:var(--ink2);border-color:var(--line)">${esc(f.key)}: ${esc(f.value)}</span>`).join('')}</div>` : '';
+        const parentHtml = t.parentId ? (() => {
+            const p = tasks.find(x => x.id === t.parentId);
+            return p ? `<div style="font-size:10.5px;color:var(--ink3);margin-bottom:6px">↖ from "${esc(p.name)}"</div>` : '';
+        })() : '';
         const blockers = getBlockers(t);
         const blockedHtml = blockers.length ?
             `<div class="blocked-banner">⛔ Blocked by <span class="bb-names">${blockers.map(b => esc(b.name)).join(', ')}</span></div>` : '';
@@ -6808,15 +6931,17 @@ $user = current_user();
                 <div class="card-top">
                     <div class="card-top-left">
                         <span class="drag-handle" title="Drag to reorder" aria-hidden="true">⠿</span>
-                        <div class="badges"><span class="badge ${rankCls[er]}"><span class="pri-dot"></span>${rankLabel[er]}</span>${dlPill(t)}${recurHtml}${collabHtml}${timeHtml}</div>
+                        <div class="badges"><span class="badge ${rankCls[er]}"><span class="pri-dot"></span>${rankLabel[er]}</span>${milestoneHtml}${dlPill(t)}${recurHtml}${collabHtml}${timeHtml}${estHtml}</div>
                     </div>
                     <button class="pin-btn ${t.pinned ? 'pinned' : ''}" onclick="${bulkMode ? `toggleBulkSelect(${t.id})` : `togglePin(${t.id})`}" oncontextmenu="event.preventDefault(); ${bulkMode ? `toggleBulkSelect(${t.id})` : `enterBulkMode(${t.id})`}" title="${bulkMode ? 'Select' : 'Pin (right-click to multi-select)'}">${bulkMode ? (bulkSelected.has(t.id) ? '☑' : '☐') : (t.pinned ? '★' : '☆')}</button>
                 </div>
                 ${wasEsc(t) ? `<div class="escalated">↑ Auto-escalated from ${t.rank} · deadline pressure</div>` : ''}
                 ${blockedHtml}
+                ${parentHtml}
                 <div class="task-name ${t.done ? 'struck' : ''}">${esc(t.name)}</div>
                 <div class="task-meta">${t.person ? `<span>◴ ${esc(t.person)}</span>` : ''}${t.steps.length ? `<span>✓ ${doneS}/${t.steps.length} steps</span>` : ''}<span>↯ score ${t.score}</span></div>
                 ${tagsHtml}
+                ${fieldsHtml}
                 ${linksHtml}
                 ${prog}${steps}${rmk}
                 <div class="actions">
@@ -6966,7 +7091,9 @@ $user = current_user();
             const items = byDay.get(key) || [];
             const isToday = key === tKey;
             const isSel = key === calSelectedDay;
-            const dots = items.slice(0, 4).map(t => `<span class="pri-dot ${rankCls[effRank(t)]}-c"></span>`).join('');
+            const dots = items.slice(0, 4).map(t => t.isMilestone
+                ? `<span class="pri-dot" style="border-radius:2px;transform:rotate(45deg);background:#a3811f"></span>`
+                : `<span class="pri-dot ${rankCls[effRank(t)]}-c"></span>`).join('');
             const more = items.length > 4 ? `<span class="cal-more">+${items.length - 4}</span>` : '';
             cells += `<div class="cal-cell ${isToday ? 'today' : ''} ${isSel ? 'selected' : ''}" onclick="calSelectDay('${key}')">
                 <span class="cal-daynum">${d}</span>
@@ -7335,6 +7462,7 @@ $user = current_user();
                 if (t.blockedBy && t.blockedBy.includes(id)) {
                     t.blockedBy = t.blockedBy.filter(x => x !== id);
                 }
+                if (t.parentId === id) t.parentId = null;
             });
             remarks = remarks.filter(r => r.taskId !== id);
             save();
@@ -7384,6 +7512,7 @@ $user = current_user();
             order: Date.now(),
             updatedAt: Date.now(),
             steps: (t.steps || []).map(s => ({ ...s, done: false })),
+            parentId: null,
             activity: [{ ts: Date.now(), who: TV_UNAME, text: `Duplicated from "${t.name}"` }]
         };
         tasks.push(clone);
@@ -7464,8 +7593,9 @@ $user = current_user();
     }
 
     function resetAddForm() {
-        ['f-name', 'f-person', 'f-collab', 'f-s1', 'f-s2', 'f-s3', 'f-deadline', 'f-tag-input'].forEach(i => document
+        ['f-name', 'f-person', 'f-collab', 'f-s1', 'f-s2', 'f-s3', 'f-deadline', 'f-tag-input', 'f-estimate'].forEach(i => document
             .getElementById(i).value = '');
+        document.getElementById('f-milestone').checked = false;
         document.querySelectorAll('#sheet .opt').forEach(b => b.classList.remove('sel'));
         sel.urg = null;
         sel.dmg = null;
@@ -7581,6 +7711,8 @@ $user = current_user();
                 rank: rank(sc),
                 score: sc,
                 deadline: document.getElementById('f-deadline').value || null,
+                estimateMins: parseInt(document.getElementById('f-estimate').value) || 0,
+                isMilestone: document.getElementById('f-milestone').checked,
                 recur: sel.recur || 'none',
                 tags: formTags.slice(),
                 links: [],
@@ -7623,6 +7755,10 @@ $user = current_user();
         document.getElementById('e-person').value = t.person || '';
         document.getElementById('e-collab').value = t.collab || '';
         document.getElementById('e-deadline').value = t.deadline || '';
+        document.getElementById('e-estimate').value = t.estimateMins || '';
+        document.getElementById('e-milestone').checked = !!t.isMilestone;
+        editCustomFields = (t.fields || []).slice();
+        renderCustomFields();
         editSel.urg = t.urgency;
         editSel.dmg = t.damage;
         editSel.recur = t.recur || 'none';
@@ -7652,6 +7788,7 @@ $user = current_user();
             `<div class="estep" id="es-${i}">
                                     <input type="text" id="est-${i}" value="${esc(s.text)}" placeholder="Step ${i+1}"/>
                                     <input type="url" id="esl-${i}" value="${esc(s.link || '')}" placeholder="Link"/>
+                                    <button onclick="promoteStepToTask(${i})" title="Promote to its own task">↗</button>
                                     <button onclick="rmEStep(${i})">✕</button>
                                 </div>`
         ).join('');
@@ -7666,7 +7803,7 @@ $user = current_user();
         d.className = 'estep';
         d.id = 'es-' + i;
         d.innerHTML =
-            `<input type="text" id="est-${i}" placeholder="Step ${i + 1}"/><input type="url" id="esl-${i}" placeholder="Link"/><button onclick="rmEStep(${i})">✕</button>`;
+            `<input type="text" id="est-${i}" placeholder="Step ${i + 1}"/><input type="url" id="esl-${i}" placeholder="Link"/><button onclick="promoteStepToTask(${i})" title="Promote to its own task">↗</button><button onclick="rmEStep(${i})">✕</button>`;
         c.appendChild(d);
     }
 
@@ -7679,8 +7816,9 @@ $user = current_user();
             const inputs = row.querySelectorAll('input');
             if (inputs[0]) inputs[0].id = 'est-' + n;
             if (inputs[1]) inputs[1].id = 'esl-' + n;
-            const b = row.querySelector('button');
-            if (b) b.setAttribute('onclick', `rmEStep(${n})`);
+            const buttons = row.querySelectorAll('button');
+            if (buttons[0]) buttons[0].setAttribute('onclick', `promoteStepToTask(${n})`);
+            if (buttons[1]) buttons[1].setAttribute('onclick', `rmEStep(${n})`);
         });
     }
 
@@ -7719,6 +7857,9 @@ $user = current_user();
         t.person = document.getElementById('e-person').value.trim();
         t.collab = document.getElementById('e-collab').value.trim();
         t.deadline = document.getElementById('e-deadline').value || null;
+        t.estimateMins = parseInt(document.getElementById('e-estimate').value) || 0;
+        t.isMilestone = document.getElementById('e-milestone').checked;
+        t.fields = editCustomFields.slice();
         if (editSel.urg) t.urgency = editSel.urg;
         if (editSel.dmg) t.damage = editSel.dmg;
         t.recur = editSel.recur || 'none';
@@ -7839,7 +7980,7 @@ $user = current_user();
                 minute: '2-digit'
             });
             return `<div class="rmk-card" style="animation-delay:${i * 40}ms">${r.taskName ? `<div class="rmk-link">› ${esc(r.taskName)}</div>` : '<span class="rmk-gen">General</span>'}
-                                <div class="rmk-body">${esc(r.text)}</div><div class="rmk-time">${ds}</div>
+                                <div class="rmk-body">${highlightMentions(r.text)}</div><div class="rmk-time">${ds}</div>
                                 <div class="actions" style="margin-top:10px"><button class="act del" onclick="delRemark(${r.id})">× Delete</button></div></div>`;
         }).join('');
     }

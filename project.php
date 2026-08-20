@@ -120,6 +120,39 @@ $isManager = ($role === 'owner' || $role === 'manager');
     .comments { margin-top:0; }
     .comment { font-size:12.5px; margin-bottom:8px; padding:9px 11px; background:var(--bg-sunk); border-radius:9px; }
     .comment b { font-family:var(--font-display); font-size:11.5px; }
+
+    /* ── View toggle (Board / List) ── */
+    .view-toggle { display:flex; gap:2px; padding:3px; background:var(--bg-elev); border:1px solid var(--line); border-radius:10px; }
+    .vt-btn { border:none; background:transparent; color:var(--ink3); font-family:var(--font-display); font-size:12.5px; font-weight:600;
+        padding:6px 12px; border-radius:7px; cursor:pointer; transition:background .15s var(--ease), color .15s var(--ease); }
+    .vt-btn:hover { color:var(--ink); }
+    .vt-btn.active { background:var(--accent); color:var(--on-accent); }
+
+    /* ── List / table view ── */
+    .list-toolbar { display:flex; gap:8px; flex-wrap:wrap; align-items:center; margin-bottom:14px; }
+    .list-toolbar input[type="text"] { flex:1; min-width:160px; }
+    .list-toolbar select { min-width:120px; }
+    .list-table-wrap { background:var(--bg-elev); border:1px solid var(--line); border-radius:var(--r); overflow:hidden; overflow-x:auto; }
+    table.list-table { width:100%; border-collapse:collapse; font-size:13px; min-width:760px; }
+    table.list-table th { text-align:left; font-family:var(--font-display); font-size:10.5px; text-transform:uppercase; letter-spacing:.5px;
+        color:var(--ink3); font-weight:700; padding:11px 14px; background:var(--bg-sunk); border-bottom:1px solid var(--line);
+        cursor:pointer; user-select:none; white-space:nowrap; }
+    table.list-table th:hover { color:var(--ink); }
+    table.list-table th .sort-arrow { opacity:.4; margin-left:3px; font-size:9px; }
+    table.list-table th.sorted .sort-arrow { opacity:1; color:var(--accent); }
+    table.list-table td { padding:10px 14px; border-bottom:1px solid var(--line); vertical-align:middle; }
+    table.list-table tbody tr { cursor:pointer; transition:background .12s var(--ease); }
+    table.list-table tbody tr:hover { background:var(--bg-sunk); }
+    table.list-table tbody tr:last-child td { border-bottom:none; }
+    .lt-title { font-weight:700; display:flex; align-items:center; gap:7px; }
+    .lt-status-dot { width:8px; height:8px; border-radius:50%; flex-shrink:0; }
+    .lt-status-dot.todo { background:var(--ink4); }
+    .lt-status-dot.in_progress { background:var(--warn); }
+    .lt-status-dot.done { background:var(--good); }
+    .lt-assignee { display:flex; align-items:center; gap:7px; font-size:12.5px; color:var(--ink2); }
+    .lt-empty { text-align:center; color:var(--ink3); font-size:13px; padding:40px 20px; }
+    .lt-labels { display:flex; flex-wrap:wrap; gap:4px; }
+    .list-count { font-size:11.5px; color:var(--ink3); font-family:var(--font-display); margin-bottom:10px; }
 </style>
 </head>
 <body>
@@ -134,6 +167,10 @@ $isManager = ($role === 'owner' || $role === 'manager');
             <div class="sub" id="proj-desc" style="margin-bottom:0"></div>
         </div>
         <div class="actions">
+            <div class="view-toggle" id="view-toggle">
+                <button class="vt-btn active" id="vt-board" onclick="switchProjectView('board')">▥ Board</button>
+                <button class="vt-btn" id="vt-list" onclick="switchProjectView('list')">☰ List</button>
+            </div>
             <button class="btn ghost" onclick="openManageLabels()">🏷 Labels</button>
             <button class="btn" onclick="openCreateTask()">+ Add task</button>
         </div>
@@ -141,10 +178,49 @@ $isManager = ($role === 'owner' || $role === 'manager');
 
     <div class="summary-strip" id="summary-strip"></div>
 
-    <div class="board">
+    <div class="board" id="board-view">
         <div class="col"><h3>To do <span id="cnt-todo">0</span></h3><div id="col-todo"></div></div>
         <div class="col"><h3>In progress <span id="cnt-in_progress">0</span></h3><div id="col-in_progress"></div></div>
         <div class="col"><h3>Done <span id="cnt-done">0</span></h3><div id="col-done"></div></div>
+    </div>
+
+    <div id="list-view" style="display:none">
+        <div class="list-toolbar">
+            <input type="text" id="lt-search" placeholder="Search tasks…" oninput="renderListView()" />
+            <select id="lt-filter-status" onchange="renderListView()">
+                <option value="">All statuses</option>
+                <option value="todo">To do</option>
+                <option value="in_progress">In progress</option>
+                <option value="done">Done</option>
+            </select>
+            <select id="lt-filter-assignee" onchange="renderListView()">
+                <option value="">Everyone</option>
+                <option value="unassigned">Unassigned</option>
+            </select>
+            <select id="lt-filter-priority" onchange="renderListView()">
+                <option value="">All priorities</option>
+                <option value="critical">Critical</option>
+                <option value="high">High</option>
+                <option value="medium">Medium</option>
+                <option value="low">Low</option>
+            </select>
+        </div>
+        <div class="list-count" id="lt-count"></div>
+        <div class="list-table-wrap">
+            <table class="list-table">
+                <thead>
+                    <tr>
+                        <th data-sort="title" onclick="setListSort('title')">Task <span class="sort-arrow">▲</span></th>
+                        <th data-sort="status" onclick="setListSort('status')">Status <span class="sort-arrow">▲</span></th>
+                        <th data-sort="priority" onclick="setListSort('priority')">Priority <span class="sort-arrow">▲</span></th>
+                        <th data-sort="assignee_name" onclick="setListSort('assignee_name')">Assignee <span class="sort-arrow">▲</span></th>
+                        <th data-sort="due_date" onclick="setListSort('due_date')">Due <span class="sort-arrow">▲</span></th>
+                        <th>Labels</th>
+                    </tr>
+                </thead>
+                <tbody id="lt-body"></tbody>
+            </table>
+        </div>
     </div>
 </div>
 
@@ -276,7 +352,96 @@ async function loadProject() {
     members = m;
     document.getElementById('t-assignee').innerHTML = '<option value="">Unassigned</option>' +
         members.map(mm => `<option value="${mm.id}">${esc(mm.name)}</option>`).join('');
+    document.getElementById('lt-filter-assignee').innerHTML = '<option value="">Everyone</option><option value="unassigned">Unassigned</option>' +
+        members.map(mm => `<option value="${mm.id}">${esc(mm.name)}</option>`).join('');
     await Promise.all([loadTasks(), loadSummary(), loadProjectLabels()]);
+    initListView();
+}
+
+// ═══════════════════════ VIEW SWITCH (Board / List) ═══════════════════════
+let currentProjectView = localStorage.getItem('tv_project_view') || 'board';
+let listSortKey = 'due_date';
+let listSortDir = 'asc';
+
+function switchProjectView(v) {
+    currentProjectView = v;
+    localStorage.setItem('tv_project_view', v);
+    document.getElementById('board-view').style.display = v === 'board' ? 'grid' : 'none';
+    document.getElementById('list-view').style.display = v === 'list' ? 'block' : 'none';
+    document.getElementById('vt-board').classList.toggle('active', v === 'board');
+    document.getElementById('vt-list').classList.toggle('active', v === 'list');
+    if (v === 'list') renderListView();
+}
+
+function initListView() {
+    switchProjectView(currentProjectView);
+}
+
+function setListSort(key) {
+    if (listSortKey === key) { listSortDir = listSortDir === 'asc' ? 'desc' : 'asc'; }
+    else { listSortKey = key; listSortDir = 'asc'; }
+    renderListView();
+}
+
+const PRIORITY_RANK = { critical: 0, high: 1, medium: 2, low: 3 };
+const STATUS_RANK = { todo: 0, in_progress: 1, done: 2 };
+
+function renderListView() {
+    const q = (document.getElementById('lt-search').value || '').trim().toLowerCase();
+    const fStatus = document.getElementById('lt-filter-status').value;
+    const fAssignee = document.getElementById('lt-filter-assignee').value;
+    const fPriority = document.getElementById('lt-filter-priority').value;
+
+    let rows = tasksCache.filter(t => {
+        if (q && !t.title.toLowerCase().includes(q) && !(t.description || '').toLowerCase().includes(q)) return false;
+        if (fStatus && t.status !== fStatus) return false;
+        if (fPriority && t.priority !== fPriority) return false;
+        if (fAssignee === 'unassigned' && t.assignee_id) return false;
+        if (fAssignee && fAssignee !== 'unassigned' && String(t.assignee_id) !== fAssignee) return false;
+        return true;
+    });
+
+    rows.sort((a, b) => {
+        let av, bv;
+        if (listSortKey === 'priority') { av = PRIORITY_RANK[a.priority]; bv = PRIORITY_RANK[b.priority]; }
+        else if (listSortKey === 'status') { av = STATUS_RANK[a.status]; bv = STATUS_RANK[b.status]; }
+        else if (listSortKey === 'due_date') { av = a.due_date || '9999-99-99'; bv = b.due_date || '9999-99-99'; }
+        else if (listSortKey === 'assignee_name') { av = (a.assignee_name || '\uffff').toLowerCase(); bv = (b.assignee_name || '\uffff').toLowerCase(); }
+        else { av = (a.title || '').toLowerCase(); bv = (b.title || '').toLowerCase(); }
+        if (av < bv) return listSortDir === 'asc' ? -1 : 1;
+        if (av > bv) return listSortDir === 'asc' ? 1 : -1;
+        return 0;
+    });
+
+    document.querySelectorAll('.list-table th[data-sort]').forEach(th => {
+        th.classList.toggle('sorted', th.dataset.sort === listSortKey);
+        th.querySelector('.sort-arrow').textContent = (th.dataset.sort === listSortKey && listSortDir === 'desc') ? '▼' : '▲';
+    });
+
+    const total = tasksCache.length;
+    document.getElementById('lt-count').textContent = rows.length === total
+        ? `${total} task${total === 1 ? '' : 's'}` : `${rows.length} of ${total} tasks`;
+
+    const body = document.getElementById('lt-body');
+    if (!rows.length) {
+        body.innerHTML = `<tr><td colspan="6"><div class="lt-empty">${total ? 'No tasks match your filters.' : 'No tasks yet — add one to get started.'}</div></td></tr>`;
+        return;
+    }
+    const today = new Date(); today.setHours(0,0,0,0);
+    const statusLabel = { todo: 'To do', in_progress: 'In progress', done: 'Done' };
+    body.innerHTML = rows.map(t => {
+        const due = t.due_date ? new Date(t.due_date) : null;
+        const overdue = due && due < today && t.status !== 'done';
+        const labels = (t.labels || []).map(l => `<span class="label-dot-chip" style="${labelChipStyle(l.color)}">${esc(l.name)}</span>`).join('');
+        return `<tr onclick="openEditTask(${t.id})">
+            <td><div class="lt-title"><span class="lt-status-dot ${t.status}"></span>${esc(t.title)}${t.blocked_by_open_count > 0 ? ' <span class="mini-stat blocked" title="Blocked">🔒</span>' : ''}</div></td>
+            <td>${statusLabel[t.status]}</td>
+            <td><span class="pill pri-${t.priority}">${t.priority}</span></td>
+            <td>${t.assignee_name ? `<span class="lt-assignee"><span class="avatar" title="${esc(t.assignee_name)}">${initials(t.assignee_name)}</span>${esc(t.assignee_name)}</span>` : '<span style="color:var(--ink3)">—</span>'}</td>
+            <td><span class="due ${overdue ? 'overdue' : ''}">${t.due_date || '—'}</span></td>
+            <td><div class="lt-labels">${labels || ''}</div></td>
+        </tr>`;
+    }).join('');
 }
 
 async function loadProjectLabels() {
@@ -299,6 +464,7 @@ async function loadTasks() {
         if (!cols[status].length) { el.innerHTML = `<div class="empty-col">Nothing here</div>`; return; }
         el.innerHTML = cols[status].map(t => cardHTML(t)).join('');
     });
+    if (currentProjectView === 'list') renderListView();
 }
 
 function cardHTML(t) {

@@ -1,7 +1,12 @@
 <?php
+
+ini_set('display_errors', 1);
+error_reporting(E_ALL);
+
 require_once __DIR__ . '/../includes/licensing.php';
 require_once __DIR__ . '/../includes/notifications.php';
 require_once __DIR__ . '/../includes/mailer.php';
+require_once __DIR__ . '/../includes/security.php';
 require_login();
 
 $uid = current_user_id();

@@ -50,7 +50,7 @@ CREATE TABLE organizations (
     seats_purchased         INT UNSIGNED NOT NULL DEFAULT 0,
     stripe_customer_id      VARCHAR(100) NULL,
     stripe_subscription_id  VARCHAR(100) NULL,
-    plan_status             ENUM('active','past_due','canceled') NOT NULL DEFAULT 'active',
+    plan_status             ENUM('pending','active','past_due','canceled') NOT NULL DEFAULT 'pending',
     renewal_date            DATE NULL,
     created_at              DATETIME DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (owner_user_id) REFERENCES users(id) ON DELETE CASCADE

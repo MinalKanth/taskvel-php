@@ -11,6 +11,25 @@ $in = body();
 
 switch ("$method:$action") {
 
+    // Cross-project "assigned to me" feed — every project task assigned to
+    // the caller across every team they belong to, in one query (no N+1
+    // over each team/project). Powers the unified My Work view.
+    case 'GET:my-tasks':
+        $stmt = $pdo->prepare("SELECT pt.*, p.name AS project_name, p.color AS project_color,
+                                      t.name AS team_name,
+                                      (SELECT COUNT(*) FROM project_task_dependencies d
+                                        JOIN project_tasks blk ON blk.id = d.depends_on_id
+                                        WHERE d.task_id = pt.id AND blk.status <> 'done') AS blocked_by_open_count
+                               FROM project_tasks pt
+                               JOIN projects p ON p.id = pt.project_id
+                               JOIN teams t ON t.id = p.team_id
+                               JOIN team_members tm ON tm.team_id = t.id AND tm.user_id = ?
+                               WHERE pt.assignee_id = ? AND p.archived = 0
+                               ORDER BY pt.due_date IS NULL, pt.due_date ASC, FIELD(pt.priority,'critical','high','medium','low')");
+        $stmt->execute([$uid, $uid]);
+        json_response(['tasks' => $stmt->fetchAll()]);
+        break;
+
     case 'GET:list':
         $projectId = (int)($_GET['project_id'] ?? 0);
         $teamId = project_team_id($projectId);
