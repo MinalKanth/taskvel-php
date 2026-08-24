@@ -14,6 +14,7 @@ $user = current_user();
     .wrap {
         max-width: 760px;
     }
+    
     .header-shell { max-width:920px; }
 
     .mw-intro { margin-bottom:20px; }

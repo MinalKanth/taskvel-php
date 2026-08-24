@@ -84,6 +84,7 @@ function personal_task_out(array $r): array
         'timeSpent' => (int)$r['time_spent'],
         'timeTrackingStarted' => $r['time_tracking_started'] !== null ? (int)$r['time_tracking_started'] : null,
         'updatedAt' => (int)$r['updated_at'],
+        'status'    => $r['status'] ?? 'todo',
     ];
 }
 
@@ -124,6 +125,7 @@ function upsert_personal_task(PDO $pdo, int $uid, int $clientId, array $in): voi
         'time_spent' => (int)($in['timeSpent'] ?? 0),
         'time_tracking_started' => isset($in['timeTrackingStarted']) && $in['timeTrackingStarted'] !== null ? (int)$in['timeTrackingStarted'] : null,
         'updated_at' => $updatedAt,
+        'status'    => one_of($in['status'] ?? 'todo', ['todo', 'doing', 'done'], 'todo'),
     ];
 
     if ($existing) {
