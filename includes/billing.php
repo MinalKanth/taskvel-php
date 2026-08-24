@@ -1,7 +1,5 @@
 <?php
 require_once __DIR__ . '/../config/db.php';
-ini_set('display_errors', 1);
-   error_reporting(E_ALL);
 
 // The account holder's personal Taskvel Pro plan ('free' | 'pro'). Dormant
 // column from migration_02 — this is its first real consumer.

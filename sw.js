@@ -11,6 +11,14 @@ self.addEventListener('activate', e => {
 });
 self.addEventListener('fetch', e => {
     if (e.request.method !== 'GET') return; // never cache API POST/DELETE calls
+    // Never let /api/ calls fall back to cached HTML — that would resolve
+    // as a "successful" 200 with an unparsable body, which api-client.js
+    // silently swallows into {} instead of surfacing a network error.
+    const url = new URL(e.request.url);
+    if (url.pathname.startsWith('/api/')) return;
+    // Only serve the cached app shell for actual page navigations, not
+    // for other asset/API-style GETs that happen to be same-origin.
+    if (e.request.mode !== 'navigate') return;
     e.respondWith(
         fetch(e.request).catch(() => caches.match(e.request).then(cached => cached || caches.match('./taskvel-pro.php')))
     );

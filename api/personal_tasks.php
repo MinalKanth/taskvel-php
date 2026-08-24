@@ -85,6 +85,13 @@ function personal_task_out(array $r): array
         'timeTrackingStarted' => $r['time_tracking_started'] !== null ? (int)$r['time_tracking_started'] : null,
         'updatedAt' => (int)$r['updated_at'],
         'status'    => $r['status'] ?? 'todo',
+        'selectedForToday' => (bool)($r['selected_for_today'] ?? false),
+        'blockedBy' => json_decode($r['blocked_by'] ?? '[]', true) ?: [],
+        'activity'  => json_decode($r['activity'] ?? '[]', true) ?: [],
+        'estimateMins' => (int)($r['estimate_mins'] ?? 0),
+        'isMilestone'  => (bool)($r['is_milestone'] ?? false),
+        'parentId'  => $r['parent_id'] !== null ? (int)$r['parent_id'] : null,
+        'fields'    => json_decode($r['fields'] ?? '[]', true) ?: [],
     ];
 }
 
@@ -126,6 +133,13 @@ function upsert_personal_task(PDO $pdo, int $uid, int $clientId, array $in): voi
         'time_tracking_started' => isset($in['timeTrackingStarted']) && $in['timeTrackingStarted'] !== null ? (int)$in['timeTrackingStarted'] : null,
         'updated_at' => $updatedAt,
         'status'    => one_of($in['status'] ?? 'todo', ['todo', 'doing', 'done'], 'todo'),
+        'selected_for_today' => !empty($in['selectedForToday']) ? 1 : 0,
+        'blocked_by' => json_encode(array_slice($in['blockedBy'] ?? [], 0, 200)),
+        'activity'   => json_encode(array_slice($in['activity'] ?? [], 0, 60)),
+        'estimate_mins' => (int)($in['estimateMins'] ?? 0),
+        'is_milestone'  => !empty($in['isMilestone']) ? 1 : 0,
+        'parent_id'  => isset($in['parentId']) && $in['parentId'] !== null ? (int)$in['parentId'] : null,
+        'fields'     => json_encode(array_slice($in['fields'] ?? [], 0, 100)),
     ];
 
     if ($existing) {

@@ -1,5 +1,6 @@
 <?php
 require_once __DIR__ . '/../includes/teams.php';
+require_once __DIR__ . '/../includes/billing.php';
 require_login();
 
 $uid = current_user_id();
@@ -35,6 +36,7 @@ switch ("$method:$action") {
     case 'POST:create':
         $teamId = (int)($in['team_id'] ?? 0);
         require_team_member($teamId); // any member can spin up a project
+        require_project_slot_available($teamId);
         $name = clean_str($in['name'] ?? '', 150);
         if ($name === '') json_response(['error' => 'Project name is required'], 422);
         $color = preg_match('/^#[0-9a-fA-F]{6}$/', $in['color'] ?? '') ? $in['color'] : '#4f46e5';

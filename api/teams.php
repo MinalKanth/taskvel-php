@@ -136,6 +136,12 @@ switch ("$method:$action") {
             ->execute([$teamId, $targetUserId]);
         $pdo->prepare('UPDATE team_tasks SET assignee_id = NULL WHERE team_id = ? AND assignee_id = ?')
             ->execute([$teamId, $targetUserId]);
+        // Also drop them from this team's upcoming events, so a removed
+        // member doesn't keep showing as an invited/going attendee.
+        $pdo->prepare('DELETE tea FROM team_event_attendees tea
+                       JOIN team_events te ON te.id = tea.event_id
+                       WHERE te.team_id = ? AND tea.user_id = ? AND te.event_date >= CURDATE()')
+            ->execute([$teamId, $targetUserId]);
         $pdo->prepare('DELETE FROM team_members WHERE team_id = ? AND user_id = ?')
             ->execute([$teamId, $targetUserId]);
         json_response(['ok' => true]);
@@ -148,6 +154,10 @@ switch ("$method:$action") {
                        SET pt.assignee_id = NULL WHERE p.team_id = ? AND pt.assignee_id = ?')
             ->execute([$teamId, $uid]);
         $pdo->prepare('UPDATE team_tasks SET assignee_id = NULL WHERE team_id = ? AND assignee_id = ?')
+            ->execute([$teamId, $uid]);
+        $pdo->prepare('DELETE tea FROM team_event_attendees tea
+                       JOIN team_events te ON te.id = tea.event_id
+                       WHERE te.team_id = ? AND tea.user_id = ? AND te.event_date >= CURDATE()')
             ->execute([$teamId, $uid]);
         $pdo->prepare('DELETE FROM team_members WHERE team_id = ? AND user_id = ?')->execute([$teamId, $uid]);
         json_response(['ok' => true]);
