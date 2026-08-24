@@ -391,8 +391,8 @@ body{font-family:'Sora',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;b
       </div>
       <div class="toggle-pill" id="cycleToggle">
         <button class="active" data-cycle="monthly">Monthly</button>
-        <button data-cycle="six">6 Months <span class="save-tag">Save 15%</span></button>
-        <button data-cycle="yearly">Yearly <span class="save-tag">Save 30%</span></button>
+        <button data-cycle="six">6 Months <span class="save-tag">Save 10%</span></button>
+        <button data-cycle="yearly">Yearly <span class="save-tag">Save 20%</span></button>
       </div>
     </div>
 
@@ -499,13 +499,13 @@ document.getElementById('replay-tour-btn').addEventListener('click', function(){
   const planData = {
     individual: {
       monthly: { price: 49, unit: '/mo', note: 'Billed monthly' },
-      six:     { price: 42, unit: '/mo', note: 'Billed ₹252 every 6 months' },
-      yearly:  { price: 34, unit: '/mo', note: 'Billed ₹408 per year' }
+      six:     { price: 44, unit: '/mo', note: 'Billed ₹264 every 6 months' },
+      yearly:  { price: 39, unit: '/mo', note: 'Billed ₹468 per year' }
     },
     enterprise: {
       monthly: { price: 99, unit: '/user/mo', note: 'Billed monthly · per user' },
-      six:     { price: 84, unit: '/user/mo', note: 'Billed ₹504/user every 6 months' },
-      yearly:  { price: 69, unit: '/user/mo', note: 'Billed ₹828/user per year' }
+      six:     { price: 89, unit: '/user/mo', note: 'Billed ₹534/user every 6 months' },
+      yearly:  { price: 79, unit: '/user/mo', note: 'Billed ₹948/user per year' }
     }
   };
   const planFeats = {
