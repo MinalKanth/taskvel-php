@@ -230,7 +230,12 @@ $isManager = ($role === 'owner' || $role === 'manager');
         <h2 id="task-modal-title">New task</h2>
         <input type="hidden" id="t-id" />
         <div class="fg"><label>Title</label><input type="text" id="t-title" placeholder="What needs to be done?" /></div>
-        <div class="fg"><label>Description</label><textarea id="t-desc" placeholder="Details, links, context…"></textarea></div>
+        <div class="fg"><label>Description</label><textarea id="t-desc" placeholder="Details, links, context…"></textarea>
+            <button type="button" id="ai-suggest-btn" onclick="aiSuggestProjectTask()"
+                style="margin-top:8px;font-size:12px;padding:7px 12px;border-radius:8px;border:1px solid var(--line,#ddd);background:var(--card,#fff);cursor:pointer">
+                🤖 AI Suggest</button>
+            <div id="ai-suggest-status" style="font-size:11px;color:var(--ink4,#888);margin-top:6px;display:none"></div>
+        </div>
         <div class="row2">
             <div class="fg"><label>Priority</label>
                 <select id="t-priority"><option value="low">Low</option><option value="medium" selected>Medium</option><option value="high">High</option><option value="critical">Critical</option></select>
@@ -573,6 +578,43 @@ async function openEditTask(id) {
 }
 
 function closeTaskModal() { document.getElementById('task-overlay').classList.remove('open'); }
+
+async function aiSuggestProjectTask() {
+    const title = document.getElementById('t-title').value.trim();
+    const statusEl = document.getElementById('ai-suggest-status');
+    const btn = document.getElementById('ai-suggest-btn');
+    if (!title) {
+        alert('Enter a task title first');
+        return;
+    }
+    btn.disabled = true;
+    btn.textContent = '🤖 Thinking…';
+    statusEl.style.display = 'block';
+    statusEl.textContent = 'Asking AI for suggestions…';
+    try {
+        const { suggestion } = await Taskvel.request('/api/ai_suggest.php?action=suggest', {
+            method: 'POST',
+            body: { name: title, note: document.getElementById('t-desc').value.trim() }
+        });
+
+        if (suggestion.urgency) document.getElementById('t-priority').value = suggestion.urgency;
+        if (suggestion.deadline) document.getElementById('t-due').value = suggestion.deadline;
+
+        if ((suggestion.steps || []).length) {
+            const descEl = document.getElementById('t-desc');
+            const extra = suggestion.steps.map(s => `- ${s}`).join('\n');
+            descEl.value = descEl.value ? `${descEl.value}\n\nSuggested subtasks:\n${extra}` : `Suggested subtasks:\n${extra}`;
+        }
+
+        statusEl.textContent = '✨ Priority, due date & subtask ideas applied — tweak anything you like.';
+    } catch (e) {
+        statusEl.textContent = "Couldn't get AI suggestions: " + e.message;
+    } finally {
+        btn.disabled = false;
+        btn.textContent = '🤖 AI Suggest';
+        setTimeout(() => { statusEl.style.display = 'none'; }, 5000);
+    }
+}
 
 async function saveTask(force) {
     const title = document.getElementById('t-title').value.trim();
