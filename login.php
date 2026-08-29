@@ -262,6 +262,36 @@ input:focus-visible, button:focus-visible, a:focus-visible{outline:2px solid var
   color:var(--amber-2, #C9A227);
   transform:translateX(-3px);
 }
+
+.back-home-link{
+  position:fixed;
+  top:24px;
+  left:24px;
+  z-index:20;
+  display:inline-flex;
+  align-items:center;
+  gap:6px;
+  font-family:'Inter',sans-serif;
+  font-size:13.5px;
+  font-weight:600;
+  color:rgba(250,248,243,0.75);
+  text-decoration:none;
+  padding:9px 16px 9px 14px;
+  border-radius:100px;
+  background:rgba(255,255,255,0.06);
+  border:1px solid rgba(255,255,255,0.14);
+  backdrop-filter:blur(10px);
+  transition:color .25s ease, transform .25s ease, background .25s ease, border-color .25s ease;
+}
+.back-home-link:hover{
+  color:var(--gold-2);
+  background:rgba(255,255,255,0.1);
+  border-color:rgba(232,199,102,0.35);
+  transform:translateX(-3px);
+}
+@media (max-width:919px){
+  .back-home-link{ top:16px; left:16px; padding:8px 14px 8px 12px; font-size:13px; }
+}
 </style>
 </head>
 <body>
