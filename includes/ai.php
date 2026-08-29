@@ -213,3 +213,113 @@ PROMPT;
 
     return ['ok' => true, 'message' => $text];
 }
+
+/**
+ * Parse a single free-form sentence (e.g. "Submit GST report next Friday,
+ * very urgent") into a clean structured task — this powers "quick add"
+ * boxes where the user types a whole task in plain English instead of
+ * filling in a form field by field.
+ *
+ * Returns an array like ai_suggest_task()'s, plus a cleaned-up 'title':
+ *   ['ok'=>true, 'title'=>'Submit GST report', 'urgency'=>'high', ...]
+ * or ['ok'=>false, 'error'=>'...'].
+ */
+function ai_parse_task_from_text(string $text): array
+{
+    if (GEMINI_API_KEY === '') {
+        return ['ok' => false, 'error' => 'AI is not configured yet (missing GEMINI_API_KEY).'];
+    }
+    $text = trim($text);
+    if ($text === '') {
+        return ['ok' => false, 'error' => 'No text given.'];
+    }
+
+    $today = date('Y-m-d (D)');
+    $prompt = <<<PROMPT
+You are a task-parser inside a to-do app. Today's date is $today.
+
+The user typed this whole task in plain English:
+"{$text}"
+
+Reply with ONLY a compact JSON object (no markdown, no code fences, no
+commentary) with exactly these keys:
+{
+  "title": a short, clean task title with priority/date words removed (e.g. "Call client about contract"),
+  "urgency": one of "critical" | "high" | "medium" | "low" (infer from wording like "urgent", "asap", "whenever", else "medium"),
+  "damage": one of "severe" | "moderate" | "minor" (impact if this drags on),
+  "deadline": a "YYYY-MM-DD" date if the text implies one (e.g. "tomorrow", "next friday", "in 3 days"), else null,
+  "estimateMins": a realistic whole number of minutes this task takes, else null,
+  "steps": an array of up to 3 short (max 6 words) actionable subtask strings, or an empty array if none are implied,
+  "tags": an array of up to 3 short single-word lowercase tags implied by the text (e.g. "work", "personal", "billing")
+}
+PROMPT;
+
+    $payload = [
+        'contents' => [[
+            'parts' => [['text' => $prompt]],
+        ]],
+        'generationConfig' => [
+            'temperature' => 0.3,
+            'maxOutputTokens' => 300,
+            'responseMimeType' => 'application/json',
+        ],
+    ];
+
+    $url = 'https://generativelanguage.googleapis.com/v1beta/models/'
+        . GEMINI_MODEL . ':generateContent?key=' . GEMINI_API_KEY;
+
+    $ch = curl_init($url);
+    curl_setopt_array($ch, [
+        CURLOPT_RETURNTRANSFER => true,
+        CURLOPT_POST => true,
+        CURLOPT_HTTPHEADER => ['Content-Type: application/json'],
+        CURLOPT_POSTFIELDS => json_encode($payload),
+        CURLOPT_TIMEOUT => 15,
+    ]);
+    $raw = curl_exec($ch);
+    $err = curl_error($ch);
+    $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+    curl_close($ch);
+
+    if ($raw === false) {
+        return ['ok' => false, 'error' => "Could not reach AI service: $err"];
+    }
+    $resp = json_decode($raw, true);
+    if ($httpCode !== 200 || !is_array($resp)) {
+        $msg = $resp['error']['message'] ?? "AI service returned HTTP $httpCode";
+        return ['ok' => false, 'error' => $msg];
+    }
+
+    $body = $resp['candidates'][0]['content']['parts'][0]['text'] ?? '';
+    $body = trim($body);
+    $body = preg_replace('/^```(?:json)?|```$/m', '', $body);
+    $data = json_decode(trim($body), true);
+    if (!is_array($data)) {
+        return ['ok' => false, 'error' => 'AI returned an unexpected response.'];
+    }
+
+    $title = clean_str((string)($data['title'] ?? ''), 255) ?: clean_str($text, 255);
+    $urgency = in_array($data['urgency'] ?? '', ['critical', 'high', 'medium', 'low'], true)
+        ? $data['urgency'] : 'medium';
+    $damage = in_array($data['damage'] ?? '', ['severe', 'moderate', 'minor'], true)
+        ? $data['damage'] : 'moderate';
+    $deadline = null;
+    if (!empty($data['deadline']) && preg_match('/^\d{4}-\d{2}-\d{2}$/', $data['deadline'])) {
+        $deadline = $data['deadline'];
+    }
+    $estimate = isset($data['estimateMins']) && is_numeric($data['estimateMins'])
+        ? max(0, (int)$data['estimateMins']) : null;
+    $steps = array_slice(array_filter(array_map('strval', $data['steps'] ?? [])), 0, 3);
+    $tags = array_slice(array_filter(array_map('strval', $data['tags'] ?? [])), 0, 3);
+
+    return [
+        'ok' => true,
+        'title' => $title,
+        'urgency' => $urgency,
+        'damage' => $damage,
+        'deadline' => $deadline,
+        'estimateMins' => $estimate,
+        'steps' => array_values($steps),
+        'tags' => array_values($tags),
+    ];
+}

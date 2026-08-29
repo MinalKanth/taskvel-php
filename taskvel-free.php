@@ -3755,6 +3755,16 @@
             </div>
         </div>
 
+        <!-- AI quick add -->
+        <div class="toolbar" style="margin-bottom:8px">
+            <div class="search" style="flex:1">
+                <span class="ic">✨</span>
+                <input type="text" id="ai-quickadd" placeholder="Type a task in plain English… e.g. Submit GST report next Friday, high priority"
+                    onkeydown="if(event.key==='Enter'){event.preventDefault();aiQuickAdd();}" />
+            </div>
+            <button class="add-btn" id="ai-quickadd-btn" onclick="aiQuickAdd()" aria-label="Add with AI" title="Add with AI">✨</button>
+        </div>
+
         <!-- toolbar -->
         <div class="toolbar">
             <div class="search">
@@ -5619,6 +5629,63 @@
             btn.disabled = false;
             btn.textContent = '🤖 AI Suggest';
             setTimeout(() => { statusEl.style.display = 'none'; }, 4000);
+        }
+    }
+
+    // ════════════════════════════════════════════
+    // AI QUICK ADD — type a whole task in plain English (e.g. "Submit GST
+    // report next Friday, high priority") and AI parses it straight into
+    // a task, skipping the full "New task" sheet entirely. This page has
+    // no login, so it calls the public (IP rate-limited) AI endpoint.
+    // ════════════════════════════════════════════
+    async function aiQuickAdd() {
+        const input = document.getElementById('ai-quickadd');
+        const btn = document.getElementById('ai-quickadd-btn');
+        const text = input.value.trim();
+        if (!text) {
+            toast('Type a task first, e.g. "Call client tomorrow, high priority"');
+            return;
+        }
+        btn.disabled = true;
+        btn.textContent = '…';
+        try {
+            const res = await fetch('api/ai_parse_task_public.php?action=parse', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ text })
+            });
+            const data = await res.json().catch(() => ({}));
+            if (!res.ok) throw new Error(data.error || `Request failed (${res.status})`);
+            const t = data.task;
+            const sc = score(t.urgency, t.damage);
+            tasks.push({
+                id: Date.now(),
+                name: t.title,
+                person: '',
+                collab: '',
+                urgency: t.urgency,
+                damage: t.damage,
+                rank: rank(sc),
+                score: sc,
+                deadline: t.deadline || null,
+                recur: 'none',
+                tags: t.tags || [],
+                pinned: false,
+                steps: (t.steps || []).map(s => ({ text: s, done: false, deadline: null, link: null })),
+                done: false,
+                addedOn: new Date().toISOString(),
+                order: Date.now()
+            });
+            save();
+            input.value = '';
+            render();
+            renderTabs();
+            toast(`✨ Added: "${t.title}"`);
+        } catch (e) {
+            toast("Couldn't parse that: " + e.message);
+        } finally {
+            btn.disabled = false;
+            btn.textContent = '✨';
         }
     }
 

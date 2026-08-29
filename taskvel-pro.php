@@ -4578,6 +4578,16 @@ $user = current_user();
             </div>
         </div>
 
+        <!-- AI quick add -->
+        <div class="toolbar" style="margin-bottom:8px">
+            <div class="search" style="flex:1">
+                <span class="ic">✨</span>
+                <input type="text" id="ai-quickadd" placeholder="Type a task in plain English… e.g. Submit GST report next Friday, high priority"
+                    onkeydown="if(event.key==='Enter'){event.preventDefault();aiQuickAdd();}" />
+            </div>
+            <button class="add-btn" id="ai-quickadd-btn" onclick="aiQuickAdd()" aria-label="Add with AI" title="Add with AI">✨</button>
+        </div>
+
         <!-- toolbar -->
         <div class="toolbar">
             <div class="search">
@@ -7777,6 +7787,66 @@ $user = current_user();
             btn.disabled = false;
             btn.textContent = '🤖 AI Suggest';
             setTimeout(() => { statusEl.style.display = 'none'; }, 4000);
+        }
+    }
+
+    // ════════════════════════════════════════════
+    // AI QUICK ADD — type a whole task in plain English (e.g. "Submit GST
+    // report next Friday, high priority") and AI parses it straight into
+    // a task, skipping the full "New task" sheet entirely.
+    // ════════════════════════════════════════════
+    async function aiQuickAdd() {
+        const input = document.getElementById('ai-quickadd');
+        const btn = document.getElementById('ai-quickadd-btn');
+        const text = input.value.trim();
+        if (!text) {
+            toast('Type a task first, e.g. "Call client tomorrow, high priority"');
+            return;
+        }
+        btn.disabled = true;
+        btn.textContent = '…';
+        try {
+            const { task: t } = await Taskvel.request('/api/ai_parse_task.php?action=parse', {
+                method: 'POST',
+                body: { text }
+            });
+            const sc = score(t.urgency, t.damage);
+            const newTask = {
+                id: Date.now(),
+                name: t.title,
+                person: '',
+                collab: '',
+                urgency: t.urgency,
+                damage: t.damage,
+                rank: rank(sc),
+                score: sc,
+                deadline: t.deadline || null,
+                estimateMins: t.estimateMins || 0,
+                isMilestone: false,
+                recur: 'none',
+                tags: t.tags || [],
+                links: [],
+                pinned: false,
+                selectedForToday: false,
+                steps: (t.steps || []).map(s => ({ text: s, done: false, deadline: null })),
+                done: false,
+                addedOn: new Date().toISOString(),
+                order: Date.now(),
+                updatedAt: Date.now(),
+                activity: [{ ts: Date.now(), who: TV_UNAME, text: 'Created this task (via AI quick add)' }]
+            };
+            tasks.push(newTask);
+            save();
+            upsertTaskOnServer(newTask);
+            input.value = '';
+            render();
+            renderTabs();
+            toast(`✨ Added: "${t.title}"`);
+        } catch (e) {
+            toast("Couldn't parse that: " + e.message);
+        } finally {
+            btn.disabled = false;
+            btn.textContent = '✨';
         }
     }
 
