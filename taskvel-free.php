@@ -3791,7 +3791,12 @@
         <h2>New task</h2>
         <div class="sub">Capture it, rank it, get it done.</div>
         <div class="fg"><label>What's the task?</label><input type="text" id="f-name"
-                placeholder="e.g. Ship the Wispr auth endpoint" /></div>
+                placeholder="e.g. Ship the Wispr auth endpoint" />
+            <button type="button" id="ai-suggest-btn" onclick="aiSuggestTask()"
+                style="margin-top:8px;font-size:12px;padding:7px 12px;border-radius:8px;border:1px solid var(--line,#ddd);background:var(--card,#fff);cursor:pointer">
+                🤖 AI Suggest</button>
+            <div id="ai-suggest-status" style="font-size:11px;color:var(--ink4);margin-top:6px;display:none"></div>
+        </div>
         <div class="fg"><label>Who's waiting on this?</label><input type="text" id="f-person"
                 placeholder="e.g. Client, teammate, future you…" /></div>
         <div class="fg"><label>Shared with (optional)</label><input type="text" id="f-collab"
@@ -3922,6 +3927,8 @@
         <div class="celebrate-icon" id="brief-icon" style="margin:0 0 14px">☀</div>
         <div class="celebrate-title" id="brief-title">Good morning</div>
         <div id="brief-body" style="font-size:13.5px;color:var(--ink3);line-height:1.7;margin-bottom:20px"></div>
+        <div id="ai-focus-line" style="display:none;font-size:13px;color:var(--ink2);line-height:1.6;padding:10px 12px;border-radius:10px;background:var(--card2,rgba(0,0,0,.04));margin-bottom:16px">🤖 <span id="ai-focus-text"></span></div>
+        <button class="celebrate-dismiss" id="ai-focus-btn" onclick="aiFocusBriefing()" style="background:transparent;border:1px solid var(--line,#ddd);margin-bottom:8px">🤖 Ask AI what to focus on</button>
         <button class="celebrate-dismiss" onclick="dismissBriefing()">Let's go</button>
     </div>
 
@@ -4191,14 +4198,63 @@
         document.getElementById('brief-title').textContent = `${greeting}. Here's your day.`;
         document.getElementById('brief-body').innerHTML = lines.map(l => `<div style="margin-bottom:6px">• ${l}</div>`)
             .join('');
+        document.getElementById('ai-focus-line').style.display = 'none';
 
         document.getElementById('brief-overlay').classList.add('show');
         document.getElementById('brief-card').classList.add('show');
+
+        // Fire off the AI focus line in the background — the rule-based
+        // briefing above already renders instantly, this just enhances it
+        // a moment later (and silently does nothing if it fails).
+        aiFocusBriefing();
     }
 
     function dismissBriefing() {
         document.getElementById('brief-overlay').classList.remove('show');
         document.getElementById('brief-card').classList.remove('show');
+    }
+
+    function buildOpenTaskSummaryForAI() {
+        return tasks
+            .filter(t => !t.done)
+            .sort((a, b) => (b.score || 0) - (a.score || 0))
+            .slice(0, 12)
+            .map(t => {
+                const d = daysUntil(t.deadline);
+                return {
+                    name: t.name,
+                    priority: effRank(t),
+                    overdue: d !== null && d < 0,
+                    dueToday: d === 0,
+                    deadline: t.deadline || null
+                };
+            });
+    }
+
+    async function aiFocusBriefing() {
+        const line = document.getElementById('ai-focus-line');
+        const text = document.getElementById('ai-focus-text');
+        const btn = document.getElementById('ai-focus-btn');
+        const openTasks = buildOpenTaskSummaryForAI();
+        if (!openTasks.length) return;
+
+        if (btn) { btn.disabled = true; btn.textContent = '🤖 Thinking…'; }
+        try {
+            const res = await fetch('api/ai_focus_public.php?action=focus', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ tasks: openTasks })
+            });
+            const data = await res.json().catch(() => ({}));
+            if (!res.ok) throw new Error(data.error || `Request failed (${res.status})`);
+            text.textContent = data.focus;
+            line.style.display = 'block';
+        } catch (e) {
+            // Silent failure — the rule-based briefing already covers the
+            // essentials; AI is a bonus, not a requirement.
+        } finally {
+            if (btn) { btn.disabled = false; btn.textContent = '🤖 Ask AI what to focus on'; }
+        }
     }
 
     // ════════════════════════════════════════════
@@ -5503,6 +5559,67 @@
         renderFormTags();
         const neverBtn = document.querySelector('#sheet .recur-row .opt');
         if (neverBtn) neverBtn.classList.add('sel');
+    }
+
+    // ════════════════════════════════════════════
+    // AI SUGGEST — fills urgency/impact/deadline/steps/tags for whatever's
+    // currently typed in the task-name field. This page has no login, so
+    // it calls the public (IP rate-limited) AI endpoint, not the one used
+    // by taskvel-pro.php.
+    // ════════════════════════════════════════════
+    async function aiSuggestTask() {
+        const name = document.getElementById('f-name').value.trim();
+        const statusEl = document.getElementById('ai-suggest-status');
+        const btn = document.getElementById('ai-suggest-btn');
+        if (!name) {
+            toast('Type the task name first, then hit AI Suggest');
+            return;
+        }
+        btn.disabled = true;
+        btn.textContent = '🤖 Thinking…';
+        statusEl.style.display = 'block';
+        statusEl.textContent = 'Asking AI for suggestions…';
+        try {
+            const res = await fetch('api/ai_suggest_public.php?action=suggest', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ name, note: document.getElementById('f-person').value.trim() })
+            });
+            const data = await res.json().catch(() => ({}));
+            if (!res.ok) throw new Error(data.error || `Request failed (${res.status})`);
+            const suggestion = data.suggestion;
+
+            if (suggestion.urgency) {
+                const b = [...document.querySelectorAll('#sheet .opt')]
+                    .find(el => el.getAttribute('onclick') === `pick(this,'urg','${suggestion.urgency}')`);
+                if (b) pick(b, 'urg', suggestion.urgency);
+            }
+            if (suggestion.damage) {
+                const b = [...document.querySelectorAll('#sheet .opt')]
+                    .find(el => el.getAttribute('onclick') === `pick(this,'dmg','${suggestion.damage}')`);
+                if (b) pick(b, 'dmg', suggestion.damage);
+            }
+            const deadlineEl = document.getElementById('f-deadline');
+            if (deadlineEl && suggestion.deadline) deadlineEl.value = suggestion.deadline;
+
+            (suggestion.steps || []).forEach((s, i) => {
+                const el = document.getElementById(`f-s${i + 1}`);
+                if (el && !el.value) el.value = s;
+            });
+
+            (suggestion.tags || []).forEach(t => {
+                if (!formTags.includes(t)) formTags.push(t);
+            });
+            renderFormTags();
+
+            statusEl.textContent = '✨ Suggestions applied — tweak anything you like.';
+        } catch (e) {
+            statusEl.textContent = "Couldn't get AI suggestions: " + e.message;
+        } finally {
+            btn.disabled = false;
+            btn.textContent = '🤖 AI Suggest';
+            setTimeout(() => { statusEl.style.display = 'none'; }, 4000);
+        }
     }
 
     function addTask() {
