@@ -82,6 +82,11 @@ if (!$role) { header('Location: teams.php'); exit; }
 
     <section id="team-tasks">
         <h2>✅ Team Tasks <button class="btn sm" onclick="openAssignTask()">+ Assign task</button></h2>
+        <div class="fg" style="display:flex;gap:8px;align-items:flex-start;margin:8px 0">
+            <input type="text" id="ai-quickadd" placeholder="✨ Quick add with AI… e.g. Prepare client proposal by next Friday, high priority"
+                style="flex:1" onkeydown="if(event.key==='Enter'){event.preventDefault();aiQuickAddTeamTask();}" />
+            <button class="btn sm" id="ai-quickadd-btn" onclick="aiQuickAddTeamTask()">✨ Add</button>
+        </div>
         <label style="display:flex;align-items:center;gap:7px;font-size:12px;color:var(--ink3);margin:6px 0 4px">
             <input type="checkbox" id="notify-email-toggle" onchange="toggleEmailNotifications(this.checked)" />
             Email me when someone updates a task I created or manage
@@ -583,6 +588,44 @@ async function aiSuggestTeamTask() {
         btn.disabled = false;
         btn.textContent = '🤖 AI Suggest';
         setTimeout(() => { statusEl.style.display = 'none'; }, 5000);
+    }
+}
+
+async function aiQuickAddTeamTask() {
+    const input = document.getElementById('ai-quickadd');
+    const btn = document.getElementById('ai-quickadd-btn');
+    const text = input.value.trim();
+    if (!text) { toast('Type a task first, e.g. "Prepare client proposal by next Friday, high priority"'); return; }
+    btn.disabled = true;
+    btn.textContent = '…';
+    try {
+        const { task: t } = await Taskvel.request('/api/ai_parse_task.php?action=parse', {
+            method: 'POST',
+            body: { text }
+        });
+        let description = '';
+        if ((t.steps || []).length) {
+            description = 'Suggested subtasks:\n' + t.steps.map(s => `- ${s}`).join('\n');
+        }
+        await Taskvel.request('/api/team_tasks.php?action=create', {
+            method: 'POST',
+            body: {
+                team_id: TEAM_ID,
+                title: t.title,
+                description,
+                priority: t.urgency === 'critical' ? 'urgent' : t.urgency,
+                assignee_id: null,
+                due_date: t.deadline || null,
+            }
+        });
+        input.value = '';
+        toast(`✨ Added: "${t.title}"`);
+        loadTeamTasks();
+    } catch (e) {
+        toast("Couldn't parse that: " + (e.message || 'error'));
+    } finally {
+        btn.disabled = false;
+        btn.textContent = '✨ Add';
     }
 }
 

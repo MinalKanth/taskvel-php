@@ -176,6 +176,12 @@ $isManager = ($role === 'owner' || $role === 'manager');
         </div>
     </div>
 
+    <div class="fg" style="display:flex;gap:8px;align-items:flex-start;margin-bottom:14px">
+        <input type="text" id="ai-quickadd" placeholder="✨ Quick add with AI… e.g. Prepare client proposal by next Friday, high priority"
+            style="flex:1" onkeydown="if(event.key==='Enter'){event.preventDefault();aiQuickAddProjectTask();}" />
+        <button class="btn" id="ai-quickadd-btn" onclick="aiQuickAddProjectTask()">✨ Add</button>
+    </div>
+
     <div class="summary-strip" id="summary-strip"></div>
 
     <div class="board" id="board-view">
@@ -578,6 +584,48 @@ async function openEditTask(id) {
 }
 
 function closeTaskModal() { document.getElementById('task-overlay').classList.remove('open'); }
+
+async function aiQuickAddProjectTask() {
+    const input = document.getElementById('ai-quickadd');
+    const btn = document.getElementById('ai-quickadd-btn');
+    const text = input.value.trim();
+    if (!text) { alert('Type a task first, e.g. "Prepare client proposal by next Friday, high priority"'); return; }
+    btn.disabled = true;
+    btn.textContent = '…';
+    try {
+        const { task: t } = await Taskvel.request('/api/ai_parse_task.php?action=parse', {
+            method: 'POST',
+            body: { text }
+        });
+        const { task_id } = await Taskvel.request('/api/project_tasks.php?action=create', {
+            method: 'POST',
+            body: {
+                project_id: PROJECT_ID,
+                title: t.title,
+                description: '',
+                priority: t.urgency,
+                due_date: t.deadline || null,
+                assignee_id: IS_MANAGER ? null : MY_USER_ID,
+                status: 'todo',
+            }
+        });
+        for (const step of (t.steps || [])) {
+            await Taskvel.request('/api/project_tasks.php?action=subtask-add', {
+                method: 'POST',
+                body: { task_id, title: step }
+            });
+        }
+        input.value = '';
+        toast(`✨ Added: "${t.title}"`);
+        await loadTasks();
+        await loadSummary();
+    } catch (e) {
+        alert("Couldn't parse that: " + e.message);
+    } finally {
+        btn.disabled = false;
+        btn.textContent = '✨ Add';
+    }
+}
 
 async function aiSuggestProjectTask() {
     const title = document.getElementById('t-title').value.trim();
