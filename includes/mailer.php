@@ -670,7 +670,7 @@ function send_trial_reminder_email(string $to, string $name, string $milestone, 
  * inline-HTML the daily Check-in summary used previously, so it reads as
  * part of one consistent, premium product rather than a bolted-on extra.
  */
-function send_daily_report_email(string $to, string $userName, string $dateLabel, array $summary, array $tasks, ?string $notes, string $link): bool
+function send_daily_report_email(string $to, string $userName, string $dateLabel, array $summary, array $tasks, ?string $notes, string $link, ?string $aiSummary = null): bool
 {
     $subject = "$userName's daily report — $dateLabel";
 
@@ -701,7 +701,12 @@ function send_daily_report_email(string $to, string $userName, string $dateLabel
         ? '<p style="margin:16px 0 0;font-family:\'Segoe UI\',Helvetica,Arial,sans-serif;font-size:13.5px;"><strong>Notes:</strong> ' . nl2br(htmlspecialchars($notes)) . '</p>'
         : '';
 
+    $aiSummaryHtml = $aiSummary
+        ? '<p style="margin:0 0 16px;padding:12px 14px;background:#f0f4ff;border-radius:10px;font-family:\'Segoe UI\',Helvetica,Arial,sans-serif;font-size:13.5px;color:#26264a;line-height:1.6;">🤖 ' . htmlspecialchars($aiSummary) . '</p>'
+        : '';
+
     $body = <<<HTML
+      {$aiSummaryHtml}
       <table role="presentation" cellpadding="0" cellspacing="0" width="100%" style="margin:0 0 18px;">
         <tr>
           <td style="text-align:center;padding:10px;background:#f7f7fb;border-radius:10px;">

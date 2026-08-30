@@ -323,3 +323,103 @@ PROMPT;
         'tags' => array_values($tags),
     ];
 }
+
+/**
+ * Ask Gemini for a short "day in review" paragraph for an end-of-day
+ * check-out report, given the tasks worked on today and the day's stats.
+ * Used to make the daily report email (and the on-screen checkout summary)
+ * read like a real update instead of just a stat block.
+ *
+ * $tasks: array of raw workday_tasks rows (title, status, duration_seconds)
+ * $summary: the $summary array already built in api/workday.php (done,
+ *           worked_text, overtime_text, etc.)
+ * $notes: the free-text notes the user typed at checkout, if any
+ *
+ * Returns ['ok'=>true, 'summary'=>string] or ['ok'=>false, 'error'=>string].
+ * Callers should treat failure as "skip the AI paragraph", never as a
+ * reason to block checkout.
+ */
+function ai_workday_summary(array $tasks, array $summary, ?string $notes = null): array
+{
+    if (GEMINI_API_KEY === '') {
+        return ['ok' => false, 'error' => 'AI is not configured yet (missing GEMINI_API_KEY).'];
+    }
+    if (empty($tasks)) {
+        return ['ok' => false, 'error' => 'No tasks logged today.'];
+    }
+
+    $lines = [];
+    foreach (array_slice($tasks, 0, 15) as $t) {
+        $title = clean_str($t['title'] ?? '', 120);
+        if ($title === '') continue;
+        $status = clean_str($t['status'] ?? '', 30);
+        $dur = !empty($t['duration_seconds']) ? gmdate('H\h i\m', (int)$t['duration_seconds']) : null;
+        $bits = [$status];
+        if ($dur) $bits[] = "took $dur";
+        $lines[] = "- $title (" . implode(', ', $bits) . ')';
+    }
+    if (empty($lines)) {
+        return ['ok' => false, 'error' => 'No tasks logged today.'];
+    }
+    $taskList = implode("\n", $lines);
+    $notesLine = $notes ? "\nThe person's own end-of-day notes: \"" . clean_str($notes, 500) . '"' : '';
+
+    $prompt = <<<PROMPT
+You are writing a short end-of-day summary paragraph for a daily work
+report email, sent from an employee to their manager.
+
+Today's tasks:
+$taskList
+
+Worked: {$summary['worked_text']}, {$summary['done']} task(s) completed
+out of {$summary['total']}.{$notesLine}
+
+Write 2-3 sentences, under 55 words total, in third person (e.g. "Rohet
+completed..."), professional and factual — no emojis, no markdown, plain
+prose only, as it will be inserted directly into an HTML email. Mention
+what got done and call out anything still pending or awaiting approval if
+relevant. Do not invent details not implied by the list above.
+PROMPT;
+
+    $payload = [
+        'contents' => [[
+            'parts' => [['text' => $prompt]],
+        ]],
+        'generationConfig' => [
+            'temperature' => 0.4,
+            'maxOutputTokens' => 150,
+        ],
+    ];
+
+    $url = 'https://generativelanguage.googleapis.com/v1beta/models/'
+        . GEMINI_MODEL . ':generateContent?key=' . GEMINI_API_KEY;
+
+    $ch = curl_init($url);
+    curl_setopt_array($ch, [
+        CURLOPT_RETURNTRANSFER => true,
+        CURLOPT_POST => true,
+        CURLOPT_HTTPHEADER => ['Content-Type: application/json'],
+        CURLOPT_POSTFIELDS => json_encode($payload),
+        CURLOPT_TIMEOUT => 15,
+    ]);
+    $raw = curl_exec($ch);
+    $err = curl_error($ch);
+    $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+    curl_close($ch);
+
+    if ($raw === false) {
+        return ['ok' => false, 'error' => "Could not reach AI service: $err"];
+    }
+    $resp = json_decode($raw, true);
+    if ($httpCode !== 200 || !is_array($resp)) {
+        $msg = $resp['error']['message'] ?? "AI service returned HTTP $httpCode";
+        return ['ok' => false, 'error' => $msg];
+    }
+
+    $text = trim($resp['candidates'][0]['content']['parts'][0]['text'] ?? '');
+    if ($text === '') {
+        return ['ok' => false, 'error' => 'AI returned an empty response.'];
+    }
+
+    return ['ok' => true, 'summary' => $text];
+}

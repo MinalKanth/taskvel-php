@@ -384,7 +384,7 @@ async function checkOut() {
         });
         clearInterval(liveTimerHandle);
         await load();
-        renderSummary(res.summary, res.notified);
+        renderSummary(res.summary, res.notified, res.ai_summary);
     } catch (e) {
         alert(e.message || 'Could not check out');
         btn.disabled = false;
@@ -392,11 +392,12 @@ async function checkOut() {
     }
 }
 
-function renderSummary(summary, notified) {
+function renderSummary(summary, notified, aiSummary) {
     const el = document.getElementById('summary-area');
     el.innerHTML = `
         <div class="summary-card">
             <h3 style="margin-top:0">📋 Today's summary</h3>
+            ${aiSummary ? `<div style="margin-bottom:14px;padding:12px 14px;background:var(--accent-soft,rgba(99,102,241,.08));border-radius:10px;font-size:13.5px;line-height:1.6">🤖 ${esc(aiSummary)}</div>` : ''}
             <div class="summary-grid">
                 <div class="summary-stat"><div class="num">${summary.total}</div><div class="lbl">Total</div></div>
                 <div class="summary-stat"><div class="num" style="color:var(--good)">${summary.done}</div><div class="lbl">Done</div></div>

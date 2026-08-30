@@ -2,6 +2,7 @@
 require_once __DIR__ . '/../includes/auth.php';
 require_once __DIR__ . '/../includes/mailer.php';
 require_once __DIR__ . '/../includes/webhooks.php';
+require_once __DIR__ . '/../includes/ai.php';
 require_once __DIR__ . '/../config/workhours.php';
 require_login();
 
@@ -299,6 +300,21 @@ switch ("$method:$action") {
             'overtime_seconds' => $overtimeSeconds, 'overtime_text' => $overtimeSeconds > 0 ? fmt_duration($overtimeSeconds) : null,
         ];
 
+        // ── AI end-of-day summary paragraph (optional, best-effort) ──
+        // Checkout only happens a handful of times a day per user, so this
+        // is lightly rate-limited just as a safety net, not because it's
+        // expected to ever be hit in normal use. A failed/skipped AI call
+        // never blocks checkout — it just means no paragraph gets added.
+        $aiSummaryText = null;
+        $rl = enforce_rate_limit_soft("ai_workday:$uid", 10, 3600);
+        if ($rl['ok']) {
+            rate_limit_hit("ai_workday:$uid", 3600);
+            $aiResult = ai_workday_summary($tasks, $summary, $notes);
+            if ($aiResult['ok']) {
+                $aiSummaryText = $aiResult['summary'];
+            }
+        }
+
         // ── Build the recipient list ─────────────────────────────────
         // 1) Legacy per-day/per-task report-to emails (unchanged, kept
         //    for backward compatibility with existing check-ins).
@@ -349,7 +365,7 @@ switch ("$method:$action") {
             $userName = user_name($pdo, $uid);
             $link = (!empty($_SERVER['HTTPS']) ? 'https://' : 'http://') . ($_SERVER['HTTP_HOST'] ?? '') . '/manager.php';
             foreach ($reportEmails as $email) {
-                try { send_daily_report_email($email, $userName, $today, $summary, $tasks, $notes, $link); } catch (Throwable $e) {}
+                try { send_daily_report_email($email, $userName, $today, $summary, $tasks, $notes, $link, $aiSummaryText); } catch (Throwable $e) {}
             }
             notify_chat('Day checked out', "$userName checked out — {$summary['done']} done, {$summary['worked_text']} worked");
             $pdo->prepare('UPDATE workdays SET summary_sent = 1 WHERE id = ?')->execute([$workday['id']]);
@@ -359,7 +375,7 @@ switch ("$method:$action") {
             ]);
         }
 
-        json_response(['ok' => true, 'summary' => $summary, 'notified' => $reportEmails]);
+        json_response(['ok' => true, 'summary' => $summary, 'notified' => $reportEmails, 'ai_summary' => $aiSummaryText]);
         break;
 
     default:
