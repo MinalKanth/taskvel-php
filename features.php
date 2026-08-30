@@ -332,17 +332,35 @@ body{font-family:'Sora',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;b
     </div>
   </section>
 
+  <!-- AI COPILOT -->
+  <section class="rail-section">
+    <div class="rail-head">
+      <span class="rail-eyebrow">04 — AI Copilot</span>
+      <h2>An assistant that actually does the busywork</h2>
+      <p>Built-in AI that suggests, writes, and summarizes for you — free plan includes 3 AI actions a day, Premium and Enterprise get unlimited.</p>
+    </div>
+    <div class="feat-grid" data-stagger>
+      <div class="feat-card"><span class="feat-tag">AI</span><div class="feat-ic">🤖</div><h3>AI Suggest</h3><p>Type just a task name and AI fills in urgency, impact, a realistic deadline, subtasks, and tags in one tap — in your personal list, projects, and team tasks alike.</p></div>
+      <div class="feat-card"><span class="feat-tag">AI</span><div class="feat-ic">✨</div><h3>AI Quick Add</h3><p>Type a whole task in plain English — "Submit GST report next Friday, high priority" — and it's created fully-formed, no form to fill in.</p></div>
+      <div class="feat-card"><span class="feat-tag">AI</span><div class="feat-ic">☀</div><h3>Daily Focus Briefing</h3><p>Your morning briefing now includes a short AI-written focus tip — what to tackle first and why — based on what's overdue, due today, and highest priority.</p></div>
+      <div class="feat-card"><span class="feat-tag">AI</span><div class="feat-ic">📝</div><h3>End-of-Day AI Summary</h3><p>Check out of your workday and AI writes a clean 2-3 sentence recap of what got done, added straight into your manager's report email.</p></div>
+      <div class="feat-card"><span class="feat-tag pro">Teams</span><div class="feat-ic">🧩</div><h3>AI across Projects &amp; Teams</h3><p>The same AI Suggest and Quick Add tools work inside Kanban projects and team task assignment, not just your personal list.</p></div>
+      <div class="feat-card"><div class="feat-ic">◔</div><h3>Fair daily quota</h3><p>Free plan includes 3 AI actions a day, shared across every AI feature. Premium and Enterprise remove the limit entirely.</p></div>
+    </div>
+  </section>
+
   <!-- TOGETHER -->
   <section class="rail-section">
     <div class="rail-head">
-      <span class="rail-eyebrow">04 — Together</span>
+      <span class="rail-eyebrow">05 — Together</span>
       <h2>Built for teams, not just to-do lists</h2>
-      <p>Assign work, plan events, and see what a whole team is actually getting done.</p>
+      <p>Assign work, plan events, chat in real time, and see what a whole team is actually getting done.</p>
     </div>
     <div class="feat-grid" data-stagger>
       <div class="feat-card"><span class="feat-tag pro">Teams</span><div class="feat-ic">👥</div><h3>Teams &amp; roles</h3><p>Owners, managers, and members — invite coworkers and control who can assign, edit, and delete.</p></div>
       <div class="feat-card"><span class="feat-tag pro">Teams</span><div class="feat-ic">▦</div><h3>Projects &amp; Kanban</h3><p>A full to-do / in-progress / done board per project, with comments and per-person progress tracking.</p></div>
       <div class="feat-card"><span class="feat-tag pro">Teams</span><div class="feat-ic">📆</div><h3>Team events</h3><p>Plan meetings and deadlines with attendees, RSVPs, and a live "who's actually going" view.</p></div>
+      <div class="feat-card"><span class="feat-tag pro">Teams</span><div class="feat-ic">💬</div><h3>Team Chat</h3><p>A live chat box on every team's page — new messages appear within seconds, styled like a real messenger. Messages auto-delete after 7 days, so it never turns into archive clutter.</p></div>
       <div class="feat-card"><span class="feat-tag pro">Office</span><div class="feat-ic">📍</div><h3>Daily Check-in</h3><p>Check in, log tasks with report-to emails, take tracked breaks, and check out with an auto-generated summary.</p></div>
       <div class="feat-card"><span class="feat-tag pro">Office</span><div class="feat-ic">📈</div><h3>Manager Dashboard</h3><p>Per-person productivity, a 7-day completion trend, late check-ins, overtime, and overdue flags — all in one view.</p></div>
       <div class="feat-card"><span class="feat-tag pro">Teams</span><div class="feat-ic">🔔</div><h3>Task assignment alerts</h3><p>Assignees get notified the moment work lands on them, and creators hear back the moment it's done.</p></div>
@@ -352,7 +370,7 @@ body{font-family:'Sora',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;b
   <!-- YOURS -->
   <section class="rail-section">
     <div class="rail-head">
-      <span class="rail-eyebrow">05 — Yours</span>
+      <span class="rail-eyebrow">06 — Yours</span>
       <h2>It looks and works the way you want</h2>
       <p>Every device stays in sync. Every color, every keystroke, tuned to you.</p>
     </div>
@@ -379,7 +397,7 @@ body{font-family:'Sora',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;b
   <!-- PRICING -->
   <section class="rail-section pricing-section" id="pricing">
     <div class="pricing-head">
-      <span class="rail-eyebrow">06 — Pricing</span>
+      <span class="rail-eyebrow">07 — Pricing</span>
       <h2>Simple, honest pricing.</h2>
       <p>Every plan starts with a 14-day free trial — every premium feature unlocked, no card required to begin.</p>
     </div>
@@ -406,7 +424,8 @@ body{font-family:'Sora',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;b
       <p>Your first <strong>14 days are fully free</strong> — every premium feature is unlocked, exactly as shown on this page. If you started on a <strong>1-month free promotional plan</strong>, here's exactly what happens the moment it ends:</p>
       <ul class="trial-notice-list">
         <li>Your account automatically reverts to the <strong>Free tier</strong> — no charge is ever made without your consent.</li>
-        <li>Premium features are locked: <strong>team collaboration, analytics dashboard, multi-device sync, manager dashboard, compliance tracker, and push notifications</strong> will stop working.</li>
+        <li>Premium features are locked: <strong>team collaboration, unlimited AI assistant, team chat, analytics dashboard, multi-device sync, manager dashboard, compliance tracker, and push notifications</strong> will stop working.</li>
+        <li>Your AI assistant doesn't disappear — it just drops to the <strong>free-plan limit of 3 actions/day</strong>, shared across suggestions, quick add, and focus briefings.</li>
         <li>Your existing tasks, remarks, and data are <strong>never deleted</strong> — everything is preserved and waiting the moment you subscribe.</li>
         <li>Re-activate instantly at any time by choosing a plan above — there's no re-onboarding, you pick up exactly where you left off.</li>
       </ul>
@@ -511,6 +530,7 @@ document.getElementById('replay-tour-btn').addEventListener('click', function(){
   const planFeats = {
     individual: [
       'Everything in Free',
+      'Unlimited AI assistant — suggest, quick add, daily focus & summaries',
       'Multi-device sync & personal analytics',
       'Custom Pomodoro focus sessions',
       'Compliance & client tracker',
@@ -520,6 +540,8 @@ document.getElementById('replay-tour-btn').addEventListener('click', function(){
     enterprise: [
       'Everything in Individual',
       'Team collaboration & task assignment',
+      'Unlimited AI across every team member',
+      'Team Chat, with 7-day message history',
       'Role & permission control',
       'Daily check-in & manager dashboard',
       'Team-wide analytics dashboard',
@@ -542,6 +564,7 @@ document.getElementById('replay-tour-btn').addEventListener('click', function(){
           <li>Task ranking & Pomodoro timer</li>
           <li>Tags, deadlines, recurring tasks</li>
           <li>CSV / PDF / calendar export</li>
+          <li>AI assistant — 3 actions/day</li>
           <li>Works offline, installs like an app</li>
         </ul>
         <a href="taskvel-pro.php" class="btn btn-ghost">Continue on Free</a>
