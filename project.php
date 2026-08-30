@@ -153,6 +153,13 @@ $isManager = ($role === 'owner' || $role === 'manager');
     .lt-empty { text-align:center; color:var(--ink3); font-size:13px; padding:40px 20px; }
     .lt-labels { display:flex; flex-wrap:wrap; gap:4px; }
     .list-count { font-size:11.5px; color:var(--ink3); font-family:var(--font-display); margin-bottom:10px; }
+    .dropdown-menu { position:absolute; top:calc(100% + 6px); right:0; min-width:220px; background:var(--bg-elev);
+        border:1px solid var(--line); border-radius:12px; box-shadow:0 12px 30px rgba(0,0,0,.15); overflow:hidden;
+        z-index:20; text-align:left; }
+    .dropdown-item { display:block; width:100%; text-align:left; padding:11px 14px; background:none; border:none;
+        font-size:13px; color:var(--ink); cursor:pointer; font-family:var(--font-body,inherit); white-space:nowrap; }
+    .dropdown-item:hover { background:var(--bg-sunk); }
+    .dropdown-item.danger { color:var(--bad,#dc2626); }
 </style>
 </head>
 <body>
@@ -173,6 +180,13 @@ $isManager = ($role === 'owner' || $role === 'manager');
             </div>
             <button class="btn ghost" onclick="openManageLabels()">🏷 Labels</button>
             <button class="btn" onclick="openCreateTask()">+ Add task</button>
+            <div style="position:relative;display:none" id="proj-options-btn">
+                <button class="btn ghost" onclick="toggleProjectOptionsMenu()">⋯</button>
+                <div class="dropdown-menu" id="proj-options-menu" style="display:none">
+                    <button class="dropdown-item" onclick="archiveThisProject()">✓ Mark project complete (archive)</button>
+                    <button class="dropdown-item danger" onclick="deleteThisProject()">🗑 Delete project</button>
+                </div>
+            </div>
         </div>
     </div>
 
@@ -238,7 +252,7 @@ $isManager = ($role === 'owner' || $role === 'manager');
         <div class="fg"><label>Title</label><input type="text" id="t-title" placeholder="What needs to be done?" /></div>
         <div class="fg"><label>Description</label><textarea id="t-desc" placeholder="Details, links, context…"></textarea>
             <button type="button" id="ai-suggest-btn" onclick="aiSuggestProjectTask()"
-                style="margin-top:8px;font-size:12px;padding:7px 12px;border-radius:8px;border:1px solid var(--line,#ddd);background:var(--card,#fff);cursor:pointer">
+                style="margin-top:8px;font-size:12px;padding:7px 12px;border-radius:8px;border:1px solid var(--line,#ddd);background:var(--bg-elev);cursor:pointer">
                 🤖 AI Suggest</button>
             <div id="ai-suggest-status" style="font-size:11px;color:var(--ink4,#888);margin-top:6px;display:none"></div>
         </div>
@@ -359,6 +373,7 @@ async function loadProject() {
         document.getElementById('proj-desc').textContent = project.description || '';
         document.title = project.name + ' · Taskvel Pro';
     } catch (e) {}
+    if (IS_MANAGER) document.getElementById('proj-options-btn').style.display = 'inline-block';
     const { members: m } = await Taskvel.request(`/api/teams.php?action=members&team_id=${TEAM_ID}`);
     members = m;
     document.getElementById('t-assignee').innerHTML = '<option value="">Unassigned</option>' +
@@ -624,6 +639,40 @@ async function aiQuickAddProjectTask() {
     } finally {
         btn.disabled = false;
         btn.textContent = '✨ Add';
+    }
+}
+
+function toggleProjectOptionsMenu() {
+    const menu = document.getElementById('proj-options-menu');
+    menu.style.display = menu.style.display === 'block' ? 'none' : 'block';
+}
+document.addEventListener('click', (e) => {
+    const btn = document.getElementById('proj-options-btn');
+    const menu = document.getElementById('proj-options-menu');
+    if (menu && btn && !btn.contains(e.target)) menu.style.display = 'none';
+});
+
+async function archiveThisProject() {
+    document.getElementById('proj-options-menu').style.display = 'none';
+    if (!confirm('Mark this project complete? It will be archived and hidden from the team\'s project list (existing tasks and history are kept, not deleted).')) return;
+    try {
+        await Taskvel.request('/api/projects.php?action=archive', { method: 'POST', body: { id: PROJECT_ID } });
+        toast('Project archived ✓');
+        setTimeout(() => { window.location.href = `team.php?id=${TEAM_ID}`; }, 700);
+    } catch (e) {
+        toast(e.message || 'Could not archive project');
+    }
+}
+
+async function deleteThisProject() {
+    document.getElementById('proj-options-menu').style.display = 'none';
+    if (!confirm('Delete this project permanently? This removes every task, comment, and label in it and cannot be undone.')) return;
+    try {
+        await Taskvel.request(`/api/projects.php?action=delete&id=${PROJECT_ID}`, { method: 'DELETE' });
+        toast('Project deleted');
+        setTimeout(() => { window.location.href = `team.php?id=${TEAM_ID}`; }, 700);
+    } catch (e) {
+        toast(e.message || 'Could not delete project');
     }
 }
 

@@ -885,8 +885,6 @@ footer{border-top:1px solid var(--line);padding:48px 0 30px;}
       <div class="instr"><span class="instr-badge">Premium</span><div class="instr-dial">📍</div><h3>Daily check-in &amp; manager dashboard</h3><p>Check in, log tasks against a report-to email, and check out to an automatic summary — with approvals, break tracking, and a manager dashboard that flags late arrivals and overdue work before anyone has to ask.</p></div>
       <div class="instr"><span class="instr-badge">Premium</span><div class="instr-dial">⇡</div><h3>Real push, even when it's closed</h3><p>Native OS notifications on desktop and mobile — installable as an app, working offline, alerting your team to assignments and deadlines even with the tab shut.</p></div>
       <div class="instr"><span class="instr-badge">Premium</span><div class="instr-dial">🛡</div><h3>Audit-grade security</h3><p>CSRF protection, rate limiting, and role checks enforced on every request — plus a full audit log of logins, edits and approvals, so trust isn't a UI promise.</p></div>
-      <div class="instr"><span class="instr-badge">Premium</span><div class="instr-dial">🤖</div><h3>Unlimited AI Copilot</h3><p>AI suggests priority, deadlines, subtasks and tags, parses plain-English quick-add, writes your daily focus tip and end-of-day summary. Free includes 3 actions/day — Premium removes the limit entirely.</p></div>
-      <div class="instr"><span class="instr-badge">Premium</span><div class="instr-dial">💬</div><h3>Team Chat</h3><p>A live chat on every team's page — messages appear within seconds and auto-delete after 7 days, so it never turns into archive clutter.</p></div>
     </div>
   </div>
 </section>
@@ -1033,8 +1031,6 @@ footer{border-top:1px solid var(--line);padding:48px 0 30px;}
       <div class="spec-row"><div class="spec-cell feat">Daily check-in &amp; manager dashboard</div><div class="spec-cell val dim">—</div><div class="spec-cell val premium-yes">✓</div></div>
       <div class="spec-row"><div class="spec-cell feat">Real push notifications</div><div class="spec-cell val dim">—</div><div class="spec-cell val premium-yes">✓</div></div>
       <div class="spec-row"><div class="spec-cell feat">Audit log &amp; rate-limited security</div><div class="spec-cell val dim">—</div><div class="spec-cell val premium-yes">✓</div></div>
-      <div class="spec-row"><div class="spec-cell feat">AI Copilot (suggest, quick add, focus, summaries)</div><div class="spec-cell val yes">3/day</div><div class="spec-cell val premium-yes">Unlimited</div></div>
-      <div class="spec-row"><div class="spec-cell feat">Team Chat (7-day history)</div><div class="spec-cell val dim">—</div><div class="spec-cell val premium-yes">✓</div></div>
       <div class="spec-row"><div class="spec-cell feat">Priority support</div><div class="spec-cell val dim">—</div><div class="spec-cell val premium-yes">✓</div></div>
     </div>
   </div>
@@ -1256,7 +1252,7 @@ function renderLedger(id,count){
 renderLedger('ledger-rows'); renderLedger('ledger-rows-2'); renderLedger('ledger-rows-3',3);
 
 /* ═══════════════════════ MARQUEE ═══════════════════════ */
-const marqueeItems=['GST Ready','EPFO Compliant','ESIC Tracked','SOC2-style access control','Multi-device sync','Real-time reconciliation','Role-based permissions','Daily check-in & approvals','Real push, even offline','Full audit logging','AI-powered task suggestions','Live team chat','Trusted by 340+ teams'];
+const marqueeItems=['GST Ready','EPFO Compliant','ESIC Tracked','SOC2-style access control','Multi-device sync','Real-time reconciliation','Role-based permissions','Daily check-in & approvals','Real push, even offline','Full audit logging','Trusted by 340+ teams'];
 const track=document.getElementById('marqueeTrack');
 track.innerHTML=[...marqueeItems,...marqueeItems].map(t=>`<span class="marquee-item">${t}</span>`).join('');
 
@@ -1371,7 +1367,6 @@ const planData = {
 const planFeatures = {
   individual: [
     'Everything in Free',
-    'Unlimited AI Copilot — suggest, quick add, focus & summaries',
     'Multi-device sync & personal analytics',
     'Custom Pomodoro focus sessions',
     'Compliance & client tracker',
@@ -1382,8 +1377,6 @@ const planFeatures = {
   enterprise: [
     'Everything in Individual',
     'Team collaboration & task assignment',
-    'Team Chat, with 7-day message history',
-    'Unlimited AI Copilot across every team member',
     'Role & permission control',
     'Daily check-in & manager dashboard',
     'Team-wide analytics dashboard',
@@ -1409,7 +1402,6 @@ function renderPricingCards(){
         <li>Task ranking & Pomodoro timer</li>
         <li>Tags, deadlines, recurring tasks</li>
         <li>CSV / PDF / calendar export</li>
-        <li>AI assistant — 3 actions/day</li>
         <li>Works offline, installs like an app</li>
       </ul>
       <a href="taskvel-free.php" class="btn btn-ghost magnetic">Use Taskvel Free →</a>

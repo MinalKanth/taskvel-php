@@ -12,11 +12,6 @@ switch ("$method:$action") {
 
     // ---------------- PARSE FREE-TEXT INTO A TASK ----------------
     case 'POST:parse':
-        $quota = ai_consume_daily_quota($uid);
-        if (!$quota['ok']) {
-            json_response(['error' => $quota['error'], 'upgrade_required' => true], 402);
-        }
-
         $rl = enforce_rate_limit_soft("ai_parse:$uid", 20, 3600);
         if (!$rl['ok']) {
             json_response(['error' => $rl['error'] ?? 'Too many AI requests, please slow down.'], 429);
@@ -33,7 +28,7 @@ switch ("$method:$action") {
             json_response(['error' => $result['error']], 502);
         }
 
-        json_response(['task' => $result, 'ai_quota_remaining' => $quota['remaining']]);
+        json_response(['task' => $result]);
         break;
 
     default:

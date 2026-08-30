@@ -1,6 +1,8 @@
 <?php
 require_once __DIR__ . '/../includes/auth.php';
 require_once __DIR__ . '/../includes/teams.php';
+require_once __DIR__ . '/../includes/notifications.php';
+require_once __DIR__ . '/../includes/webpush.php';
 require_login();
 
 $uid    = current_user_id();
@@ -25,6 +27,62 @@ function chat_require_member(int $teamId, int $uid): void
 {
     if (!team_role($teamId, $uid)) {
         json_response(['error' => 'Not a member of this team'], 403);
+    }
+}
+
+// Parses @[Full Name] tokens out of a message (that exact bracketed format
+// is only ever produced by the frontend's mention autocomplete, so a plain
+// @ in ordinary conversation is never mistaken for a mention), matches
+// each name against this team's members, and fires an in-app + push
+// notification to everyone mentioned except the sender. Best-effort: a
+// notification failure should never stop the message from sending.
+function chat_notify_mentions(PDO $pdo, int $teamId, int $senderId, string $senderName, string $message, int $messageId): void
+{
+    if (!preg_match_all('/@\[([^\]]+)\]/', $message, $matches)) {
+        return;
+    }
+    $names = array_unique(array_map('mb_strtolower', $matches[1]));
+    if (empty($names)) return;
+
+    $stmt = $pdo->prepare(
+        'SELECT u.id, u.name FROM team_members tm JOIN users u ON u.id = tm.user_id WHERE tm.team_id = ?'
+    );
+    $stmt->execute([$teamId]);
+    $memberByName = [];
+    foreach ($stmt->fetchAll() as $row) {
+        $memberByName[mb_strtolower($row['name'])] = (int)$row['id'];
+    }
+
+    $excerpt = mb_strlen($message) > 140 ? mb_substr($message, 0, 140) . '…' : $message;
+    // Strip the bracket markup from the excerpt shown in the notification —
+    // recipients should see "@Jane Smith", not the raw "@[Jane Smith]" token.
+    $excerpt = preg_replace('/@\[([^\]]+)\]/', '@$1', $excerpt);
+    $link = './team.php?id=' . $teamId . '#team-chat';
+
+    $notified = [];
+    foreach ($names as $name) {
+        if (!isset($memberByName[$name])) continue;
+        $targetId = $memberByName[$name];
+        if ($targetId === $senderId || isset($notified[$targetId])) continue;
+        $notified[$targetId] = true;
+
+        try {
+            create_notification(
+                $pdo, $targetId, 'chat_mention',
+                'Mentioned in Team Chat',
+                "$senderName: \"$excerpt\"",
+                $link
+            );
+        } catch (Throwable $e) { /* in-app notification is best-effort */ }
+
+        try {
+            send_web_push_to_user($pdo, $targetId, [
+                'title' => "$senderName mentioned you",
+                'body'  => $excerpt,
+                'url'   => $link,
+                'tag'   => 'taskvel-chat-mention',
+            ]);
+        } catch (Throwable $e) { /* push is best-effort */ }
     }
 }
 
@@ -97,8 +155,13 @@ switch ("$method:$action") {
              FROM team_chat_messages m JOIN users u ON u.id = m.user_id WHERE m.id = ?'
         );
         $stmt->execute([$id]);
+        $row = $stmt->fetch();
 
-        json_response(['message' => $stmt->fetch()], 201);
+        try {
+            chat_notify_mentions($pdo, $teamId, $uid, $row['name'], $message, $id);
+        } catch (Throwable $e) { /* mention notifications are best-effort */ }
+
+        json_response(['message' => $row], 201);
         break;
 
     default:

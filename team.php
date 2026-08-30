@@ -65,7 +65,43 @@ if (!$role) { header('Location: teams.php'); exit; }
     .tt-bar { height:6px; border-radius:4px; background:var(--bg-sunk); overflow:hidden; }
     .tt-bar i { display:block; height:100%; background:var(--accent); border-radius:4px; }
     .tt-actions { display:flex; gap:6px; align-items:center; flex-wrap:wrap; }
-    .tt-progress-input { width:70px; }
+    .tt-progress-input { width:70px; }    /* Team Chat */
+    .chat-box { display:flex; flex-direction:column; background:var(--bg-sunk); border:1px solid var(--line);
+        border-radius:16px; overflow:hidden; }
+    .chat-messages { height:420px; overflow-y:auto; padding:16px; display:flex; flex-direction:column; gap:12px; scroll-behavior:smooth; }
+    .chat-empty { margin:auto; font-size:13px; color:var(--ink3); text-align:center; }
+    .chat-msg { display:flex; gap:9px; align-items:flex-end; max-width:78%; animation:chatIn .18s ease-out; }
+    .chat-msg.me { align-self:flex-end; flex-direction:row-reverse; }
+    .chat-msg .avatar { flex-shrink:0; width:26px; height:26px; }
+    .chat-bubble-group { min-width:0; }
+    .chat-msg.me .chat-bubble-group { text-align:right; }
+    .chat-sender { font-size:10.5px; font-weight:700; color:var(--ink3); margin:0 4px 3px; font-family:var(--font-display); }
+    .chat-bubble { display:inline-block; padding:9px 13px; border-radius:16px; font-size:13.5px; line-height:1.5;
+        white-space:pre-wrap; word-break:break-word; text-align:left; background:var(--bg-elev); border:1px solid var(--line); }
+    .chat-msg.me .chat-bubble { background:var(--accent); color:var(--on-accent); border-color:transparent; border-bottom-right-radius:5px; }
+    .chat-msg:not(.me) .chat-bubble { border-bottom-left-radius:5px; }
+    .chat-time { display:block; font-size:9.5px; color:var(--ink4); margin:3px 4px 0; opacity:.75; }
+    .chat-day-divider { align-self:center; font-size:10.5px; color:var(--ink3); background:var(--bg-elev);
+        padding:3px 12px; border-radius:999px; margin:6px 0; }
+    .chat-input-row { display:flex; align-items:flex-end; gap:8px; padding:12px; border-top:1px solid var(--line);
+        background:var(--bg-elev); }
+    .chat-input { flex:1; resize:none; border:1px solid var(--line2); border-radius:14px; padding:10px 14px;
+        font-family:var(--font-body); font-size:13.5px; background:var(--bg); color:var(--ink); max-height:110px; min-height:20px; }
+    .chat-input:focus { outline:none; border-color:var(--accent); }
+    .chat-send-btn { flex-shrink:0; width:38px; height:38px; border-radius:50%; border:none; background:var(--accent);
+        color:var(--on-accent); font-size:15px; cursor:pointer; display:flex; align-items:center; justify-content:center;
+        transition:transform .12s ease, opacity .12s ease; }
+    .chat-send-btn:hover { transform:scale(1.07); }
+    .chat-send-btn:disabled { opacity:.5; cursor:default; transform:none; }
+    .chat-mention { background:var(--accent-soft); color:var(--accent); font-weight:700; padding:1px 5px; border-radius:6px; }
+    .chat-msg.me .chat-mention { background:rgba(255,255,255,.22); color:inherit; }
+    .chat-mention.me-mentioned { background:var(--warn-soft); color:var(--warn); }
+    .chat-mention-menu { position:absolute; bottom:100%; left:12px; right:12px; margin-bottom:6px; background:var(--bg-elev);
+        border:1px solid var(--line); border-radius:12px; box-shadow:0 8px 24px rgba(0,0,0,.15); overflow:hidden; z-index:5; }
+    .chat-mention-opt { display:flex; align-items:center; gap:9px; padding:8px 12px; cursor:pointer; font-size:13px; }
+    .chat-mention-opt.active, .chat-mention-opt:hover { background:var(--accent-soft); }
+    .chat-mention-opt .avatar { width:22px; height:22px; font-size:9px; }
+    @keyframes chatIn { from { opacity:0; transform:translateY(6px); } to { opacity:1; transform:translateY(0); } }
 </style>
 </head>
 <body>
@@ -74,6 +110,22 @@ if (!$role) { header('Location: teams.php'); exit; }
 
     <h1 class="page-title"><span id="team-name">Loading…</span> <span class="role-badge role-<?= htmlspecialchars($role) ?>"><?= htmlspecialchars($role) ?></span></h1>
     <div class="sub" id="team-sub"></div>
+
+    <section id="team-chat">
+        <h2>💬 Team Chat <span style="font-size:11px;font-weight:400;color:var(--ink3);margin-left:6px">messages auto-delete after 7 days</span></h2>
+        <div class="chat-box">
+            <div class="chat-messages" id="chat-messages">
+                <div class="chat-empty" id="chat-empty">Loading conversation…</div>
+            </div>
+            <div class="chat-input-row" style="position:relative">
+                <div class="chat-mention-menu" id="chat-mention-menu" style="display:none"></div>
+                <textarea id="chat-input" class="chat-input" rows="1" placeholder="Message the team… (@ to mention someone)"
+                    onkeydown="handleChatInputKeydown(event)"
+                    oninput="handleChatInputChange(this)"></textarea>
+                <button class="chat-send-btn" id="chat-send-btn" onclick="sendChatMessage()" aria-label="Send">➤</button>
+            </div>
+        </div>
+    </section>
 
     <section>
         <h2>📅 Events <button class="btn sm" onclick="openEventModal()">+ New event</button></h2>
@@ -181,7 +233,7 @@ if (!$role) { header('Location: teams.php'); exit; }
         <div class="fg"><label>Title</label><input type="text" id="tt-title" maxlength="255" placeholder="e.g. Prepare client proposal" /></div>
         <div class="fg"><label>Description (optional)</label><textarea id="tt-desc" rows="3" placeholder="Any details the assignee needs…"></textarea>
             <button type="button" id="ai-suggest-btn" onclick="aiSuggestTeamTask()"
-                style="margin-top:8px;font-size:12px;padding:7px 12px;border-radius:8px;border:1px solid var(--line,#ddd);background:var(--card,#fff);cursor:pointer">
+                style="margin-top:8px;font-size:12px;padding:7px 12px;border-radius:8px;border:1px solid var(--line,#ddd);background:var(--bg-elev);cursor:pointer">
                 🤖 AI Suggest</button>
             <div id="ai-suggest-status" style="font-size:11px;color:var(--ink4,#888);margin-top:6px;display:none"></div>
         </div>
@@ -261,6 +313,206 @@ const MONTHS = ['JAN','FEB','MAR','APR','MAY','JUN','JUL','AUG','SEP','OCT','NOV
 function fmtTime(t) { if (!t) return ''; const [h,m] = t.split(':').map(Number);
     const ap = h >= 12 ? 'PM' : 'AM'; const hh = h % 12 || 12; return `${hh}:${String(m).padStart(2,'0')} ${ap}`; }
 
+// ════════════════════════════════════════════
+// TEAM CHAT — polls for new messages every few seconds. Not a true
+// websocket-pushed "live" chat (this app runs on plain PHP hosting with
+// no persistent socket server), but new messages typically show up within
+// ~3 seconds for everyone in the team, which reads as live in practice.
+// Messages older than 7 days are purged automatically by the backend on
+// every send/list call — nothing to schedule or maintain.
+// ════════════════════════════════════════════
+let chatLastId = 0;
+let chatPollHandle = null;
+let chatLastDayKey = null;
+
+function initChat() {
+    loadChatInitial();
+    if (chatPollHandle) clearInterval(chatPollHandle);
+    chatPollHandle = setInterval(pollChat, 3000);
+}
+
+function chatIsScrolledToBottom(el) {
+    return el.scrollHeight - el.scrollTop - el.clientHeight < 60;
+}
+
+function fmtChatTime(iso) {
+    const d = new Date(iso.replace(' ', 'T'));
+    return d.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' });
+}
+
+function fmtChatDay(iso) {
+    const d = new Date(iso.replace(' ', 'T'));
+    const today = new Date();
+    const yest = new Date(); yest.setDate(today.getDate() - 1);
+    const key = d.toDateString();
+    if (key === today.toDateString()) return 'Today';
+    if (key === yest.toDateString()) return 'Yesterday';
+    return d.toLocaleDateString([], { weekday: 'long', month: 'short', day: 'numeric' });
+}
+
+// ── @mentions ──
+// Typed as the unambiguous token @[Full Name] (inserted only via the
+// autocomplete below, never hand-typed), so the backend can reliably tell
+// "@[Jane Smith]" apart from an ordinary sentence containing an @ sign —
+// multi-word names make a plain regex like /@(\w+)/ unsafe to rely on.
+let chatMentionActive = false;
+let chatMentionMatches = [];
+let chatMentionIndex = 0;
+let chatMentionStart = -1;
+
+function renderMessageText(text, isMe) {
+    return esc(text).replace(/@\[([^\]]+)\]/g, (full, name) => {
+        const member = members.find(m => m.name.toLowerCase() === name.toLowerCase());
+        const mine = member && member.id === MY_USER_ID;
+        return `<span class="chat-mention${mine ? ' me-mentioned' : ''}">@${esc(name)}</span>`;
+    });
+}
+
+function handleChatInputChange(el) {
+    el.style.height = 'auto';
+    el.style.height = Math.min(el.scrollHeight, 110) + 'px';
+
+    const upToCursor = el.value.slice(0, el.selectionStart);
+    const match = upToCursor.match(/@([a-zA-Z0-9 ]{0,30})$/);
+    if (!match) { closeChatMentionMenu(); return; }
+
+    const fragment = match[1].trim().toLowerCase();
+    chatMentionMatches = members
+        .filter(m => m.name.toLowerCase().includes(fragment))
+        .slice(0, 6);
+
+    if (!chatMentionMatches.length) { closeChatMentionMenu(); return; }
+
+    chatMentionStart = upToCursor.length - match[0].length;
+    chatMentionIndex = 0;
+    chatMentionActive = true;
+    renderChatMentionMenu();
+}
+
+function renderChatMentionMenu() {
+    const menu = document.getElementById('chat-mention-menu');
+    if (!chatMentionActive || !chatMentionMatches.length) { menu.style.display = 'none'; return; }
+    menu.innerHTML = chatMentionMatches.map((m, i) => `
+        <div class="chat-mention-opt${i === chatMentionIndex ? ' active' : ''}" onmousedown="event.preventDefault();selectChatMention(${i})">
+            <span class="avatar">${initials(m.name)}</span>${esc(m.name)}
+        </div>`).join('');
+    menu.style.display = 'block';
+}
+
+function closeChatMentionMenu() {
+    chatMentionActive = false;
+    chatMentionMatches = [];
+    document.getElementById('chat-mention-menu').style.display = 'none';
+}
+
+function selectChatMention(idx) {
+    const member = chatMentionMatches[idx];
+    if (!member) return;
+    const input = document.getElementById('chat-input');
+    const before = input.value.slice(0, chatMentionStart);
+    const after = input.value.slice(input.selectionStart);
+    const insert = `@[${member.name}] `;
+    input.value = before + insert + after;
+    const caret = before.length + insert.length;
+    input.setSelectionRange(caret, caret);
+    closeChatMentionMenu();
+    input.focus();
+}
+
+function handleChatInputKeydown(event) {
+    if (chatMentionActive) {
+        if (event.key === 'ArrowDown') { event.preventDefault(); chatMentionIndex = (chatMentionIndex + 1) % chatMentionMatches.length; renderChatMentionMenu(); return; }
+        if (event.key === 'ArrowUp') { event.preventDefault(); chatMentionIndex = (chatMentionIndex - 1 + chatMentionMatches.length) % chatMentionMatches.length; renderChatMentionMenu(); return; }
+        if (event.key === 'Enter' || event.key === 'Tab') { event.preventDefault(); selectChatMention(chatMentionIndex); return; }
+        if (event.key === 'Escape') { closeChatMentionMenu(); return; }
+    }
+    if (event.key === 'Enter' && !event.shiftKey) {
+        event.preventDefault();
+        sendChatMessage();
+    }
+}
+
+function appendChatMessage(m) {
+    const container = document.getElementById('chat-messages');
+    const emptyEl = document.getElementById('chat-empty');
+    if (emptyEl) emptyEl.remove();
+
+    const dayKey = new Date(m.created_at.replace(' ', 'T')).toDateString();
+    if (dayKey !== chatLastDayKey) {
+        chatLastDayKey = dayKey;
+        const div = document.createElement('div');
+        div.className = 'chat-day-divider';
+        div.textContent = fmtChatDay(m.created_at);
+        container.appendChild(div);
+    }
+
+    const isMe = m.user_id === MY_USER_ID;
+    const wrap = document.createElement('div');
+    wrap.className = 'chat-msg' + (isMe ? ' me' : '');
+    wrap.innerHTML = `
+        <span class="avatar" title="${esc(m.name)}">${initials(m.name)}</span>
+        <div class="chat-bubble-group">
+            ${isMe ? '' : `<div class="chat-sender">${esc(m.name)}</div>`}
+            <div class="chat-bubble">${renderMessageText(m.message, isMe)}</div>
+            <span class="chat-time">${fmtChatTime(m.created_at)}</span>
+        </div>`;
+    container.appendChild(wrap);
+}
+
+async function loadChatInitial() {
+    try {
+        const { messages } = await Taskvel.request(`/api/team_chat.php?action=list&team_id=${TEAM_ID}`);
+        const container = document.getElementById('chat-messages');
+        container.innerHTML = messages.length
+            ? ''
+            : '<div class="chat-empty" id="chat-empty">No messages yet — say hello 👋</div>';
+        chatLastDayKey = null;
+        messages.forEach(appendChatMessage);
+        if (messages.length) chatLastId = messages[messages.length - 1].id;
+        container.scrollTop = container.scrollHeight;
+    } catch (e) {
+        document.getElementById('chat-messages').innerHTML = `<div class="chat-empty">Couldn't load chat.</div>`;
+    }
+}
+
+async function pollChat() {
+    try {
+        const { messages } = await Taskvel.request(`/api/team_chat.php?action=list&team_id=${TEAM_ID}&since_id=${chatLastId}`);
+        if (!messages.length) return;
+        const container = document.getElementById('chat-messages');
+        const wasAtBottom = chatIsScrolledToBottom(container);
+        messages.forEach(appendChatMessage);
+        chatLastId = messages[messages.length - 1].id;
+        if (wasAtBottom) container.scrollTop = container.scrollHeight;
+    } catch (e) { /* silent — next poll will retry */ }
+}
+
+async function sendChatMessage() {
+    const input = document.getElementById('chat-input');
+    const btn = document.getElementById('chat-send-btn');
+    const text = input.value.trim();
+    if (!text) return;
+    closeChatMentionMenu();
+    btn.disabled = true;
+    try {
+        const { message: m } = await Taskvel.request('/api/team_chat.php?action=send', {
+            method: 'POST',
+            body: { team_id: TEAM_ID, message: text }
+        });
+        input.value = '';
+        input.style.height = 'auto';
+        chatLastId = Math.max(chatLastId, m.id);
+        appendChatMessage(m);
+        const container = document.getElementById('chat-messages');
+        container.scrollTop = container.scrollHeight;
+    } catch (e) {
+        toast(e.message || 'Could not send message');
+    } finally {
+        btn.disabled = false;
+        input.focus();
+    }
+}
+
 async function loadAll() {
     // Team name + stats
     try {
@@ -292,6 +544,9 @@ async function loadAll() {
 
     // Events (after members, so attendees always resolve to real people)
     loadEvents();
+
+    // Chat — starts polling once we know who we are on this team
+    initChat();
 }
 
 async function loadNotificationPref() {

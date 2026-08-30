@@ -3803,7 +3803,7 @@
         <div class="fg"><label>What's the task?</label><input type="text" id="f-name"
                 placeholder="e.g. Ship the Wispr auth endpoint" />
             <button type="button" id="ai-suggest-btn" onclick="aiSuggestTask()"
-                style="margin-top:8px;font-size:12px;padding:7px 12px;border-radius:8px;border:1px solid var(--line,#ddd);background:var(--card,#fff);cursor:pointer">
+                style="margin-top:8px;font-size:12px;padding:7px 12px;border-radius:8px;border:1px solid var(--line,#ddd);background:var(--bg-elev);cursor:pointer">
                 🤖 AI Suggest</button>
             <div id="ai-suggest-status" style="font-size:11px;color:var(--ink4);margin-top:6px;display:none"></div>
         </div>
@@ -3937,7 +3937,7 @@
         <div class="celebrate-icon" id="brief-icon" style="margin:0 0 14px">☀</div>
         <div class="celebrate-title" id="brief-title">Good morning</div>
         <div id="brief-body" style="font-size:13.5px;color:var(--ink3);line-height:1.7;margin-bottom:20px"></div>
-        <div id="ai-focus-line" style="display:none;font-size:13px;color:var(--ink2);line-height:1.6;padding:10px 12px;border-radius:10px;background:var(--card2,rgba(0,0,0,.04));margin-bottom:16px">🤖 <span id="ai-focus-text"></span></div>
+        <div id="ai-focus-line" style="display:none;font-size:13px;color:var(--ink2);line-height:1.6;padding:10px 12px;border-radius:10px;background:var(--bg-sunk);margin-bottom:16px">🤖 <span id="ai-focus-text"></span></div>
         <button class="celebrate-dismiss" id="ai-focus-btn" onclick="aiFocusBriefing(true)" style="background:transparent;border:1px solid var(--line,#ddd);margin-bottom:8px">🤖 Ask AI what to focus on</button>
         <button class="celebrate-dismiss" onclick="dismissBriefing()">Let's go</button>
     </div>

@@ -12,14 +12,6 @@ switch ("$method:$action") {
 
     // ---------------- SUGGEST ----------------
     case 'POST:suggest':
-        // Plan-based daily quota — free plan gets a handful of AI actions
-        // per day (shared across every AI feature), Pro/Business get
-        // effectively unlimited.
-        $quota = ai_consume_daily_quota($uid);
-        if (!$quota['ok']) {
-            json_response(['error' => $quota['error'], 'upgrade_required' => true], 402);
-        }
-
         // A soft per-user rate limit — AI calls are the most expensive thing
         // this app does per-request, so this keeps one user (or a bug in the
         // frontend retry logic) from burning the whole free quota.
@@ -40,7 +32,7 @@ switch ("$method:$action") {
             json_response(['error' => $result['error']], 502);
         }
 
-        json_response(['suggestion' => $result, 'ai_quota_remaining' => $quota['remaining']]);
+        json_response(['suggestion' => $result]);
         break;
 
     default:
