@@ -12,6 +12,11 @@ switch ("$method:$action") {
 
     // ---------------- FOCUS BRIEFING ----------------
     case 'POST:focus':
+        $quota = ai_consume_daily_quota($uid);
+        if (!$quota['ok']) {
+            json_response(['error' => $quota['error'], 'upgrade_required' => true], 402);
+        }
+
         // Normally called at most once/day, but allow a little headroom for
         // manual re-requests ("give me another tip") without opening the
         // door to abuse.
@@ -27,7 +32,7 @@ switch ("$method:$action") {
             json_response(['error' => $result['error']], 502);
         }
 
-        json_response(['focus' => $result['message']]);
+        json_response(['focus' => $result['message'], 'ai_quota_remaining' => $quota['remaining']]);
         break;
 
     default:

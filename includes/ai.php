@@ -1,5 +1,57 @@
 <?php
 require_once __DIR__ . '/../config/ai.php';
+require_once __DIR__ . '/billing.php';
+
+/**
+ * Enforce the per-day AI usage quota tied to the user's plan
+ * (plan_limits.max_ai_daily). Free-plan users share one small daily
+ * allowance across ALL AI features combined — suggestions, quick add,
+ * daily focus, workday summary; Pro/Business get an effectively unlimited
+ * allowance. This sits ON TOP OF each endpoint's existing per-feature
+ * hourly rate limit, which stays in place purely as an abuse safety net.
+ *
+ * Call this once per AI action, right before doing the actual AI work.
+ * On success it also records the usage — don't call rate_limit_hit again
+ * for the same request.
+ *
+ * Returns ['ok'=>true, 'remaining'=>int, 'limit'=>int] or
+ *         ['ok'=>false, 'error'=>string, 'upgrade_required'=>true, 'limit'=>int].
+ */
+function ai_consume_daily_quota(int $uid): array
+{
+    $plan = user_plan($uid);
+    $limits = plan_limits($plan);
+    $max = (int)($limits['max_ai_daily'] ?? 3);
+
+    if (!rate_limit_check("ai_daily:$uid", $max, 86400)) {
+        return [
+            'ok' => false,
+            'limit' => $max,
+            'error' => "You've used today's $max free AI action" . ($max === 1 ? '' : 's') . ". Upgrade to Taskvel Pro for unlimited AI.",
+            'upgrade_required' => true,
+        ];
+    }
+    rate_limit_hit("ai_daily:$uid", 86400);
+
+    return ['ok' => true, 'limit' => $max, 'remaining' => max(0, $max - ai_daily_usage_count($uid))];
+}
+
+// How many of today's AI actions this user has already used, regardless
+// of plan — reads the same rate_limits row ai_consume_daily_quota() writes
+// to, so it always reflects the true current count.
+function ai_daily_usage_count(int $uid): int
+{
+    try {
+        $stmt = db()->prepare('SELECT attempts, window_start FROM rate_limits WHERE rl_key = ?');
+        $stmt->execute(["ai_daily:$uid"]);
+        $row = $stmt->fetch();
+        if (!$row) return 0;
+        if ((time() - strtotime($row['window_start'])) > 86400) return 0;
+        return (int)$row['attempts'];
+    } catch (Throwable $e) {
+        return 0;
+    }
+}
 
 /**
  * Ask Gemini for smart suggestions (urgency, impact, deadline, estimate,

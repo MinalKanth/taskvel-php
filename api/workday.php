@@ -304,14 +304,18 @@ switch ("$method:$action") {
         // Checkout only happens a handful of times a day per user, so this
         // is lightly rate-limited just as a safety net, not because it's
         // expected to ever be hit in normal use. A failed/skipped AI call
-        // never blocks checkout — it just means no paragraph gets added.
+        // (including a free-plan user being out of daily AI quota) never
+        // blocks checkout — it just means no paragraph gets added.
         $aiSummaryText = null;
-        $rl = enforce_rate_limit_soft("ai_workday:$uid", 10, 3600);
-        if ($rl['ok']) {
-            rate_limit_hit("ai_workday:$uid", 3600);
-            $aiResult = ai_workday_summary($tasks, $summary, $notes);
-            if ($aiResult['ok']) {
-                $aiSummaryText = $aiResult['summary'];
+        $quota = ai_consume_daily_quota($uid);
+        if ($quota['ok']) {
+            $rl = enforce_rate_limit_soft("ai_workday:$uid", 10, 3600);
+            if ($rl['ok']) {
+                rate_limit_hit("ai_workday:$uid", 3600);
+                $aiResult = ai_workday_summary($tasks, $summary, $notes);
+                if ($aiResult['ok']) {
+                    $aiSummaryText = $aiResult['summary'];
+                }
             }
         }
 

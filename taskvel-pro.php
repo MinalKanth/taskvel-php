@@ -4811,7 +4811,7 @@ $user = current_user();
         <div class="celebrate-title" id="brief-title">Good morning</div>
         <div id="brief-body" style="font-size:13.5px;color:var(--ink3);line-height:1.7;margin-bottom:20px"></div>
         <div id="ai-focus-line" style="display:none;font-size:13px;color:var(--ink2);line-height:1.6;padding:10px 12px;border-radius:10px;background:var(--card2,rgba(0,0,0,.04));margin-bottom:16px">🤖 <span id="ai-focus-text"></span></div>
-        <button class="celebrate-dismiss" id="ai-focus-btn" onclick="aiFocusBriefing()" style="background:transparent;border:1px solid var(--line,#ddd);margin-bottom:8px">🤖 Ask AI what to focus on</button>
+        <button class="celebrate-dismiss" id="ai-focus-btn" onclick="aiFocusBriefing(true)" style="background:transparent;border:1px solid var(--line,#ddd);margin-bottom:8px">🤖 Ask AI what to focus on</button>
         <button class="celebrate-dismiss" onclick="dismissBriefing()">Let's go</button>
     </div>
 
@@ -5661,7 +5661,7 @@ $user = current_user();
             });
     }
 
-    async function aiFocusBriefing() {
+    async function aiFocusBriefing(manual = false) {
         const line = document.getElementById('ai-focus-line');
         const text = document.getElementById('ai-focus-text');
         const btn = document.getElementById('ai-focus-btn');
@@ -5677,8 +5677,14 @@ $user = current_user();
             text.textContent = focus;
             line.style.display = 'block';
         } catch (e) {
-            // Silent failure is fine here — the rule-based briefing already
-            // covers the essentials; AI is a bonus, not a requirement.
+            // Silent on the automatic once-a-day trigger — the rule-based
+            // briefing already covers the essentials, AI is a bonus. But if
+            // the person explicitly tapped the button, show them why it
+            // didn't work (e.g. daily AI quota reached on the free plan).
+            if (manual) {
+                text.textContent = e.message || "Couldn't get a focus tip right now.";
+                line.style.display = 'block';
+            }
         } finally {
             if (btn) { btn.disabled = false; btn.textContent = '🤖 Ask AI what to focus on'; }
         }

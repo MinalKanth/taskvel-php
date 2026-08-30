@@ -43,7 +43,7 @@ function team_plan(int $teamId): string
 
 function plan_limits(string $plan): array
 {
-    $defaults = ['max_teams' => 1, 'max_members' => 3, 'max_projects' => 1, 'max_attachment_mb' => 10];
+    $defaults = ['max_teams' => 1, 'max_members' => 3, 'max_projects' => 1, 'max_attachment_mb' => 10, 'max_ai_daily' => 3];
     try {
         $stmt = db()->prepare('SELECT * FROM plan_limits WHERE plan = ?');
         $stmt->execute([$plan]);
