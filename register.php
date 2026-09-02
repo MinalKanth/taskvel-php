@@ -306,8 +306,9 @@ input:focus-visible, button:focus-visible, a:focus-visible{outline:2px solid var
           <label for="email">Email address</label>
         </div>
         <div class="field">
-          <input type="password" name="password" placeholder=" " required minlength="8" maxlength="200" autocomplete="new-password" id="password">
+          <input type="password" name="password" placeholder=" " required minlength="8" maxlength="200" autocomplete="new-password" id="password" style="padding-right:44px;">
           <label for="password">Password (min 8 characters)</label>
+          <button type="button" id="togglePassword" aria-label="Show password" style="position:absolute; right:12px; top:50%; transform:translateY(-50%); background:none; border:none; color:rgba(250,248,243,0.55); cursor:pointer; font-size:12px; font-weight:600; padding:4px 6px;">Show</button>
         </div>
         <button type="submit" class="btn" id="submitBtn">Create account</button>
       </form>
@@ -373,6 +374,19 @@ input:focus-visible, button:focus-visible, a:focus-visible{outline:2px solid var
       }, 0);
     });
   }
+
+    /* Show/hide password toggle */
+  var pwInput = document.getElementById('password');
+  var pwToggle = document.getElementById('togglePassword');
+  if (pwInput && pwToggle) {
+    pwToggle.addEventListener('click', function(){
+      var isHidden = pwInput.type === 'password';
+      pwInput.type = isHidden ? 'text' : 'password';
+      pwToggle.textContent = isHidden ? 'Hide' : 'Show';
+      pwToggle.setAttribute('aria-label', isHidden ? 'Hide password' : 'Show password');
+    });
+  }
+
 })();
 </script>
 </body>

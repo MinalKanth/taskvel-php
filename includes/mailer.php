@@ -35,11 +35,16 @@ function send_mail(string $to, string $subject, string $htmlBody): bool
         $headers = "MIME-Version: 1.0\r\n";
         $headers .= "Content-type: text/html; charset=UTF-8\r\n";
         $headers .= 'From: ' . SMTP_FROM_NAME . ' <' . SMTP_FROM . ">\r\n";
-        return mail($to, $subject, $htmlBody, $headers);
+        // Subject must be MIME encoded-word wrapped, or any non-ASCII
+        // character (—, é, ₹, etc.) gets read back as Latin-1 mojibake
+        // (e.g. "â€”") by mail clients.
+        $encodedSubject = mb_encode_mimeheader($subject, 'UTF-8', 'B', "\r\n");
+        return mail($to, $encodedSubject, $htmlBody, $headers);
     }
 
     $mail = new PHPMailer\PHPMailer\PHPMailer(true);
     try {
+        $mail->CharSet    = 'UTF-8'; // PHPMailer defaults to ISO-8859-1, which mangles UTF-8 subjects/bodies into "â€”"-style mojibake
         $mail->isSMTP();
         $mail->Host       = SMTP_HOST;
         $mail->SMTPAuth   = true;
@@ -72,16 +77,25 @@ function send_verification_email(string $email, string $name, string $token): vo
 {
     $link = APP_URL . '/verify-email.php?token=' . urlencode($token);
     $subject = 'Verify your email — Taskvel';
-    $body = "Hi " . htmlspecialchars($name) . ",\n\n"
-        . "Please confirm your email address to activate your Taskvel account:\n\n"
-        . $link . "\n\n"
-        . "This link doesn't expire, but you won't be able to log in until you use it.\n\n"
-        . "If you didn't create a Taskvel account, you can ignore this email.";
 
-    // Use whatever mail-sending mechanism send_welcome_email()/
-    // send_password_reset_email() already use in this file (PHPMailer, etc).
-    // Example if using PHPMailer, mirror send_password_reset_email()'s setup:
-    send_app_email($email, $subject, $body); // replace with your existing helper name
+    $body = <<<HTML
+      <p style="margin:0 0 14px;">Hi <strong style="color:#141425;">{$name}</strong>, thanks for signing up for Taskvel!</p>
+      <p style="margin:0;">Please confirm your email address to activate your account. This link doesn't expire, but you won't be able to log in until you use it.</p>
+    HTML;
+
+    $html = email_shell(
+        preheader: 'Confirm your email to activate your Taskvel account',
+        badgeLabel: 'Verify Email',
+        heading: 'Verify your email ✅',
+        bodyHtml: $body,
+        ctaLabel: 'Verify email',
+        ctaLink: $link,
+        footerNote: "If you didn't create a Taskvel account, you can safely ignore this email.",
+        accentFrom: '#0F4436',
+        accentTo: '#22c55e'
+    );
+
+    send_mail($email, $subject, $html);
 }
 
 function smtp_send(string $to, string $subject, string $htmlBody): bool
