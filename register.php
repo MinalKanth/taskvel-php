@@ -30,14 +30,24 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     } else {
         $name = trim($_POST['name'] ?? '');
         $email = trim($_POST['email'] ?? '');
-        $res = register_user($name, $email, $_POST['password'] ?? '');
-        if ($res['ok']) {
-            // No auto-login — the account exists but is unverified until the
-            // email link is clicked. Show a "check your email" state on this
-            // same page instead of redirecting in.
-            $registeredEmail = $res['email'];
+        $password = $_POST['password'] ?? '';
+        $confirmPassword = $_POST['confirm_password'] ?? '';
+
+        // Server-side check too — the JS below blocks submission on mismatch,
+        // but JS can be disabled/bypassed, so this must never be trusted as
+        // the only guard.
+        if ($password !== $confirmPassword) {
+            $error = 'Passwords do not match.';
         } else {
-            $error = $res['error'];
+            $res = register_user($name, $email, $password);
+            if ($res['ok']) {
+                // No auto-login — the account exists but is unverified until the
+                // email link is clicked. Show a "check your email" state on this
+                // same page instead of redirecting in.
+                $registeredEmail = $res['email'];
+            } else {
+                $error = $res['error'];
+            }
         }
     }
 }
@@ -206,6 +216,72 @@ body::before{
 .field input:focus{border-color:var(--gold); background:rgba(255,255,255,0.11); box-shadow:0 0 0 4px rgba(201,162,39,0.14);}
 .field input:focus + label, .field input:not(:placeholder-shown) + label{top:6px; font-size:10.5px; color:var(--gold-2); letter-spacing:.04em;}
 
+/* Password + confirm-password field variants */
+.field.has-toggle input{padding-right:46px;}
+.pw-toggle{
+  position:absolute; right:6px; top:50%; transform:translateY(-50%);
+  background:none; border:none; cursor:pointer; padding:8px;
+  color:rgba(250,248,243,0.5); font-size:15px; line-height:1;
+  display:flex; align-items:center; justify-content:center;
+  transition:color .2s ease, transform .2s ease;
+}
+.pw-toggle:hover{color:var(--gold-2);}
+.pw-toggle:active{transform:translateY(-50%) scale(.9);}
+.pw-toggle svg{width:18px;height:18px;display:block;}
+
+.field input{transition:border-color .3s ease, background .3s ease, box-shadow .3s ease;}
+.field.is-match input{
+  border-color:#34D399; background:rgba(52,211,153,0.08);
+  box-shadow:0 0 0 4px rgba(52,211,153,0.14);
+  animation:pwPop .35s var(--ease);
+}
+.field.is-match input:focus{box-shadow:0 0 0 4px rgba(52,211,153,0.18);}
+.field.is-mismatch input{
+  border-color:#F87171; background:rgba(248,113,113,0.08);
+  box-shadow:0 0 0 4px rgba(248,113,113,0.12);
+  animation:pwShake .35s var(--ease);
+}
+.field.is-mismatch input:focus{box-shadow:0 0 0 4px rgba(248,113,113,0.16);}
+@keyframes pwPop{
+  0%{transform:scale(1);}
+  40%{transform:scale(1.015);}
+  100%{transform:scale(1);}
+}
+@keyframes pwShake{
+  0%,100%{transform:translateX(0);}
+  25%{transform:translateX(-3px);}
+  75%{transform:translateX(3px);}
+}
+
+.pw-status{
+  display:flex; align-items:center; gap:6px; font-size:12px; margin:-8px 0 16px 2px;
+  min-height:16px; opacity:0; transform:translateY(-4px);
+  transition:opacity .25s ease, transform .25s ease;
+}
+.pw-status.show{opacity:1; transform:translateY(0);}
+.pw-status.ok{color:#34D399;}
+.pw-status.bad{color:#F87171;}
+.pw-status .dot{
+  width:15px;height:15px;border-radius:50%; flex-shrink:0;
+  display:inline-flex; align-items:center; justify-content:center; font-size:9px; font-weight:700;
+  transition:transform .3s var(--ease), background .3s ease, color .3s ease;
+}
+.pw-status.ok .dot{background:rgba(52,211,153,0.18); color:#34D399;}
+.pw-status.bad .dot{background:rgba(248,113,113,0.18); color:#F87171;}
+.pw-status.show .dot{
+  animation:dotPop .35s var(--ease);
+}
+@keyframes dotPop{
+  0%{transform:scale(.4) rotate(-45deg); opacity:0;}
+  60%{transform:scale(1.15) rotate(5deg); opacity:1;}
+  100%{transform:scale(1) rotate(0);}
+}
+
+.btn:disabled{
+  opacity:.5; cursor:not-allowed; box-shadow:none; transform:none !important;
+}
+.btn:disabled:hover{transform:none; box-shadow:none;}
+
 .btn{
   position:relative; overflow:hidden; width:100%; padding:15px 22px; border:none; cursor:pointer;
   border-radius:100px; font-family:'Inter'; font-weight:700; font-size:14.5px; color:#fff;
@@ -305,12 +381,28 @@ input:focus-visible, button:focus-visible, a:focus-visible{outline:2px solid var
           <input type="email" name="email" placeholder=" " required maxlength="190" autocomplete="email" id="email">
           <label for="email">Email address</label>
         </div>
-        <div class="field">
-          <input type="password" name="password" placeholder=" " required minlength="8" maxlength="200" autocomplete="new-password" id="password" style="padding-right:44px;">
+        <div class="field has-toggle">
+          <input type="password" name="password" placeholder=" " required minlength="8" maxlength="200" autocomplete="new-password" id="password">
           <label for="password">Password (min 8 characters)</label>
-          <button type="button" id="togglePassword" aria-label="Show password" style="position:absolute; right:12px; top:50%; transform:translateY(-50%); background:none; border:none; color:rgba(250,248,243,0.55); cursor:pointer; font-size:12px; font-weight:600; padding:4px 6px;">Show</button>
+          <button type="button" class="pw-toggle" id="togglePassword" aria-label="Show password" aria-pressed="false">
+            <svg id="eyePassword" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7-11-7-11-7Z"/><circle cx="12" cy="12" r="3"/></svg>
+          </button>
         </div>
-        <button type="submit" class="btn" id="submitBtn">Create account</button>
+
+        <div class="field has-toggle" style="margin-bottom:6px;">
+          <input type="password" name="confirm_password" placeholder=" " required minlength="8" maxlength="200" autocomplete="new-password" id="confirmPassword">
+          <label for="confirmPassword">Confirm password</label>
+          <button type="button" class="pw-toggle" id="toggleConfirmPassword" aria-label="Show password" aria-pressed="false">
+            <svg id="eyeConfirmPassword" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7-11-7-11-7Z"/><circle cx="12" cy="12" r="3"/></svg>
+          </button>
+        </div>
+
+        <div class="pw-status" id="pwStatus">
+          <span class="dot">•</span>
+          <span id="pwStatusText"></span>
+        </div>
+
+        <button type="submit" class="btn" id="submitBtn" disabled>Create account</button>
       </form>
       <p class="alt">Already have an account? <a href="login.php">Log in</a></p>
       <?php endif; ?>
@@ -355,6 +447,82 @@ input:focus-visible, button:focus-visible, a:focus-visible{outline:2px solid var
     });
   }
 
+    /* Show/hide toggles for both password fields */
+  function wireToggle(btnId, inputId, eyeId){
+    var btn = document.getElementById(btnId);
+    var input = document.getElementById(inputId);
+    var eye = document.getElementById(eyeId);
+    if (!btn || !input) return;
+    btn.addEventListener('click', function(){
+      var show = input.type === 'password';
+      input.type = show ? 'text' : 'password';
+      btn.setAttribute('aria-pressed', show ? 'true' : 'false');
+      btn.setAttribute('aria-label', show ? 'Hide password' : 'Show password');
+      if (eye) {
+        eye.innerHTML = show
+          ? '<path d="M3 3l18 18"/><path d="M10.6 10.6a2 2 0 0 0 2.8 2.8"/><path d="M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 7 11 7a13.16 13.16 0 0 1-3.17 3.88M6.1 6.1C3.51 7.86 1.5 10.5 1 11c0 0 4 7 11 7 1.3 0 2.5-.24 3.6-.66"/>'
+          : '<path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7-11-7-11-7Z"/><circle cx="12" cy="12" r="3"/>';
+      }
+    });
+  }
+  wireToggle('togglePassword', 'password', 'eyePassword');
+  wireToggle('toggleConfirmPassword', 'confirmPassword', 'eyeConfirmPassword');
+
+  /* Live "do the passwords match" check — greys out / green-lights the
+     confirm field in real time and only enables Create Account once both
+     fields are non-empty, meet the length rule, and match exactly.
+     Server-side (register.php) re-checks this independently, since JS
+     can be disabled or bypassed entirely. */
+  var pwField = document.getElementById('password');
+  var cpField = document.getElementById('confirmPassword');
+  var pwFieldWrap = pwField ? pwField.closest('.field') : null;
+  var cpFieldWrap = cpField ? cpField.closest('.field') : null;
+  var statusEl = document.getElementById('pwStatus');
+  var statusText = document.getElementById('pwStatusText');
+  var statusDot = statusEl ? statusEl.querySelector('.dot') : null;
+
+  function checkPasswordMatch(){
+    if (!pwField || !cpField || !statusEl) return;
+    var pw = pwField.value;
+    var cp = cpField.value;
+
+    [pwFieldWrap, cpFieldWrap].forEach(function(w){ if (w) w.classList.remove('is-match', 'is-mismatch'); });
+    statusEl.classList.remove('show', 'ok', 'bad');
+
+    var canSubmit = false;
+
+    if (cp.length === 0) {
+      // Confirm field untouched/empty — stay neutral, no message yet.
+      if (statusDot) statusDot.textContent = '•';
+    } else if (pw.length < 8) {
+      statusEl.classList.add('show', 'bad');
+      statusText.textContent = 'Password must be at least 8 characters.';
+      if (statusDot) statusDot.textContent = '✕';
+      if (cpFieldWrap) cpFieldWrap.classList.add('is-mismatch');
+    } else if (pw !== cp) {
+      statusEl.classList.add('show', 'bad');
+      statusText.textContent = 'Passwords do not match.';
+      if (statusDot) statusDot.textContent = '✕';
+      if (pwFieldWrap) pwFieldWrap.classList.add('is-mismatch');
+      if (cpFieldWrap) cpFieldWrap.classList.add('is-mismatch');
+    } else {
+      statusEl.classList.add('show', 'ok');
+      statusText.textContent = 'Passwords match.';
+      if (statusDot) statusDot.textContent = '✓';
+      if (pwFieldWrap) pwFieldWrap.classList.add('is-match');
+      if (cpFieldWrap) cpFieldWrap.classList.add('is-match');
+      canSubmit = true;
+    }
+
+    if (btn) btn.disabled = !canSubmit;
+  }
+
+  if (pwField && cpField) {
+    pwField.addEventListener('input', checkPasswordMatch);
+    cpField.addEventListener('input', checkPasswordMatch);
+    checkPasswordMatch(); // set initial disabled state on load
+  }
+
   /* Prevent double-submit: a second click while the first request is still
      in flight would reuse the same CSRF token — but the first successful
      request already consumes/clears it server-side, so the second request
@@ -372,18 +540,6 @@ input:focus-visible, button:focus-visible, a:focus-visible{outline:2px solid var
         btn.style.cursor = 'wait';
         btn.textContent = 'Creating account…';
       }, 0);
-    });
-  }
-
-    /* Show/hide password toggle */
-  var pwInput = document.getElementById('password');
-  var pwToggle = document.getElementById('togglePassword');
-  if (pwInput && pwToggle) {
-    pwToggle.addEventListener('click', function(){
-      var isHidden = pwInput.type === 'password';
-      pwInput.type = isHidden ? 'text' : 'password';
-      pwToggle.textContent = isHidden ? 'Hide' : 'Show';
-      pwToggle.setAttribute('aria-label', isHidden ? 'Hide password' : 'Show password');
     });
   }
 
