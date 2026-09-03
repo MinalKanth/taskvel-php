@@ -4233,9 +4233,8 @@ $user = current_user();
         <div class="header">
             <div class="brand-row">
                 <div class="brand">
-                    <div class="logo">T</div>
-                    <!-- <div class="logo"><img src="images/3.png" alt="" style="width:100%;height:100%;object-fit:cover" onerror="this.remove();this.parentElement.textContent='T'"></div> -->
-                    <div class="brand-txt">
+                    <div class="logo" id="brand-logo">T</div>
+                    <div class="brand-txt" id="brand-txt">
                         <h1>Task<span>vel</span></h1>
                         <div class="tag">by <a href="https://www.samalconsultancy.com" target="_blank" rel="noopener"
                                 class="by-samal">Samal Consultancy</a></div>
@@ -4351,6 +4350,10 @@ $user = current_user();
                 <div class="panel-head"><span class="panel-title">Task templates</span><button class="panel-close"
                         onclick="closePanel('tmpl-panel')">✕</button></div>
                 <div class="notif-list" id="tmpl-list"></div>
+                <div id="org-tmpl-section" style="display:none">
+                    <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.4px;color:var(--ink3);margin:16px 0 8px;padding-top:12px;border-top:1px solid var(--line)">🏢 Team templates</div>
+                    <div class="notif-list" id="org-tmpl-list"></div>
+                </div>
             </div>
 
             <!-- Export panel -->
@@ -4766,6 +4769,8 @@ $user = current_user();
         </div>
         <button class="opt" style="width:100%;justify-content:center;margin-bottom:10px" onclick="saveAsTemplate()">💾
             Save as Template</button>
+        <button class="opt" id="publish-org-tmpl-btn" style="width:100%;justify-content:center;margin-bottom:10px;display:none" onclick="publishAsOrgTemplate()">🏢
+            Publish as Team Template</button>
         <button class="submit" onclick="saveEdit()">Save changes</button>
     </div>
 
@@ -8272,6 +8277,38 @@ $user = current_user();
         schedulePush();
     }
 
+    
+
+    // ════════════════════════════════════════════
+    // ORG BRANDING — a member's org can replace the default Taskvel logo
+    // and accent color app-wide, without touching their personal
+    // light/dark or theme-picker preference underneath it.
+    // ════════════════════════════════════════════
+    function hexToRgb(hex) {
+        const h = hex.replace('#', '');
+        return [0, 2, 4].map(i => parseInt(h.substr(i, 2), 16));
+    }
+
+    async function applyOrgBranding() {
+        try {
+            const { membership } = await Taskvel.request('/api/organizations.php?action=mine');
+            if (!membership) return;
+
+            if (membership.org_logo_url) {
+                const logoEl = document.getElementById('brand-logo');
+                logoEl.innerHTML = `<img src="${esc(membership.org_logo_url)}" alt="" style="width:100%;height:100%;object-fit:cover" onerror="this.remove();this.parentElement.textContent='${esc(membership.org_name || 'T').charAt(0)}'">`;
+            }
+
+            if (membership.org_brand_color) {
+                const [r, g, b] = hexToRgb(membership.org_brand_color);
+                const root = document.documentElement.style;
+                root.setProperty('--accent', membership.org_brand_color);
+                root.setProperty('--accent-soft', `rgba(${r},${g},${b},.10)`);
+                root.setProperty('--accent-glow', `rgba(${r},${g},${b},.28)`);
+            }
+        } catch (e) { /* not in an org — keep default Taskvel branding */ }
+    }
+
     function saveAsTemplate() {
         const t = tasks.find(t => t.id === editingId);
         if (!t) return;
@@ -8308,8 +8345,8 @@ $user = current_user();
                                 </div>`).join('');
     }
 
-    function useTemplate(id) {
-        const tm = templates.find(t => t.id === id);
+    function useTemplate(idOrObj) {
+        const tm = typeof idOrObj === 'object' ? idOrObj : templates.find(t => t.id === idOrObj);
         if (!tm) return;
         closePanel('tmpl-panel');
         openSheet();
@@ -8342,6 +8379,82 @@ $user = current_user();
         saveTemplates();
         renderTemplates();
         toast('Template deleted');
+    }
+
+    // ════════════════════════════════════════════
+    // ORG-WIDE TEMPLATES — published by an admin, visible to every member
+    // ════════════════════════════════════════════
+    let orgMembership = null;
+    let orgTemplates = [];
+
+    async function initOrgTemplates() {
+        try {
+            const { membership } = await Taskvel.request('/api/organizations.php?action=mine');
+            orgMembership = membership;
+            if (membership) {
+                document.getElementById('org-tmpl-section').style.display = '';
+                if (['owner', 'admin'].includes(membership.role)) {
+                    document.getElementById('publish-org-tmpl-btn').style.display = '';
+                }
+                loadOrgTemplates();
+            }
+        } catch (e) { /* not in an org, or not logged in yet — silently skip */ }
+    }
+
+    async function loadOrgTemplates() {
+        const el = document.getElementById('org-tmpl-list');
+        try {
+            const { templates: tpls } = await Taskvel.request('/api/org-templates.php?action=list');
+            orgTemplates = tpls;
+            if (!tpls.length) { el.innerHTML = `<div class="notif-empty">No team templates yet.</div>`; return; }
+            el.innerHTML = tpls.map(tm => `
+                <div class="notif-item">
+                    <div class="body">
+                        <div class="msg"><b>${esc(tm.name)}</b> — ${tm.payload.urgency}/${tm.payload.damage}, ${(tm.payload.steps||[]).length} step(s)</div>
+                        <div class="sub" style="font-size:11px;color:var(--ink3)">by ${esc(tm.created_by_name || 'a team admin')}</div>
+                    </div>
+                    <button class="rmk-x" onclick="useOrgTemplate(${tm.id})" title="Use">▶</button>
+                    ${['owner','admin'].includes((orgMembership||{}).role) ? `<button class="rmk-x" onclick="deleteOrgTemplate(${tm.id})" title="Delete">✕</button>` : ''}
+                </div>`).join('');
+        } catch (e) { el.innerHTML = `<div class="notif-empty">Couldn't load team templates.</div>`; }
+    }
+
+    function useOrgTemplate(id) {
+        const tm = orgTemplates.find(t => t.id === id);
+        if (!tm) return;
+        // Reuses the exact same "apply a template to the open form" logic
+        // as personal templates — just feeding it a server-sourced payload
+        // instead of a localStorage one.
+        useTemplate({ ...tm.payload, id: -1 - id, name: tm.name });
+    }
+
+    async function publishAsOrgTemplate() {
+        if (!orgMembership) return;
+        const t = tasks.find(t => t.id === editingId);
+        if (!t) return;
+        const name = prompt('Team template name:', t.name);
+        if (!name) return;
+        const payload = {
+            name, urgency: t.urgency, damage: t.damage,
+            tags: (t.tags || []).slice(), recur: t.recur,
+            steps: (t.steps || []).map(s => ({ text: s.text })),
+        };
+        try {
+            await Taskvel.request('/api/org-templates.php?action=create', {
+                method: 'POST', body: { org_id: orgMembership.organization_id, name, payload },
+            });
+            toast('Published to your team ✓');
+            loadOrgTemplates();
+        } catch (e) { toast(e.message || 'Could not publish template'); }
+    }
+
+    async function deleteOrgTemplate(id) {
+        if (!orgMembership) return;
+        try {
+            await Taskvel.request(`/api/org-templates.php?action=delete&org_id=${orgMembership.organization_id}&id=${id}`, { method: 'DELETE' });
+            loadOrgTemplates();
+            toast('Team template deleted');
+        } catch (e) { toast(e.message || 'Could not delete'); }
     }
 
 
@@ -9135,6 +9248,8 @@ $user = current_user();
     async function init() {
         load();
         loadTemplates();
+        applyOrgBranding();
+        initOrgTemplates();
         renderTabs();
         const gs = document.getElementById('group-select');
         if (gs) gs.value = groupBy;

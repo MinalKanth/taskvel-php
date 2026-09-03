@@ -107,7 +107,7 @@ if ($event['type'] === 'invoice.payment_failed') {
     $invoice = $event['data']['object'];
     $subId = $invoice['subscription'] ?? null;
     if ($subId) {
-        $pdo->prepare('UPDATE organizations SET plan_status = "past_due" WHERE stripe_subscription_id = ? AND plan_status = "active"')
+        $pdo->prepare("UPDATE organizations SET plan_status = 'past_due', grace_ends_at = DATE_ADD(CURDATE(), INTERVAL 7 DAY) WHERE stripe_subscription_id = ? AND plan_status = 'active'")
             ->execute([$subId]);
         $pdo->prepare('UPDATE teams SET plan_status = "past_due" WHERE stripe_subscription_id = ? AND plan_status = "active"')
             ->execute([$subId]);
@@ -125,6 +125,27 @@ if ($event['type'] === 'invoice.payment_failed') {
         $stmt->execute([$subId]);
         if ($userId = $stmt->fetchColumn()) {
             audit_log((int)$userId, 'user_payment_failed', ['stripe_invoice_id' => $invoice['id'] ?? null]);
+        }
+    }
+}
+
+// A renewal charge succeeded — fires every month for an existing
+// subscription (the first payment is checkout.session.completed above;
+// every renewal after that comes through here). Revives an org from
+// past_due/locked back to active and realigns billing to the calendar month.
+if ($event['type'] === 'invoice.payment_succeeded') {
+    $invoice = $event['data']['object'];
+    $subId = $invoice['subscription'] ?? null;
+    if ($subId) {
+        $stmt = $pdo->prepare('SELECT id FROM organizations WHERE stripe_subscription_id = ?');
+        $stmt->execute([$subId]);
+        if ($orgId = $stmt->fetchColumn()) {
+            require_once __DIR__ . '/../includes/licensing.php';
+            reactivate_org_billing((int)$orgId);
+            $pdo->prepare('INSERT INTO organization_billing_history (organization_id, description, amount_cents, currency, stripe_invoice_id)
+                           VALUES (?, "Payment confirmed", ?, ?, ?)')
+                ->execute([$orgId, $invoice['amount_paid'] ?? null, $invoice['currency'] ?? 'usd', $invoice['id'] ?? null]);
+            audit_log(null, 'org_payment_succeeded', ['organization_id' => (int)$orgId, 'stripe_invoice_id' => $invoice['id'] ?? null]);
         }
     }
 }

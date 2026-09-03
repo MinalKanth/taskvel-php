@@ -90,6 +90,13 @@ $user = current_user();
             <button class="btn ghost" onclick="closeInvite()">Cancel</button>
             <button class="btn" onclick="submitInvite()">Add employee</button>
         </div>
+
+        <div style="margin:18px 0 4px;border-top:1px solid var(--line);padding-top:16px">
+            <label style="font-size:12.5px;font-weight:700;display:block;margin-bottom:6px">Or bulk import from CSV</label>
+            <div class="sub" style="margin-bottom:8px">One row per person: <code>email,role</code> — role is optional, defaults to employee. Max 50 rows per import.</div>
+            <input type="file" id="bulk-csv-input" accept=".csv,text/csv" onchange="handleBulkCsv(event)" />
+            <div id="bulk-csv-results" style="margin-top:10px;max-height:220px;overflow-y:auto"></div>
+        </div>
     </div>
 </div>
 
@@ -171,26 +178,144 @@ async function loadOrgSection() {
 function renderOrgDashboard(dash) {
     const box = document.getElementById('org-section');
     const org = dash.organization, seats = dash.seats;
+    const isLocked = org.plan_status === 'locked';
+    const isGrace = org.plan_status === 'past_due';
+    let graceDaysLeft = null;
+    if (isGrace && org.grace_ends_at) {
+        graceDaysLeft = Math.max(0, Math.ceil((new Date(org.grace_ends_at + 'T00:00:00') - new Date(new Date().toDateString())) / 86400000));
+    }
+    const banner = isLocked
+        ? `<div style="margin-bottom:16px;padding:14px 16px;border-radius:12px;background:var(--bad-soft);border:1px solid var(--bad);color:var(--bad);font-size:13.5px;font-weight:600">
+             🔒 This organization is locked — payment wasn't received during the grace period. Every member has lost Pro access. Renew now to restore it instantly.
+           </div>`
+        : isGrace
+            ? `<div style="margin-bottom:16px;padding:14px 16px;border-radius:12px;background:var(--warn-soft);border:1px solid var(--warn);color:var(--warn);font-size:13.5px;font-weight:600">
+                 ⚠️ Payment is overdue. Your account will be locked in <strong>${graceDaysLeft} day${graceDaysLeft === 1 ? '' : 's'}</strong> — kindly renew to avoid interruption.
+               </div>`
+            : '';
     box.innerHTML = `
+    ${banner}
     <div class="plan-card">
         <div class="row2" style="align-items:flex-start">
             <div>
                 <h3 style="margin:0 0 4px;font-family:var(--font-display)">🏢 ${esc(org.name)}</h3>
                 <div class="sub">${org.billing_cycle} billing · renews ${esc(org.renewal_date || '—')} · status: ${esc(org.plan_status)}</div>
             </div>
-            <button class="btn sm" onclick="openInvite()">+ Add employee</button>
+            <button class="btn sm" onclick="openInvite()" ${isLocked ? 'disabled title="Renew to add employees"' : ''}>+ Add employee</button>
         </div>
         <div class="seat-grid">
             <div class="seat-stat"><b>${seats.purchased}</b>Seats purchased</div>
             <div class="seat-stat"><b>${seats.assigned}</b>Assigned</div>
             <div class="seat-stat"><b>${seats.available}</b>Available</div>
         </div>
-        <button class="btn ghost sm" id="add-seats-btn" onclick="addSeats()">+ Add more seats</button>
-        <button class="btn ghost sm" onclick="openBusinessBundle()">🏢 Business — <?= BUSINESS_BUNDLE_SEATS ?> seats bundled</button>
+        <button class="btn ghost sm" id="add-seats-btn" onclick="addSeats()" ${isLocked ? 'disabled' : ''}>+ Add more seats</button>
+        <button class="btn ghost sm" onclick="openBusinessBundle()" style="${isLocked ? 'border-color:var(--bad);color:var(--bad)' : ''}">${isLocked ? '🔒 Renew — Business, ' : '🏢 Business — '}<?= BUSINESS_BUNDLE_SEATS ?> seats bundled</button>
         <h4 style="margin:20px 0 6px;font-family:var(--font-display)">Members</h4>
         <div id="org-members"></div>
+        <h4 style="margin:20px 0 6px;font-family:var(--font-display)">Team task progress</h4>
+        <div id="org-progress"></div>
+        <h4 style="margin:20px 0 6px;font-family:var(--font-display)">Activity log</h4>
+        <div id="org-activity"></div>
+
+        <h4 style="margin:20px 0 6px;font-family:var(--font-display)">Branding</h4>
+        <div class="sub" style="margin-bottom:10px">Replace Taskvel's default logo and accent color with your own, for every member of this org.</div>
+        <div style="display:flex;gap:10px;align-items:flex-end;flex-wrap:wrap;margin-bottom:10px">
+            <div style="flex:1;min-width:220px">
+                <label style="font-size:11.5px;font-weight:700;display:block;margin-bottom:4px">Logo image URL</label>
+                <input type="url" id="org-logo-url" placeholder="https://yourcompany.com/logo.png" value="${esc(org.logo_url || '')}" style="width:100%;padding:9px 12px;border-radius:9px;border:1px solid var(--line);background:var(--bg-elev)">
+            </div>
+            <div>
+                <label style="font-size:11.5px;font-weight:700;display:block;margin-bottom:4px">Accent color</label>
+                <input type="color" id="org-brand-color" value="${org.brand_color || '#4f46e5'}" style="width:52px;height:38px;padding:2px;border-radius:9px;border:1px solid var(--line);background:var(--bg-elev)">
+            </div>
+            <button class="btn sm" onclick="saveOrgBranding(${org.id})">Save branding</button>
+        </div>
+
+        <div style="margin:20px 0 6px;display:flex;justify-content:space-between;align-items:center">
+            <h4 style="margin:0;font-family:var(--font-display)">Reports</h4>
+            <a class="btn ghost sm" href="/api/organizations.php?action=export-report&org_id=${org.id}">⬇ Download full report (CSV)</a>
+        </div>
     </div>`;
     loadOrgMembers(org.id);
+    loadOrgProgress(org.id);
+    loadOrgActivity(org.id);
+}
+
+async function saveOrgBranding(orgId) {
+    const logoUrl = document.getElementById('org-logo-url').value.trim();
+    const brandColor = document.getElementById('org-brand-color').value;
+    try {
+        await Taskvel.request('/api/organizations.php?action=update-branding', {
+            method: 'POST', body: { org_id: orgId, logo_url: logoUrl, brand_color: brandColor },
+        });
+        toast('Branding updated ✓ — members will see it on their next visit');
+    } catch (e) { toast(e.message || 'Could not save branding'); }
+}
+
+const ACTIVITY_LABELS = {
+    org_created: 'Organization created',
+    org_seats_added: 'Seats purchased',
+    org_seat_assigned: 'Employee added',
+    org_seat_released: 'Employee removed',
+    org_member_suspended: 'Member suspended',
+    org_member_reactivated: 'Member reactivated',
+    org_seat_transferred: 'Seat transferred',
+    org_payment_failed: 'Payment failed',
+    org_payment_succeeded: 'Payment confirmed',
+    org_subscription_updated: 'Subscription updated',
+};
+
+async function loadOrgActivity(orgId) {
+    const box = document.getElementById('org-activity');
+    if (!box) return;
+    box.innerHTML = '<div class="empty">Loading…</div>';
+    try {
+        const { activity } = await Taskvel.request(`/api/organizations.php?action=activity&org_id=${orgId}`);
+        if (!activity.length) { box.innerHTML = '<div class="empty">No activity yet.</div>'; return; }
+        box.innerHTML = `<div style="display:flex;flex-direction:column;gap:6px;max-height:340px;overflow-y:auto">
+            ${activity.map(a => {
+                const meta = (() => { try { return JSON.parse(a.meta || '{}'); } catch (e) { return {}; } })();
+                const who = a.actor_name ? esc(a.actor_name) : 'System';
+                return `<div style="padding:10px 12px;border:1px solid var(--line);border-radius:10px;background:var(--bg-elev);font-size:12.5px">
+                    <div style="display:flex;justify-content:space-between;gap:10px">
+                        <b>${esc(ACTIVITY_LABELS[a.event] || a.event)}</b>
+                        <span style="color:var(--ink3);font-size:11px;white-space:nowrap">${new Date(a.created_at).toLocaleString()}</span>
+                    </div>
+                    <div style="color:var(--ink3);margin-top:3px">by ${who}${meta.email ? ' · ' + esc(meta.email) : ''}${meta.seats ? ' · ' + meta.seats + ' seat(s)' : ''}</div>
+                </div>`;
+            }).join('')}
+        </div>`;
+    } catch (e) { box.innerHTML = `<div class="empty">${esc(e.message)}</div>`; }
+}
+
+async function loadOrgProgress(orgId) {
+    const box = document.getElementById('org-progress');
+    if (!box) return;
+    box.innerHTML = '<div class="empty">Loading…</div>';
+    try {
+        const { progress } = await Taskvel.request(`/api/organizations.php?action=progress&org_id=${orgId}`);
+        if (!progress.length) { box.innerHTML = '<div class="empty">No members yet.</div>'; return; }
+        box.innerHTML = `
+        <table style="width:100%;border-collapse:collapse;background:var(--bg-elev);border:1px solid var(--line);border-radius:12px;overflow:hidden">
+            <thead><tr style="background:var(--bg-sunk)">
+                <th style="text-align:left;padding:9px 12px;font-size:10.5px;text-transform:uppercase;color:var(--ink3)">Employee</th>
+                <th style="text-align:center;padding:9px 12px;font-size:10.5px;text-transform:uppercase;color:var(--ink3)">Done</th>
+                <th style="text-align:center;padding:9px 12px;font-size:10.5px;text-transform:uppercase;color:var(--ink3)">Open</th>
+                <th style="text-align:center;padding:9px 12px;font-size:10.5px;text-transform:uppercase;color:var(--ink3)">Overdue</th>
+                <th style="text-align:left;padding:9px 12px;font-size:10.5px;text-transform:uppercase;color:var(--ink3)">Last active</th>
+            </tr></thead>
+            <tbody>
+            ${progress.map(p => `
+                <tr style="border-top:1px solid var(--line)">
+                    <td style="padding:9px 12px;font-size:13px"><b>${esc(p.name)}</b><div style="font-size:11px;color:var(--ink3)">${esc(p.email)}</div></td>
+                    <td style="padding:9px 12px;text-align:center;color:var(--good);font-weight:700">${p.done_tasks || 0}</td>
+                    <td style="padding:9px 12px;text-align:center">${p.open_tasks || 0}</td>
+                    <td style="padding:9px 12px;text-align:center;color:${(p.overdue_tasks||0) > 0 ? 'var(--bad)' : 'var(--ink3)'};font-weight:${(p.overdue_tasks||0) > 0 ? '700' : '400'}">${p.overdue_tasks || 0}</td>
+                    <td style="padding:9px 12px;font-size:12px;color:var(--ink3)">${p.last_activity ? new Date(p.last_activity).toLocaleDateString() : '—'}</td>
+                </tr>`).join('')}
+            </tbody>
+        </table>`;
+    } catch (e) { box.innerHTML = `<div class="empty">${esc(e.message)}</div>`; }
 }
 
 async function loadOrgMembers(orgId) {
@@ -285,6 +410,46 @@ async function submitInvite() {
         cancelBtn.disabled = false;
         btn.innerHTML = originalHTML;
         btn.style.cursor = '';
+        await loadOrgSection();
+    }
+}
+
+function parseBulkCsv(text) {
+    return text.split(/\r?\n/).map(l => l.trim()).filter(Boolean).map(line => {
+        const [email, role] = line.split(',').map(s => (s || '').trim());
+        return { email, role: role || 'employee' };
+    });
+}
+
+async function handleBulkCsv(event) {
+    const file = event.target.files[0];
+    if (!file || orgActionInFlight) { event.target.value = ''; return; }
+    const resultsBox = document.getElementById('bulk-csv-results');
+    const text = await file.text();
+    const rows = parseBulkCsv(text).filter(r => r.email && r.email.toLowerCase() !== 'email');
+    event.target.value = '';
+
+    if (!rows.length) { toast('No valid rows found in that file'); return; }
+    if (rows.length > 50) { toast('Import at most 50 rows at a time'); return; }
+
+    orgActionInFlight = true;
+    resultsBox.innerHTML = `<div class="empty">Importing ${rows.length} people…</div>`;
+    try {
+        const { results } = await Taskvel.request('/api/organizations.php?action=bulk-invite', {
+            method: 'POST', body: { org_id: currentOrg.organization_id, rows },
+        });
+        const ok = results.filter(r => r.ok).length;
+        toast(`Imported ${ok}/${results.length} ✓`);
+        resultsBox.innerHTML = results.map(r => `
+            <div style="padding:7px 10px;border-radius:8px;margin-bottom:5px;font-size:12px;
+                background:${r.ok ? 'var(--good-soft)' : 'var(--bad-soft)'};color:${r.ok ? 'var(--good)' : 'var(--bad)'}">
+                ${r.ok ? '✓' : '✕'} ${esc(r.email)} — ${r.ok ? (r.is_new_user ? 'account created & invited' : 'added') : esc(r.error)}
+            </div>`).join('');
+    } catch (e) {
+        resultsBox.innerHTML = '';
+        toast(e.message || 'Bulk import failed');
+    } finally {
+        orgActionInFlight = false;
         await loadOrgSection();
     }
 }

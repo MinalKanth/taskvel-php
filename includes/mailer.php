@@ -98,6 +98,50 @@ function send_verification_email(string $email, string $name, string $token): vo
     send_mail($email, $subject, $html);
 }
 
+function send_org_grace_reminder_email(string $email, string $name, string $orgName, int $daysLeft): void
+{
+    $plural = $daysLeft === 1 ? '' : 's';
+    $subject = "Action needed: {$daysLeft} day{$plural} left to renew {$orgName}";
+    $body = <<<HTML
+      <p style="margin:0 0 14px;">Hi <strong style="color:#141425;">{$name}</strong>,</p>
+      <p style="margin:0 0 14px;">Your Taskvel Enterprise plan for <strong>{$orgName}</strong> has an outstanding payment. Everyone can still work normally during this grace period.</p>
+      <p style="margin:0;">If payment isn't received within <strong>{$daysLeft} day{$plural}</strong>, the organization will be locked and every member will lose Pro access until you renew.</p>
+    HTML;
+    $html = email_shell(
+        preheader: "{$daysLeft} day(s) left before {$orgName} is locked",
+        badgeLabel: 'Billing',
+        heading: 'Your plan needs renewal ⚠️',
+        bodyHtml: $body,
+        ctaLabel: 'Renew now',
+        ctaLink: APP_URL . '/billing.php',
+        footerNote: 'Questions about your bill? Just reply to this email.',
+        accentFrom: '#d97706',
+        accentTo: '#ea580c'
+    );
+    send_mail($email, $subject, $html);
+}
+
+function send_org_locked_email(string $email, string $name, string $orgName): void
+{
+    $subject = "{$orgName} has been locked — renew to restore access";
+    $body = <<<HTML
+      <p style="margin:0 0 14px;">Hi <strong style="color:#141425;">{$name}</strong>,</p>
+      <p style="margin:0;">The 7-day grace period for <strong>{$orgName}</strong> has ended without payment. All members have been moved to the free plan. Nothing has been deleted — renew any time to restore everyone's access instantly.</p>
+    HTML;
+    $html = email_shell(
+        preheader: "{$orgName} is locked — renew to restore access",
+        badgeLabel: 'Billing',
+        heading: 'Account locked 🔒',
+        bodyHtml: $body,
+        ctaLabel: 'Renew now',
+        ctaLink: APP_URL . '/billing.php',
+        footerNote: 'Your tasks, members, and settings are all safely preserved.',
+        accentFrom: '#dc2626',
+        accentTo: '#991b1b'
+    );
+    send_mail($email, $subject, $html);
+}
+
 function smtp_send(string $to, string $subject, string $htmlBody): bool
 {
     $fp = @fsockopen((strpos(SMTP_HOST, 'ssl://') === 0 ? '' : 'tcp://') . SMTP_HOST, (int)SMTP_PORT, $errno, $errstr, 10);

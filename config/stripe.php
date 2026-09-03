@@ -22,7 +22,8 @@ define('STRIPE_PRICE_ORG_SEAT_YEARLY', (float)(getenv('STRIPE_PRICE_ORG_SEAT_YEA
 // of paying per-seat. Yearly is discounted relative to 12x the monthly rate
 // (499 * 12 = 5988; 4990 works out to ~2 months free) — a standard SaaS
 // yearly-commitment incentive.
-define('BUSINESS_BUNDLE_SEATS', (int)(getenv('BUSINESS_BUNDLE_SEATS') ?: 5));
+define('BUSINESS_BUNDLE_SEATS', (int)(getenv('BUSINESS_BUNDLE_SEATS') ?: 10));
+define('ORG_MAX_SEATS', 10); // hard ceiling — no organization can ever exceed this
 define('STRIPE_PRICE_BUSINESS_MONTHLY', (float)(getenv('STRIPE_PRICE_BUSINESS_MONTHLY') ?: 499));
 define('STRIPE_PRICE_BUSINESS_YEARLY', (float)(getenv('STRIPE_PRICE_BUSINESS_YEARLY') ?: 4990));
 define('STRIPE_CURRENCY', getenv('STRIPE_CURRENCY') ?: 'inr');                                  // ISO currency code, e.g. 'usd', 'inr', 'eur'

@@ -1,5 +1,6 @@
 <?php
 require_once __DIR__ . '/../config/db.php';
+require_once __DIR__ . '/../config/stripe.php';
 require_once __DIR__ . '/auth.php';
 
 // ────────────────────────────────────────────────────────────
@@ -21,10 +22,12 @@ function recompute_user_plan(int $userId): void
     // expiring trial. Must join organizations and check plan_status here —
     // an org created but never checked out through Stripe has plan_status
     // 'pending' and must NOT grant Pro to its members.
+    // 'past_due' = the organization's 7-day grace period — members keep
+    // access. Only 'locked' actually cuts them off.
     $stmt = $pdo->prepare(
         "SELECT 1 FROM organization_members om
          JOIN organizations o ON o.id = om.organization_id
-         WHERE om.user_id = ? AND om.status = 'active' AND o.plan_status = 'active' LIMIT 1"
+         WHERE om.user_id = ? AND om.status = 'active' AND o.plan_status IN ('active','past_due') LIMIT 1"
     );
     $stmt->execute([$userId]);
     if ($stmt->fetchColumn()) {
@@ -68,7 +71,8 @@ function generate_temp_password(): string
 function user_organization_membership(int $userId): ?array
 {
     $stmt = db()->prepare(
-        "SELECT om.*, o.name AS org_name FROM organization_members om
+        "SELECT om.*, o.name AS org_name, o.logo_url AS org_logo_url, o.brand_color AS org_brand_color
+         FROM organization_members om
          JOIN organizations o ON o.id = om.organization_id
          WHERE om.user_id = ? LIMIT 1"
     );
@@ -147,7 +151,11 @@ function assign_org_seat(int $orgId, string $email, string $role, int $actorId):
         $stmt = $pdo->prepare('SELECT COUNT(*) FROM organization_members WHERE organization_id = ?');
         $stmt->execute([$orgId]);
         $assigned = (int)$stmt->fetchColumn();
-        if ($assigned >= (int)$purchased) {
+        if ($assigned >= ORG_MAX_SEATS) {
+            $pdo->rollBack();
+            return ['ok' => false, 'error' => 'This organization has reached the maximum of ' . ORG_MAX_SEATS . ' seats.'];
+        }
+        if ($assigned >= min((int)$purchased, ORG_MAX_SEATS)) {
             $pdo->rollBack();
             return ['ok' => false, 'error' => 'No seats available — purchase more seats or free one up first'];
         }
@@ -203,4 +211,51 @@ function release_org_seat(int $orgId, int $userId, int $actorId, string $reason 
     $pdo->prepare('DELETE FROM organization_members WHERE organization_id = ? AND user_id = ?')->execute([$orgId, $userId]);
     recompute_user_plan($userId);
     audit_log($actorId, 'org_seat_released', ['organization_id' => $orgId, 'target_user_id' => $userId, 'reason' => $reason]);
+}
+
+// ────────────────────────────────────────────────────────────
+// ENTERPRISE GRACE PERIOD — calendar-month billing.
+// ────────────────────────────────────────────────────────────
+
+function end_of_month(?string $date = null): string
+{
+    return date('Y-m-t', $date ? strtotime($date) : time());
+}
+
+// Called whenever a payment for this org succeeds — realigns billing back
+// to run through the end of the calendar month the payment landed in.
+function reactivate_org_billing(int $orgId): void
+{
+    $pdo = db();
+    $pdo->prepare("UPDATE organizations SET plan_status = 'active', grace_ends_at = NULL, renewal_date = ? WHERE id = ?")
+        ->execute([end_of_month(), $orgId]);
+
+    $stmt = $pdo->prepare('SELECT user_id FROM organization_members WHERE organization_id = ?');
+    $stmt->execute([$orgId]);
+    foreach ($stmt->fetchAll(PDO::FETCH_COLUMN) as $memberId) {
+        recompute_user_plan((int)$memberId);
+    }
+}
+
+// Run daily by cron/org_grace_check.php.
+function recompute_org_grace_status(array $org): void
+{
+    $pdo = db();
+    $today = date('Y-m-d');
+
+    if ($org['plan_status'] === 'active' && $org['renewal_date'] && $org['renewal_date'] < $today) {
+        $graceEnds = date('Y-m-d', strtotime($org['renewal_date'] . ' +7 days'));
+        $pdo->prepare("UPDATE organizations SET plan_status = 'past_due', grace_ends_at = ? WHERE id = ?")
+            ->execute([$graceEnds, $org['id']]);
+        return;
+    }
+
+    if ($org['plan_status'] === 'past_due' && $org['grace_ends_at'] && $org['grace_ends_at'] < $today) {
+        $pdo->prepare("UPDATE organizations SET plan_status = 'locked' WHERE id = ?")->execute([$org['id']]);
+        $stmt = $pdo->prepare('SELECT user_id FROM organization_members WHERE organization_id = ?');
+        $stmt->execute([$org['id']]);
+        foreach ($stmt->fetchAll(PDO::FETCH_COLUMN) as $memberId) {
+            recompute_user_plan((int)$memberId);
+        }
+    }
 }
