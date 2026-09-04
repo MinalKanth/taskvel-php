@@ -4386,7 +4386,7 @@ $user = current_user();
                 <a href="my-work.php">🗂 My Work</a>
                 <a href="teams.php">👥 Teams</a>
                 <a href="checkin.php">📍 Check-in</a>
-                <a href="trading-journal.php">📈 Journal</a>
+                <a href="trading-journal.php">📈 Trading</a>
                 <a href="billing.php">💳 Billing</a>
             </div>
 

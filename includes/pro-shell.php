@@ -384,7 +384,7 @@ function pro_header(array $user, string $active = 'teams', string $crumbHtml = '
             <a href="my-work.php" class="<?= $active === 'mywork' ? 'active' : '' ?>">🗂 My Work</a>
             <a href="teams.php" class="<?= $active === 'teams' ? 'active' : '' ?>">👥 Teams</a>
             <a href="checkin.php" class="<?= $active === 'checkin' ? 'active' : '' ?>">📍 Check-in</a>
-            <a href="trading-journal.php" class="<?= $active === 'journal' ? 'active' : '' ?>">📈 Journal</a>
+            <a href="trading-journal.php" class="<?= $active === 'journal' ? 'active' : '' ?>">📈 Trading</a>
             <a href="billing.php" class="<?= $active === 'billing' ? 'active' : '' ?>">💳 Billing</a>
         </div>
     </div>

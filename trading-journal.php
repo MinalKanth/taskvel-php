@@ -29,11 +29,28 @@ $user = current_user();
     .tj-hero-chip .l { font-size:9.5px; opacity:.85; text-transform:uppercase; letter-spacing:.5px; margin-top:1px; }
 
 
-    .tj-trial-banner{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;
-    padding:12px 18px;border-radius:var(--r-lg);margin-bottom:18px;font-size:12.5px;border:1px solid var(--line);}
-    .tj-trial-banner.info{background:var(--accent-soft,var(--bg-sunk));color:var(--ink2);border-color:var(--accent);}
-    .tj-trial-banner.expired{background:var(--bad-soft);color:var(--ink);border-color:var(--bad);}
-    .tj-trial-banner .btn.sm{padding:7px 14px;font-size:11.5px;}
+    /* ===================== TRIAL COUNTDOWN (premium) ===================== */
+.tj-countdown{position:relative;overflow:hidden;display:flex;align-items:center;justify-content:space-between;gap:20px;
+    flex-wrap:wrap;padding:18px 24px;border-radius:var(--r-lg);margin-bottom:22px;
+    background:linear-gradient(135deg,var(--accent) 0%,var(--accent-2,var(--accent)) 100%);color:#fff;
+    box-shadow:var(--shadow);}
+.tj-countdown::before{content:'';position:absolute;inset:0;background:
+    radial-gradient(circle at 90% -20%,rgba(255,255,255,.22),transparent 55%),
+    radial-gradient(circle at 0% 130%,rgba(255,255,255,.12),transparent 50%);pointer-events:none;}
+.tj-countdown-left{position:relative;display:flex;align-items:center;gap:16px;}
+.tj-countdown-ring{position:relative;width:56px;height:56px;flex-shrink:0;display:flex;align-items:center;justify-content:center;}
+.tj-countdown-ring svg{position:absolute;inset:0;transform:rotate(-90deg);}
+.tj-countdown-ring circle{fill:none;stroke-width:4;}
+.tj-countdown-ring .track{stroke:rgba(255,255,255,.25);}
+.tj-countdown-ring .fill{stroke:#fff;stroke-linecap:round;transition:stroke-dashoffset .8s var(--ease);}
+.tj-countdown-num{font-family:var(--font-display);font-weight:800;font-size:17px;position:relative;}
+.tj-countdown-copy .t{font-family:var(--font-display);font-weight:700;font-size:14px;letter-spacing:-.2px;}
+.tj-countdown-copy .s{font-size:12px;opacity:.92;margin-top:2px;max-width:420px;line-height:1.5;}
+.tj-countdown-cta{position:relative;display:flex;align-items:center;gap:10px;flex-wrap:wrap;}
+.tj-countdown-cta .btn{background:#fff;color:var(--accent);font-weight:700;padding:9px 18px;border-radius:10px;
+    box-shadow:0 6px 18px rgba(0,0,0,.14);transition:transform .2s var(--ease);}
+.tj-countdown-cta .btn:hover{transform:translateY(-2px);}
+.tj-countdown.expired{background:linear-gradient(135deg,var(--bad) 0%,#7f1d1d 100%);}
 
     /* ===================== BADGES / ACHIEVEMENTS ===================== */
     .tj-badges-row { display:flex; gap:8px; flex-wrap:wrap; margin-bottom:22px; }
@@ -263,6 +280,9 @@ $user = current_user();
     <?php pro_header($user, 'journal'); ?>
     <div>
 
+    <!-- ===================== TRIAL COUNTDOWN ===================== -->
+    <div id="tj-trial-banner" class="tj-countdown" style="display:none;"></div>
+
     <!-- ===================== HERO ===================== -->
     <div class="tj-hero">
         <div class="tj-hero-row">
@@ -277,8 +297,6 @@ $user = current_user();
             </div>
         </div>
     </div>
-
-    <div id="tj-trial-banner" style="display:none;"></div>
 
     <!-- ===================== ACHIEVEMENT BADGES ===================== -->
     <div class="tj-badges-row" id="tj-badges-row"></div>
@@ -356,7 +374,7 @@ $user = current_user();
         <button data-tab="analytics">📈 Analytics</button>
         <button data-tab="calendar">🗓️ Calendar</button>
         <button data-tab="entries">🧾 Entries</button>
-        <button data-tab="journal">📔 Journal</button>
+        <button data-tab="journal">📔 Trading</button>
         <button data-tab="calculator">🧮 Risk Calculator</button>
     </div>
 
@@ -606,21 +624,65 @@ function renderTrialBanner() {
     const el = document.getElementById('tj-trial-banner');
     if (!el) return;
     if (tjAccess.is_paid) { el.style.display = 'none'; return; }
+
+    const TOTAL = 10;
+    const RING_R = 24, RING_C = 2 * Math.PI * RING_R;
+
     if (!tjAccess.trial_started) {
         el.style.display = 'flex';
-        el.className = 'tj-trial-banner info';
-        el.innerHTML = `<span>✨ Your first trading entry starts a <strong>10-day free trial</strong> of the full Trading Journal.</span>`;
+        el.className = 'tj-countdown';
+        el.innerHTML = `
+            <div class="tj-countdown-left">
+                <div class="tj-countdown-ring">
+                    <svg viewBox="0 0 56 56"><circle class="track" cx="28" cy="28" r="${RING_R}"/><circle class="fill" cx="28" cy="28" r="${RING_R}" stroke-dasharray="${RING_C}" stroke-dashoffset="0"/></svg>
+                    <div class="tj-countdown-num">10</div>
+                </div>
+                <div class="tj-countdown-copy">
+                    <div class="t">✨ Trading Journal — 10-day free trial</div>
+                    <div class="s">Log your first trade to start the clock. Full access to entries, analytics, calendar and AI journal tools for 10 days.</div>
+                </div>
+            </div>`;
         return;
     }
+
     if (tjAccess.trial_active) {
+        const daysUsed = TOTAL - tjAccess.days_left;
+        const offset = RING_C * (daysUsed / TOTAL);
         el.style.display = 'flex';
-        el.className = 'tj-trial-banner info';
-        el.innerHTML = `<span>⏳ <strong>${tjAccess.days_left} day${tjAccess.days_left===1?'':'s'} left</strong> in your Trading Journal trial.</span> <a class="btn sm" href="billing.php">Subscribe now</a>`;
+        el.className = 'tj-countdown';
+        el.innerHTML = `
+            <div class="tj-countdown-left">
+                <div class="tj-countdown-ring">
+                    <svg viewBox="0 0 56 56"><circle class="track" cx="28" cy="28" r="${RING_R}"/><circle class="fill" cx="28" cy="28" r="${RING_R}" stroke-dasharray="${RING_C}" stroke-dashoffset="${offset}"/></svg>
+                    <div class="tj-countdown-num">${tjAccess.days_left}</div>
+                </div>
+                <div class="tj-countdown-copy">
+                    <div class="t">⏳ ${tjAccess.days_left} day${tjAccess.days_left===1?'':'s'} left in your free trial</div>
+                    <div class="s">Day ${daysUsed} of ${TOTAL} — subscribe anytime to keep uninterrupted access to your Trading Journal.</div>
+                </div>
+            </div>
+            <div class="tj-countdown-cta">
+                <a class="btn" href="billing.php">Subscribe now →</a>
+            </div>`;
         return;
     }
+
     el.style.display = 'flex';
-    el.className = 'tj-trial-banner expired';
-    el.innerHTML = `<span>🔒 Your Trading Journal trial has ended. You can still view all your data — <strong>subscribe to add or edit entries.</strong></span> <a class="btn sm" href="billing.php">Choose a plan</a>`;
+    el.className = 'tj-countdown expired';
+    el.innerHTML = `
+        <div class="tj-countdown-left">
+            <div class="tj-countdown-ring">
+                <svg viewBox="0 0 56 56"><circle class="track" cx="28" cy="28" r="${RING_R}"/><circle class="fill" cx="28" cy="28" r="${RING_R}" stroke-dasharray="${RING_C}" stroke-dashoffset="${RING_C}"/></svg>
+                <div class="tj-countdown-num">0</div>
+            </div>
+            <div class="tj-countdown-copy">
+                <div class="t">🔒 Your free trial has ended</div>
+                <div class="s">All your past entries, P/L history, journals and charts are still here. Subscribe to add or edit new ones.</div>
+            </div>
+        </div>
+        <div class="tj-countdown-cta">
+            <a class="btn" href="billing.php">Choose a plan →</a>
+        </div>`;
 }
 
 function esc(s) { return (s || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;'); }
