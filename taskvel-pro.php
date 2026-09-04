@@ -9064,6 +9064,10 @@ $user = current_user();
                 toast('Push notifications aren\'t supported in this browser');
                 return;
             }
+            if (!window.isSecureContext) {
+                toast('Push notifications require HTTPS — this site is loaded over plain HTTP');
+                return;
+            }
             const perm = await Notification.requestPermission();
             if (perm !== 'granted') {
                 toast('Notification permission was not granted');
@@ -9076,7 +9080,10 @@ $user = current_user();
                 toast('Push isn\'t configured on the server yet');
                 return;
             }
-            const reg = await navigator.serviceWorker.ready;
+            const reg = await Promise.race([
+                navigator.serviceWorker.ready,
+                new Promise((_, reject) => setTimeout(() => reject(new Error('Service worker never activated (check that sw.js is reachable and the site is served over HTTPS)')), 8000))
+            ]);
             let sub = await reg.pushManager.getSubscription();
             if (!sub) {
                 sub = await reg.pushManager.subscribe({
