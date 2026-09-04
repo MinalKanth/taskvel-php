@@ -1,11 +1,25 @@
 <?php
-// New file: api/trading_journal.php
-// Follows the exact same pattern as api/personal_tasks.php:
-// require_login() enforces auth + CSRF, everything is scoped to
-// current_user_id(), and all routes reply via json_response().
+ini_set('display_errors', 1);
+ini_set('display_startup_errors', 1);
+error_reporting(E_ALL);
+register_shutdown_function(function () {
+    $e = error_get_last();
+    if ($e && in_array($e['type'], [E_ERROR, E_PARSE, E_CORE_ERROR, E_COMPILE_ERROR])) {
+        if (!headers_sent()) {
+            http_response_code(500);
+            header('Content-Type: application/json');
+        }
+        echo json_encode([
+            'error'   => 'Fatal error: ' . $e['message'],
+            'file'    => $e['file'],
+            'line'    => $e['line'],
+        ]);
+    }
+});
 
 require_once __DIR__ . '/../includes/auth.php';
 require_login();
+require_once __DIR__ . '/../includes/ai.php';
 
 $uid    = current_user_id();
 $method = $_SERVER['REQUEST_METHOD'];
@@ -146,6 +160,26 @@ switch ("$method:$action") {
         if ($id <= 0) json_response(['error' => 'Missing id'], 422);
         $pdo->prepare('DELETE FROM trading_journal WHERE id = ? AND user_id = ?')->execute([$id, $uid]);
         json_response(['ok' => true]);
+        break;
+    
+    case 'POST:ai-fix-journal':
+        $rl = enforce_rate_limit_soft("ai_journal_fix:$uid", 20, 3600);
+        if (!$rl['ok']) {
+            json_response(['error' => $rl['error'] ?? 'Too many AI requests, please slow down.'], 429);
+        }
+        rate_limit_hit("ai_journal_fix:$uid", 3600);
+
+        $content = clean_str($in['content'] ?? '', 4000);
+        if ($content === '') {
+            json_response(['error' => 'Journal text is required.'], 400);
+        }
+
+        $result = ai_fix_journal_entry($content);
+        if (!$result['ok']) {
+            json_response(['error' => $result['error']], 502);
+        }
+
+        json_response(['corrected' => $result['corrected']]);
         break;
 
     default:

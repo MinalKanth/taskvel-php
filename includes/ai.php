@@ -475,3 +475,66 @@ PROMPT;
 
     return ['ok' => true, 'summary' => $text];
 }
+
+
+function ai_fix_journal_entry(string $content): array
+{
+    if (GEMINI_API_KEY === '') {
+        return ['ok' => false, 'error' => 'AI is not configured yet (missing GEMINI_API_KEY).'];
+    }
+    $content = trim($content);
+    if ($content === '') {
+        return ['ok' => false, 'error' => 'No journal text given.'];
+    }
+
+    $prompt = <<<PROMPT
+You are proofreading a personal trading journal entry.
+
+Original entry:
+"{$content}"
+
+Correct spelling and grammar, improve sentence structure, and lightly
+rephrase for clarity while keeping the original meaning, tone and any
+mood emoji line unchanged. Keep the same number of lines (max 15) and
+do not add commentary, headings, or markdown.
+
+Reply with ONLY the corrected entry text, nothing else.
+PROMPT;
+
+    $payload = [
+        'contents' => [[ 'parts' => [['text' => $prompt]] ]],
+        'generationConfig' => [ 'temperature' => 0.3, 'maxOutputTokens' => 600 ],
+    ];
+
+    $url = 'https://generativelanguage.googleapis.com/v1beta/models/'
+        . GEMINI_MODEL . ':generateContent?key=' . GEMINI_API_KEY;
+
+    $ch = curl_init($url);
+    curl_setopt_array($ch, [
+        CURLOPT_RETURNTRANSFER => true,
+        CURLOPT_POST => true,
+        CURLOPT_HTTPHEADER => ['Content-Type: application/json'],
+        CURLOPT_POSTFIELDS => json_encode($payload),
+        CURLOPT_TIMEOUT => 15,
+    ]);
+    $raw = curl_exec($ch);
+    $err = curl_error($ch);
+    $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+    curl_close($ch);
+
+    if ($raw === false) {
+        return ['ok' => false, 'error' => "Could not reach AI service: $err"];
+    }
+    $resp = json_decode($raw, true);
+    if ($httpCode !== 200 || !is_array($resp)) {
+        $msg = $resp['error']['message'] ?? "AI service returned HTTP $httpCode";
+        return ['ok' => false, 'error' => $msg];
+    }
+
+    $text = trim($resp['candidates'][0]['content']['parts'][0]['text'] ?? '');
+    if ($text === '') {
+        return ['ok' => false, 'error' => 'AI returned an empty response.'];
+    }
+
+    return ['ok' => true, 'corrected' => $text];
+}

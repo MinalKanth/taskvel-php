@@ -468,8 +468,12 @@ $user = current_user();
             <textarea id="tj-journal-text" maxlength="4000" placeholder="How the day went...&#10;Trading experience...&#10;Emotions / mindset...&#10;Mistakes made...&#10;Lessons learned...&#10;Important observations..." oninput="onJournalInput()"></textarea>
             <div class="tj-journal-foot">
                 <div class="tj-journal-count" id="tj-journal-count">0 / 15 lines</div>
-                <button class="btn" id="tj-journal-save-btn" onclick="saveJournal()">Save Journal Entry</button>
+                <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
+                    <button type="button" class="tj-icon-btn" id="tj-journal-ai-btn" onclick="aiFixJournal()">✨ AI Fix &amp; Rephrase</button>
+                    <button class="btn" id="tj-journal-save-btn" onclick="saveJournal()">Save Journal Entry</button>
+                </div>
             </div>
+            <div id="tj-journal-ai-status" style="font-size:11.5px;color:var(--ink3);margin-top:6px;display:none;"></div>
         </div>
         <section>
             <h2>Recent Journal Entries</h2>
@@ -1303,6 +1307,38 @@ function onJournalInput() {
     countEl.textContent = `${lines.length} / 15 lines`;
     countEl.classList.toggle('over', lines.length >= 15);
 }
+
+async function aiFixJournal() {
+    const ta = document.getElementById('tj-journal-text');
+    const content = ta.value.trim();
+    const statusEl = document.getElementById('tj-journal-ai-status');
+    const btn = document.getElementById('tj-journal-ai-btn');
+    if (!content) { toast('Write something first, then hit AI Fix & Rephrase'); return; }
+    btn.disabled = true;
+    btn.textContent = '✨ Fixing…';
+    statusEl.style.display = 'block';
+    statusEl.textContent = 'Correcting spelling, grammar and rephrasing…';
+    try {
+        const { corrected } = await Taskvel.request('/api/trading_journal.php?action=ai-fix-journal', {
+            method: 'POST',
+            body: { content }
+        });
+        if (corrected) {
+            ta.value = corrected.split('\n').slice(0, 15).join('\n');
+            onJournalInput();
+            statusEl.textContent = '✨ Journal corrected — review and save.';
+        } else {
+            statusEl.textContent = "AI didn't return a correction.";
+        }
+    } catch (e) {
+        statusEl.textContent = "Couldn't fix journal: " + e.message;
+    } finally {
+        btn.disabled = false;
+        btn.textContent = '✨ AI Fix & Rephrase';
+        setTimeout(() => { statusEl.style.display = 'none'; }, 4000);
+    }
+}
+
 async function loadJournalForDate(date) {
     document.getElementById('tj-journal-date-label').textContent = date === todayStr() ? 'today' : date;
     try {
