@@ -1,6 +1,7 @@
 <?php
 require_once __DIR__ . '/../config/db.php';
 
+
 // The account holder's personal Taskvel Pro plan ('free' | 'pro'). Dormant
 // column from migration_02 — this is its first real consumer.
 function user_plan(int $userId): string
@@ -90,4 +91,74 @@ function require_project_slot_available(int $teamId): void
     if ((int)$stmt->fetchColumn() >= $limits['max_projects']) {
         json_response(['error' => "This team is on the free plan (max {$limits['max_projects']} project). Upgrade to add more.", 'upgrade_required' => true], 402);
     }
+}
+
+
+
+// ─────────────────────────────────────────────────────────────
+// TRADING JOURNAL — paid feature (₹49 plan / Pro / Enterprise all
+// set users.plan='pro', so this reuses that single flag) with a
+// 10-day trial that starts on the user's FIRST trading entry, not
+// on signup. Viewing existing data is NEVER blocked — only writes.
+// ─────────────────────────────────────────────────────────────
+
+const TRADING_JOURNAL_TRIAL_DAYS = 10;
+
+function trading_journal_access(int $userId): array
+{
+    $isPaid = user_plan($userId) === 'pro';
+
+    $stmt = db()->prepare('SELECT trading_journal_trial_started_at FROM users WHERE id = ?');
+    $stmt->execute([$userId]);
+    $startedAt = $stmt->fetchColumn();
+
+    $trialEndsAt = null;
+    $trialActive = false;
+    $daysLeft = null;
+
+    if ($startedAt) {
+        $trialEndsAt = date('Y-m-d H:i:s', strtotime($startedAt) + TRADING_JOURNAL_TRIAL_DAYS * 86400);
+        $trialActive = $trialEndsAt > date('Y-m-d H:i:s');
+        if ($trialActive) {
+            $daysLeft = max(0, (int)ceil((strtotime($trialEndsAt) - time()) / 86400));
+        }
+    }
+
+    // Writable if: paid, OR trial hasn't started yet (their next write
+    // starts it), OR trial started and hasn't expired.
+    $canWrite = $isPaid || !$startedAt || $trialActive;
+
+    return [
+        'is_paid'          => $isPaid,
+        'trial_started'    => (bool)$startedAt,
+        'trial_started_at' => $startedAt,
+        'trial_ends_at'    => $trialEndsAt,
+        'trial_active'     => $trialActive,
+        'days_left'        => $daysLeft,
+        'can_write'        => $canWrite,
+    ];
+}
+
+// Call before any Trading Journal write. Ends the request with 402 +
+// upgrade_required if the trial has expired and there's no paid plan.
+function require_trading_journal_write(int $userId): void
+{
+    $access = trading_journal_access($userId);
+    if (!$access['can_write']) {
+        json_response([
+            'error' => 'Your 10-day Trading Journal trial has ended. Subscribe to the ₹49 plan, Pro, or Enterprise to keep adding entries — your existing data is safe and still visible.',
+            'upgrade_required' => true,
+            'trading_journal_trial_expired' => true,
+        ], 402);
+    }
+}
+
+// Call ONLY when creating a brand-new trading entry (not edits, not
+// goals, not journal). Starts the clock the first time, and only the
+// first time, a free-plan user logs a trade.
+function maybe_start_trading_journal_trial(int $userId): void
+{
+    if (user_plan($userId) === 'pro') return;
+    $stmt = db()->prepare('UPDATE users SET trading_journal_trial_started_at = NOW() WHERE id = ? AND trading_journal_trial_started_at IS NULL');
+    $stmt->execute([$userId]);
 }

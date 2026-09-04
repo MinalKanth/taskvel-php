@@ -28,6 +28,13 @@ $user = current_user();
     .tj-hero-chip .v { font-family:var(--font-display); font-weight:800; font-size:16px; }
     .tj-hero-chip .l { font-size:9.5px; opacity:.85; text-transform:uppercase; letter-spacing:.5px; margin-top:1px; }
 
+
+    .tj-trial-banner{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;
+    padding:12px 18px;border-radius:var(--r-lg);margin-bottom:18px;font-size:12.5px;border:1px solid var(--line);}
+    .tj-trial-banner.info{background:var(--accent-soft,var(--bg-sunk));color:var(--ink2);border-color:var(--accent);}
+    .tj-trial-banner.expired{background:var(--bad-soft);color:var(--ink);border-color:var(--bad);}
+    .tj-trial-banner .btn.sm{padding:7px 14px;font-size:11.5px;}
+
     /* ===================== BADGES / ACHIEVEMENTS ===================== */
     .tj-badges-row { display:flex; gap:8px; flex-wrap:wrap; margin-bottom:22px; }
     .tj-badge { display:flex; align-items:center; gap:6px; background:var(--bg-elev); border:1px solid var(--line);
@@ -270,6 +277,8 @@ $user = current_user();
             </div>
         </div>
     </div>
+
+    <div id="tj-trial-banner" style="display:none;"></div>
 
     <!-- ===================== ACHIEVEMENT BADGES ===================== -->
     <div class="tj-badges-row" id="tj-badges-row"></div>
@@ -551,6 +560,22 @@ $user = current_user();
     </div>
 </div>
 
+<div class="modal-overlay" id="tj-paywall-overlay" onclick="if(event.target===this)closePaywallModal()">
+    <div class="modal">
+        <h2>🔒 Trading Journal trial ended</h2>
+        <p style="font-size:13px;color:var(--ink3);margin:10px 0 4px;line-height:1.6;">
+            Your 10-day free trial has ended. All your past entries, P/L history, journals, and charts are still here and fully viewable — you just need an active plan to add or edit new ones.
+        </p>
+        <p style="font-size:13px;color:var(--ink3);margin-bottom:16px;">
+            Subscribe to the ₹49 plan, Pro, or Enterprise to keep logging trades.
+        </p>
+        <div class="modal-actions">
+            <button class="btn ghost" onclick="closePaywallModal()">Not now</button>
+            <a class="btn" href="billing.php">View plans</a>
+        </div>
+    </div>
+</div>
+
 <canvas id="tj-confetti-canvas"></canvas>
 
 <script src="js/api-client.js?v=3"></script>
@@ -567,6 +592,36 @@ let perfView = 'monthly'; // 'monthly' | 'yearly'
 let charts = {};
 let calMonthCursor = new Date(); calMonthCursor.setDate(1);
 let selectedTag = null;
+let tjAccess = { can_write: true, is_paid: true, trial_started: false, trial_active: false, days_left: null };
+
+function checkWriteAccess() {
+    if (tjAccess.can_write) return true;
+    openPaywallModal();
+    return false;
+}
+function openPaywallModal() { document.getElementById('tj-paywall-overlay').classList.add('open'); }
+function closePaywallModal() { document.getElementById('tj-paywall-overlay').classList.remove('open'); }
+
+function renderTrialBanner() {
+    const el = document.getElementById('tj-trial-banner');
+    if (!el) return;
+    if (tjAccess.is_paid) { el.style.display = 'none'; return; }
+    if (!tjAccess.trial_started) {
+        el.style.display = 'flex';
+        el.className = 'tj-trial-banner info';
+        el.innerHTML = `<span>✨ Your first trading entry starts a <strong>10-day free trial</strong> of the full Trading Journal.</span>`;
+        return;
+    }
+    if (tjAccess.trial_active) {
+        el.style.display = 'flex';
+        el.className = 'tj-trial-banner info';
+        el.innerHTML = `<span>⏳ <strong>${tjAccess.days_left} day${tjAccess.days_left===1?'':'s'} left</strong> in your Trading Journal trial.</span> <a class="btn sm" href="billing.php">Subscribe now</a>`;
+        return;
+    }
+    el.style.display = 'flex';
+    el.className = 'tj-trial-banner expired';
+    el.innerHTML = `<span>🔒 Your Trading Journal trial has ended. You can still view all your data — <strong>subscribe to add or edit entries.</strong></span> <a class="btn sm" href="billing.php">Choose a plan</a>`;
+}
 
 function esc(s) { return (s || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;'); }
 function fmtMoney(n) {
@@ -610,6 +665,14 @@ async function loadAll() {
         toast(e.message || 'Could not load trading journal data');
         allEntries = []; allGoals = []; allJournal = [];
     }
+
+    try {
+        const accessRes = await Taskvel.request('/api/trading_journal.php?action=access-status');
+        tjAccess = accessRes.access;
+    } catch (e) {
+        tjAccess = { can_write: true, is_paid: true, trial_started: false, trial_active: false, days_left: null };
+    }
+    renderTrialBanner();
 
     renderGoalSection();
     renderAll();
@@ -821,6 +884,7 @@ function drawGauge(pct) {
 }
 
 async function saveGoal() {
+    if (!checkWriteAccess()) return;
     const month = currentGoalMonth();
     const amtInput = document.getElementById('tj-goal-amount');
     const amount = parseFloat(amtInput.value);
@@ -1203,6 +1267,7 @@ function renderEntriesList(scoped) {
 }
 
 function openEntryModal(entry) {
+    if (!checkWriteAccess()) return;
     document.getElementById('entry-modal-title').textContent = entry ? 'Edit Daily Entry' : 'Add Daily Entry';
     document.getElementById('entry-id').value = entry ? entry.id : '';
     document.getElementById('entry-date').value = entry ? entry.entry_date : todayStr();
@@ -1231,6 +1296,7 @@ function clearEntryErrors() {
 function onEntryStatusChange() { if (document.getElementById('entry-status').value === 'breakeven') document.getElementById('entry-amount').value = 0; }
 function editEntry(id) { const entry = allEntries.find(e => e.id === id); if (entry) openEntryModal(entry); }
 async function deleteEntry(id) {
+    if (!checkWriteAccess()) return;
     if (!confirm('Delete this trading entry? This cannot be undone.')) return;
     try {
         await Taskvel.request(`/api/trading_journal.php?action=delete-entry&id=${id}`, { method: 'DELETE' });
@@ -1309,6 +1375,7 @@ function onJournalInput() {
 }
 
 async function aiFixJournal() {
+    if (!checkWriteAccess()) return;
     const ta = document.getElementById('tj-journal-text');
     const content = ta.value.trim();
     const statusEl = document.getElementById('tj-journal-ai-status');
@@ -1350,6 +1417,7 @@ async function loadJournalForDate(date) {
 document.getElementById('tj-journal-date-picker').addEventListener('change', (e) => loadJournalForDate(e.target.value));
 
 async function saveJournal() {
+    if (!checkWriteAccess()) return;
     const date = document.getElementById('tj-journal-date-picker').value || todayStr();
     const content = document.getElementById('tj-journal-text').value.trim();
     if (!content) { toast('Write something before saving'); return; }

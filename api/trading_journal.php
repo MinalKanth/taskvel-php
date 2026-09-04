@@ -32,6 +32,10 @@ switch ("$method:$action") {
     // ================= GOALS =================
 
     // GET goal for a single month, e.g. ?month=2026-09
+    case 'GET:access-status':
+        json_response(['access' => trading_journal_access($uid)]);
+        break;
+
     case 'GET:goal':
         $month = valid_month($_GET['month'] ?? '');
         if (!$month) json_response(['error' => 'Invalid or missing month'], 422);
@@ -50,6 +54,7 @@ switch ("$method:$action") {
 
     // POST { month: 'YYYY-MM', target_amount: number }  — upsert
     case 'POST:save-goal':
+        require_trading_journal_write($uid);
         $month = valid_month($in['month'] ?? '');
         if (!$month) json_response(['error' => 'Invalid or missing month'], 422);
         $target = round((float)($in['target_amount'] ?? 0), 2);
@@ -80,6 +85,7 @@ switch ("$method:$action") {
 
     // POST { id?: number, entry_date, pnl_amount, status, notes? } — create or update
     case 'POST:save-entry':
+        require_trading_journal_write($uid);
         $date = valid_date($in['entry_date'] ?? '');
         if (!$date) json_response(['error' => 'Invalid or missing entry_date'], 422);
 
@@ -108,12 +114,14 @@ switch ("$method:$action") {
                 'INSERT INTO trading_entries (user_id, entry_date, pnl_amount, status, notes) VALUES (?, ?, ?, ?, ?)'
             );
             $stmt->execute([$uid, $date, $amount, $status, $notes]);
+            maybe_start_trading_journal_trial($uid);
             json_response(['ok' => true, 'id' => (int)$pdo->lastInsertId()]);
         }
         break;
 
     // DELETE ?id=123
     case 'DELETE:delete-entry':
+        require_trading_journal_write($uid);
         $id = (int)($_GET['id'] ?? 0);
         if ($id <= 0) json_response(['error' => 'Missing id'], 422);
         $pdo->prepare('DELETE FROM trading_entries WHERE id = ? AND user_id = ?')->execute([$id, $uid]);
@@ -141,6 +149,7 @@ switch ("$method:$action") {
 
     // POST { date, content } — upsert, hard-clamped to 15 lines / 4000 chars server-side
     case 'POST:save-journal':
+        require_trading_journal_write($uid);
         $date = valid_date($in['date'] ?? '');
         if (!$date) json_response(['error' => 'Invalid or missing date'], 422);
         $content = clamp_journal_content((string)($in['content'] ?? ''));
@@ -156,6 +165,7 @@ switch ("$method:$action") {
 
     // DELETE ?id=123
     case 'DELETE:delete-journal':
+        require_trading_journal_write($uid);
         $id = (int)($_GET['id'] ?? 0);
         if ($id <= 0) json_response(['error' => 'Missing id'], 422);
         $pdo->prepare('DELETE FROM trading_journal WHERE id = ? AND user_id = ?')->execute([$id, $uid]);
@@ -163,6 +173,7 @@ switch ("$method:$action") {
         break;
     
     case 'POST:ai-fix-journal':
+        require_trading_journal_write($uid);
         $rl = enforce_rate_limit_soft("ai_journal_fix:$uid", 20, 3600);
         if (!$rl['ok']) {
             json_response(['error' => $rl['error'] ?? 'Too many AI requests, please slow down.'], 429);
