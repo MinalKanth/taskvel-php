@@ -22,6 +22,29 @@ $user = current_user();
     .tc-total.pos { color:var(--good); }
     .tc-total.neg { color:var(--bad); }
 
+        .tj-countdown{position:relative;overflow:hidden;display:flex;align-items:center;justify-content:space-between;gap:20px;
+        flex-wrap:wrap;padding:18px 24px;border-radius:var(--r-lg);margin-bottom:18px;
+        background:linear-gradient(135deg,var(--accent) 0%,var(--accent-2,var(--accent)) 100%);color:#fff;
+        box-shadow:var(--shadow);}
+    .tj-countdown::before{content:'';position:absolute;inset:0;background:
+        radial-gradient(circle at 90% -20%,rgba(255,255,255,.22),transparent 55%),
+        radial-gradient(circle at 0% 130%,rgba(255,255,255,.12),transparent 50%);pointer-events:none;}
+    .tj-countdown-left{position:relative;display:flex;align-items:center;gap:16px;}
+    .tj-countdown-ring{position:relative;width:56px;height:56px;flex-shrink:0;display:flex;align-items:center;justify-content:center;}
+    .tj-countdown-ring svg{position:absolute;inset:0;transform:rotate(-90deg);}
+    .tj-countdown-ring circle{fill:none;stroke-width:4;}
+    .tj-countdown-ring .track{stroke:rgba(255,255,255,.25);}
+    .tj-countdown-ring .fill{stroke:#fff;stroke-linecap:round;transition:stroke-dashoffset .8s var(--ease);}
+    .tj-countdown-num{font-family:var(--font-display);font-weight:800;font-size:17px;position:relative;}
+    .tj-countdown-copy .t{font-family:var(--font-display);font-weight:700;font-size:14px;letter-spacing:-.2px;}
+    .tj-countdown-copy .s{font-size:12px;opacity:.92;margin-top:2px;max-width:420px;line-height:1.5;}
+    .tj-countdown-cta{position:relative;display:flex;align-items:center;gap:10px;flex-wrap:wrap;}
+    .tj-countdown-cta .btn{background:#fff;color:var(--accent);font-weight:700;padding:9px 18px;border-radius:10px;
+        box-shadow:0 6px 18px rgba(0,0,0,.14);transition:transform .2s var(--ease);}
+    .tj-countdown-cta .btn:hover{transform:translateY(-2px);}
+    .tj-countdown.expired{background:linear-gradient(135deg,var(--bad) 0%,#7f1d1d 100%);}
+
+
     .tc-cal-card { background:var(--bg-elev); border:1px solid var(--line); border-radius:var(--r-lg); padding:18px; box-shadow:var(--shadow-sm); }
     .tc-grid { display:grid; grid-template-columns:repeat(7,1fr); gap:6px; }
     .tc-dow { text-align:center; font-family:var(--font-display); font-size:10.5px; color:var(--ink3); text-transform:uppercase; padding-bottom:6px; font-weight:700; }
@@ -47,7 +70,7 @@ $user = current_user();
     <?php pro_header($user, 'calendar'); ?>
     <div>
 
-    <div id="tc-trial-note" style="display:none;font-size:12px;color:var(--ink3);margin-bottom:14px;"></div>
+    <div id="tj-trial-banner" class="tj-countdown" style="display:none;"></div>
 
     <div class="tc-topbar">
         <div class="tc-nav">
@@ -163,13 +186,7 @@ async function tcLoadAll() {
     } catch (e) {
         toast(e.message || 'Could not load calendar data');
     }
-    const note = document.getElementById('tc-trial-note');
-    if (!tcAccess.is_paid) {
-        note.style.display = 'block';
-        note.textContent = tcAccess.trial_active
-            ? `⏳ ${tcAccess.days_left} day(s) left in your Trading Journal trial.`
-            : (tcAccess.trial_started ? '🔒 Your Trading Journal trial has ended — existing entries are visible, upgrade to add new ones.' : '✨ Logging your first trade starts a 10-day free trial.');
-    } else { note.style.display = 'none'; }
+    renderTrialBanner();
     tcPopulateSelects();
     tcRenderCalendar();
 }
@@ -270,7 +287,7 @@ function tcOpenModal(dateStr) {
     document.getElementById('tc-date').value = dateStr;
     document.getElementById('tc-entry-id').value = entry ? entry.id : '';
     document.getElementById('tc-status').value = entry ? entry.status : 'profit';
-    document.getElementById('tc-amount').value = entry ? entry.pnl_amount : '';
+    document.getElementById('tc-amount').value = entry ? Math.abs(entry.pnl_amount) : '';
     document.getElementById('tc-notes').value = entry ? (entry.notes || '') : '';
     document.getElementById('tc-journal').value = journal ? journal.content : '';
     document.getElementById('tc-delete-btn').style.display = entry ? 'inline-flex' : 'none';
@@ -321,6 +338,7 @@ async function tcSaveEntry() {
                 const accessRes = await Taskvel.request('/api/trading_journal.php?action=access-status');
                 tcAccess = accessRes.access;
             } catch (e) {}
+            renderTrialBanner();
         }
         tcRenderCalendar();
     } catch (e) {
@@ -343,6 +361,70 @@ async function tcDeleteEntry() {
     } catch (e) {
         toast(e.message || 'Could not delete entry');
     }
+}
+function renderTrialBanner() {
+    const el = document.getElementById('tj-trial-banner');
+    if (!el) return;
+    if (tcAccess.is_paid) { el.style.display = 'none'; return; }
+
+    const TOTAL = 10;
+    const RING_R = 24, RING_C = 2 * Math.PI * RING_R;
+
+    if (!tcAccess.trial_started) {
+        el.style.display = 'flex';
+        el.className = 'tj-countdown';
+        el.innerHTML = `
+            <div class="tj-countdown-left">
+                <div class="tj-countdown-ring">
+                    <svg viewBox="0 0 56 56"><circle class="track" cx="28" cy="28" r="${RING_R}"/><circle class="fill" cx="28" cy="28" r="${RING_R}" stroke-dasharray="${RING_C}" stroke-dashoffset="0"/></svg>
+                    <div class="tj-countdown-num">10</div>
+                </div>
+                <div class="tj-countdown-copy">
+                    <div class="t">✨ Trading Journal — 10-day free trial</div>
+                    <div class="s">Log your first trade to start the clock. Full access to entries, calendar and journal for 10 days.</div>
+                </div>
+            </div>`;
+        return;
+    }
+
+    if (tcAccess.trial_active) {
+        const daysUsed = TOTAL - tcAccess.days_left;
+        const offset = RING_C * (daysUsed / TOTAL);
+        el.style.display = 'flex';
+        el.className = 'tj-countdown';
+        el.innerHTML = `
+            <div class="tj-countdown-left">
+                <div class="tj-countdown-ring">
+                    <svg viewBox="0 0 56 56"><circle class="track" cx="28" cy="28" r="${RING_R}"/><circle class="fill" cx="28" cy="28" r="${RING_R}" stroke-dasharray="${RING_C}" stroke-dashoffset="${offset}"/></svg>
+                    <div class="tj-countdown-num">${tcAccess.days_left}</div>
+                </div>
+                <div class="tj-countdown-copy">
+                    <div class="t">⏳ ${tcAccess.days_left} day${tcAccess.days_left===1?'':'s'} left in your free trial</div>
+                    <div class="s">Day ${daysUsed} of ${TOTAL} — subscribe anytime to keep uninterrupted access.</div>
+                </div>
+            </div>
+            <div class="tj-countdown-cta">
+                <a class="btn" href="billing.php">Subscribe now →</a>
+            </div>`;
+        return;
+    }
+
+    el.style.display = 'flex';
+    el.className = 'tj-countdown expired';
+    el.innerHTML = `
+        <div class="tj-countdown-left">
+            <div class="tj-countdown-ring">
+                <svg viewBox="0 0 56 56"><circle class="track" cx="28" cy="28" r="${RING_R}"/><circle class="fill" cx="28" cy="28" r="${RING_R}" stroke-dasharray="${RING_C}" stroke-dashoffset="${RING_C}"/></svg>
+                <div class="tj-countdown-num">0</div>
+            </div>
+            <div class="tj-countdown-copy">
+                <div class="t">🔒 Your free trial has ended</div>
+                <div class="s">All your past entries are still here. Subscribe to add or edit new ones.</div>
+            </div>
+        </div>
+        <div class="tj-countdown-cta">
+            <a class="btn" href="billing.php">Choose a plan →</a>
+        </div>`;
 }
 
 tcLoadAll();

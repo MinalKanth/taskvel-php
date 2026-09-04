@@ -1345,7 +1345,7 @@ function openEntryModal(entry) {
     document.getElementById('entry-id').value = entry ? entry.id : '';
     document.getElementById('entry-date').value = entry ? entry.entry_date : todayStr();
     document.getElementById('entry-status').value = entry ? entry.status : 'profit';
-    document.getElementById('entry-amount').value = entry ? entry.pnl_amount : '';
+    document.getElementById('entry-amount').value = entry ? Math.abs(entry.pnl_amount) : '';
     const tag = entry ? extractTag(entry.notes) : null;
     selectedTag = tag;
     document.querySelectorAll('#entry-tag-chips .tj-tag-chip').forEach(chip => chip.classList.toggle('active', chip.dataset.tag === tag));
@@ -1392,7 +1392,9 @@ async function submitEntry() {
     if (amountRaw === '' || isNaN(parseFloat(amountRaw))) { document.getElementById('entry-amount').classList.add('err'); document.getElementById('entry-amount-err').classList.add('show'); ok = false; }
     if (!ok) return;
 
-    const amount = parseFloat(amountRaw);
+    let amount = Math.abs(parseFloat(amountRaw));
+    if (status === 'loss') amount = -amount;
+    else if (status === 'breakeven') amount = 0;
     const payload = { id: id ? parseInt(id) : undefined, entry_date: date, status, pnl_amount: amount, notes };
     try {
         const res = await Taskvel.request('/api/trading_journal.php?action=save-entry', { method: 'POST', body: payload });
