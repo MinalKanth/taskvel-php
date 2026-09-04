@@ -4381,13 +4381,24 @@ $user = current_user();
                 </div>
             </div>
 
-            <div class="main-nav">
+            <!-- <div class="main-nav">
                 <a href="taskvel-pro.php" class="active">✓ My Tasks</a>
                 <a href="my-work.php">🗂 My Work</a>
                 <a href="teams.php">👥 Teams</a>
                 <a href="checkin.php">📍 Check-in</a>
                 <a href="trading-journal.php">📈 Trading</a>
+                <a href="trading-calendar.php">🗓️ Trading Calendar</a>
                 <a href="billing.php">💳 Billing</a>
+            </div> -->
+            <?php $active = $active ?? 'tasks'; ?>
+            <div class="main-nav">
+                <a href="taskvel-pro.php" class="<?= $active === 'tasks' ? 'active' : '' ?>">✓ My Tasks</a>
+                <a href="my-work.php" class="<?= $active === 'mywork' ? 'active' : '' ?>">🗂 My Work</a>
+                <a href="teams.php" class="<?= $active === 'teams' ? 'active' : '' ?>">👥 Teams</a>
+                <a href="checkin.php" class="<?= $active === 'checkin' ? 'active' : '' ?>">📍 Check-in</a>
+                <a href="trading-journal.php" class="<?= $active === 'journal' ? 'active' : '' ?>">📈 Trading</a>
+                <a href="trading-calendar.php" class="<?= $active === 'calendar' ? 'active' : '' ?>">🗓️ Trading Calendar</a>
+                <a href="billing.php" class="<?= $active === 'billing' ? 'active' : '' ?>">💳 Billing</a>
             </div>
 
             <!-- Theme picker panel -->

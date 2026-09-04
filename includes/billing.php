@@ -106,7 +106,15 @@ const TRADING_JOURNAL_TRIAL_DAYS = 10;
 
 function trading_journal_access(int $userId): array
 {
-    $isPaid = user_plan($userId) === 'pro';
+    // IMPORTANT: don't use user_plan()==='pro' alone — every brand-new
+    // signup automatically gets a 30-day account-wide Pro trial
+    // (plan_source='trial'), which is unrelated to this feature's own
+    // 10-day, first-entry-triggered trial. Only a REAL paid plan (Stripe
+    // subscription, an org seat, or an admin grant) counts as "paid" here.
+    $stmt = db()->prepare('SELECT plan, plan_source FROM users WHERE id = ?');
+    $stmt->execute([$userId]);
+    $u = $stmt->fetch();
+    $isPaid = $u && $u['plan'] === 'pro' && in_array($u['plan_source'], ['stripe', 'org_seat', 'admin'], true);
 
     $stmt = db()->prepare('SELECT trading_journal_trial_started_at FROM users WHERE id = ?');
     $stmt->execute([$userId]);
@@ -158,7 +166,12 @@ function require_trading_journal_write(int $userId): void
 // first time, a free-plan user logs a trade.
 function maybe_start_trading_journal_trial(int $userId): void
 {
-    if (user_plan($userId) === 'pro') return;
+    $stmt = db()->prepare('SELECT plan, plan_source FROM users WHERE id = ?');
+    $stmt->execute([$userId]);
+    $u = $stmt->fetch();
+    if ($u && $u['plan'] === 'pro' && in_array($u['plan_source'], ['stripe', 'org_seat', 'admin'], true)) {
+        return; // real paid users never need the trial clock
+    }
     $stmt = db()->prepare('UPDATE users SET trading_journal_trial_started_at = NOW() WHERE id = ? AND trading_journal_trial_started_at IS NULL');
     $stmt->execute([$userId]);
 }

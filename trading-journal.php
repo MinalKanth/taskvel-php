@@ -374,7 +374,7 @@ $user = current_user();
         <button data-tab="analytics">📈 Analytics</button>
         <button data-tab="calendar">🗓️ Calendar</button>
         <button data-tab="entries">🧾 Entries</button>
-        <button data-tab="journal">📔 Trading</button>
+        <button data-tab="journal">📔 Journal</button>
         <button data-tab="calculator">🧮 Risk Calculator</button>
     </div>
 
@@ -710,6 +710,7 @@ function animateNumber(el, to, fmt) {
 // ═══════════════════════════════════════════════════════════════
 // LOAD
 // ═══════════════════════════════════════════════════════════════
+
 async function loadAll() {
     document.getElementById('tj-goal-month').value = monthStr(new Date());
     document.getElementById('tj-journal-date-picker').value = todayStr();
@@ -732,7 +733,9 @@ async function loadAll() {
         const accessRes = await Taskvel.request('/api/trading_journal.php?action=access-status');
         tjAccess = accessRes.access;
     } catch (e) {
-        tjAccess = { can_write: true, is_paid: true, trial_started: false, trial_active: false, days_left: null };
+        console.error('access-status failed:', e);
+        toast('Could not load trial status: ' + (e.message || 'unknown error'));
+        tjAccess = { can_write: true, is_paid: false, trial_started: false, trial_active: false, days_left: null };
     }
     renderTrialBanner();
 
@@ -745,6 +748,14 @@ async function loadAll() {
     runCalc();
     await loadJournalForDate(todayStr());
     renderJournalList();
+}
+
+async function refreshAccessStatus() {
+    try {
+        const accessRes = await Taskvel.request('/api/trading_journal.php?action=access-status');
+        tjAccess = accessRes.access;
+    } catch (e) { console.error('refreshAccessStatus failed:', e); }
+    renderTrialBanner();
 }
 
 // ═══════════════════════════════════════════════════════════════
@@ -1391,9 +1402,10 @@ async function submitEntry() {
         } else {
             allEntries.push({ id: res.id, entry_date: date, status, pnl_amount: amount, notes });
         }
-        closeEntryModal();
+                closeEntryModal();
         renderGoalSection(); renderAll(); renderHero(); renderBadges(); renderCalendar(); renderAnalytics();
         toast(id ? 'Entry updated' : 'Entry added');
+        if (!id) refreshAccessStatus();
     } catch (e) { toast(e.message || 'Could not save entry'); }
 }
 
