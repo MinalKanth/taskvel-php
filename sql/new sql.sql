@@ -77,3 +77,10 @@ SELECT * FROM plan_limits;
 ALTER TABLE organizations
     ADD COLUMN logo_url VARCHAR(500) NULL AFTER name,
     ADD COLUMN brand_color VARCHAR(7) NULL AFTER logo_url;  -- hex, e.g. '#4f46e5'
+
+
+
+    ALTER TABLE users
+    MODIFY COLUMN plan_source ENUM('none','trial','stripe','org_seat','admin') NOT NULL DEFAULT 'none',
+    ADD COLUMN admin_extended_until DATETIME NULL AFTER trial_ends_at;
+ 

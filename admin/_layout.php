@@ -15,6 +15,7 @@ function admin_nav_items(): array
     return [
         'dashboard'         => ['index.php',            '◈', 'Dashboard'],
         'users'             => ['users.php',            '◔', 'Users'],
+        'subscriptions'     => ['subscriptions.php',    '⏳', 'Subscriptions'],
         'events'            => ['events.php',           '✦', 'Events'],
         // 'enquiries'         => ['enquiries.php',        '✉', 'Enquiries'],
         'contact-messages'  => ['contact-messages.php', '☏', 'Contact Messages'],

@@ -91,8 +91,12 @@ switch ("$method:$action") {
         break;
 
             // Per-employee task progress across the whole organization — powers
-    // the "Team dashboard" the owner/admin sees, showing everyone's
-    // personal task completion at a glance.
+    // the "Team dashboard" the owner/admin sees. Reports TWO separate
+    // things per employee, deliberately not blended into one number:
+    // their personal_tasks (private to-do list) and their assigned
+    // project_tasks (real Team/Project Kanban work). See
+    // org_team_task_stats_by_user()'s comment for why these are fetched
+    // as separate queries rather than joined together.
     case 'GET:progress':
         $orgId = (int)($_GET['org_id'] ?? 0);
         require_org_admin($orgId);
@@ -112,7 +116,29 @@ switch ("$method:$action") {
              ORDER BY FIELD(om.role,'owner','admin','employee'), u.name"
         );
         $stmt->execute([$orgId]);
-        json_response(['progress' => $stmt->fetchAll()]);
+        $progress = $stmt->fetchAll();
+
+        $teamStats = org_team_task_stats_by_user(array_column($progress, 'user_id'));
+        foreach ($progress as &$row) {
+            $t = $teamStats[(int)$row['user_id']] ?? null;
+            $row['team_total_tasks'] = (int)($t['total_tasks'] ?? 0);
+            $row['team_done_tasks'] = (int)($t['done_tasks'] ?? 0);
+            $row['team_open_tasks'] = (int)($t['open_tasks'] ?? 0);
+            $row['team_overdue_tasks'] = (int)($t['overdue_tasks'] ?? 0);
+            $row['team_last_activity'] = $t['last_activity'] ?? null;
+        }
+        unset($row);
+
+        json_response(['progress' => $progress]);
+        break;
+
+    // Portfolio view of every Team/Project this org's roster works in —
+    // the real collaborative Kanban work, not the personal to-do stats
+    // above. Powers the "Projects & teams" panel on billing.php.
+    case 'GET:org-projects':
+        $orgId = (int)($_GET['org_id'] ?? 0);
+        require_org_admin($orgId);
+        json_response(['projects' => org_projects_overview(org_member_user_ids($orgId))]);
         break;
 
     case 'GET:members':
@@ -144,7 +170,7 @@ switch ("$method:$action") {
         require_org_admin($orgId);
 
         $stmt = $pdo->prepare(
-            "SELECT u.name, u.email, om.role,
+            "SELECT om.user_id, u.name, u.email, om.role,
                     COUNT(pt.id) AS total_tasks,
                     SUM(pt.done = 1) AS done_tasks,
                     SUM(pt.done = 0) AS open_tasks,
@@ -154,11 +180,13 @@ switch ("$method:$action") {
              JOIN users u ON u.id = om.user_id
              LEFT JOIN personal_tasks pt ON pt.user_id = om.user_id
              WHERE om.organization_id = ?
-             GROUP BY u.id, u.name, u.email, om.role
+             GROUP BY om.user_id, u.name, u.email, om.role
              ORDER BY FIELD(om.role,'owner','admin','employee'), u.name"
         );
         $stmt->execute([$orgId]);
         $rows = $stmt->fetchAll();
+
+        $teamStats = org_team_task_stats_by_user(array_map(fn($r) => (int)$r['user_id'], $rows));
 
         $orgNameStmt = $pdo->prepare('SELECT name FROM organizations WHERE id = ?');
         $orgNameStmt->execute([$orgId]);
@@ -170,12 +198,17 @@ switch ("$method:$action") {
         header('X-Content-Type-Options: nosniff');
         header('Content-Disposition: attachment; filename="' . preg_replace('/[^a-z0-9\-]+/i', '-', $orgName) . '-report-' . date('Y-m-d') . '.csv"');
         $out = fopen('php://output', 'w');
-        fputcsv($out, ['Name', 'Email', 'Role', 'Total Tasks', 'Done', 'Open', 'Overdue', 'Last Active']);
+        fputcsv($out, [
+            'Name', 'Email', 'Role',
+            'Personal Tasks (Total)', 'Personal Tasks (Done)', 'Personal Tasks (Open)', 'Personal Tasks (Overdue)', 'Personal Last Active',
+            'Team/Project Tasks (Total)', 'Team/Project Tasks (Done)', 'Team/Project Tasks (Open)', 'Team/Project Tasks (Overdue)', 'Team Last Active',
+        ]);
         foreach ($rows as $r) {
+            $t = $teamStats[(int)($r['user_id'] ?? 0)] ?? null;
             fputcsv($out, [
-                $r['name'], $r['email'], $r['role'], $r['total_tasks'],
-                $r['done_tasks'] ?? 0, $r['open_tasks'] ?? 0, $r['overdue_tasks'] ?? 0,
-                $r['last_activity'] ?? '—',
+                $r['name'], $r['email'], $r['role'],
+                $r['total_tasks'], $r['done_tasks'] ?? 0, $r['open_tasks'] ?? 0, $r['overdue_tasks'] ?? 0, $r['last_activity'] ?? '—',
+                $t['total_tasks'] ?? 0, $t['done_tasks'] ?? 0, $t['open_tasks'] ?? 0, $t['overdue_tasks'] ?? 0, $t['last_activity'] ?? '—',
             ]);
         }
         fclose($out);

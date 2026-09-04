@@ -12,32 +12,551 @@ $user = current_user();
 <meta name="csrf-token" content="<?= htmlspecialchars(csrf_token()) ?>">
 <?php pro_head('Billing & Plan'); ?>
 <style>
-    .btn-spinner { display:inline-block; width:13px; height:13px; border:2px solid rgba(255,255,255,.5); border-top-color:#fff; border-radius:50%; animation:btnspin .7s linear infinite; margin-right:2px; vertical-align:-2px; }
-    .btn.ghost .btn-spinner { border-color:var(--line2); border-top-color:var(--ink2); }
-    @keyframes btnspin { to { transform:rotate(360deg); } }
-    .plan-card { padding:22px 24px; border-radius:16px; background:var(--bg-elev); border:1px solid var(--line); margin-bottom:20px; }
-    .plan-card.trial { border-color:var(--accent); }
-    .plan-card.expired { border-color:var(--bad); background:var(--bad-soft); }
-    .plan-badge { font-size:11px; font-family:var(--font-display); font-weight:700; padding:4px 11px; border-radius:999px; background:var(--accent-soft); color:var(--accent); text-transform:uppercase; letter-spacing:.03em; }
-    .plan-days { font-family:var(--font-display); font-size:32px; font-weight:800; margin:10px 0 2px; }
-    .seat-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(120px,1fr)); gap:14px; margin:16px 0; }
-    .seat-stat { text-align:center; padding:14px; border-radius:12px; background:var(--bg-sunk); }
-    .seat-stat b { display:block; font-family:var(--font-display); font-size:22px; }
-    .member-row { display:flex; justify-content:space-between; align-items:center; gap:10px; padding:10px 0; border-bottom:1px solid var(--line); }
-    .member-row:last-child { border-bottom:none; }
-    .status-dot { width:8px; height:8px; border-radius:50%; display:inline-block; margin-right:6px; }
-    .status-dot.active { background:var(--good); } .status-dot.suspended { background:var(--warn); }
+    @media (min-width:1040px) {
+        .wrap { max-width:1040px; }
+    }
+
+    .billing-intro { margin-bottom:22px; }
+    .billing-intro h1.page-title { margin-bottom:5px; }
+    .billing-intro .sub { margin-bottom:0; }
+
+    .billing-section {
+        margin-top:22px;
+    }
+
+    .plan-card {
+        position:relative;
+        padding:22px 24px;
+        border-radius:var(--r-lg);
+        background:var(--bg-elev);
+        border:1px solid var(--line);
+        margin-bottom:18px;
+        box-shadow:var(--shadow-sm);
+        overflow:hidden;
+        transition:border-color .2s ease, box-shadow .25s ease, transform .2s var(--ease);
+    }
+
+    .plan-card:hover {
+        border-color:var(--line2);
+        box-shadow:var(--shadow);
+    }
+
+    .plan-card::before {
+        content:'';
+        position:absolute;
+        left:0;
+        top:0;
+        bottom:0;
+        width:3px;
+        background:var(--accent);
+        opacity:.65;
+    }
+
+    .plan-card.trial {
+        border-color:var(--accent);
+    }
+
+    .plan-card.trial::before {
+        opacity:1;
+    }
+
+    .plan-card.expired {
+        border-color:var(--bad);
+        background:var(--bad-soft);
+    }
+
+    .plan-card.expired::before {
+        background:var(--bad);
+        opacity:1;
+    }
+
+    .plan-badge {
+        display:inline-flex;
+        align-items:center;
+        font-family:'JetBrains Mono',monospace;
+        font-size:10px;
+        font-weight:700;
+        padding:5px 11px;
+        border-radius:999px;
+        background:var(--accent-soft);
+        color:var(--accent);
+        text-transform:uppercase;
+        letter-spacing:.45px;
+    }
+
+    .plan-days {
+        font-family:var(--font-display);
+        font-size:34px;
+        line-height:1.05;
+        font-weight:800;
+        color:var(--ink);
+        margin:12px 0 5px;
+    }
+
+    .billing-actions {
+        display:flex;
+        align-items:center;
+        gap:8px;
+        flex-wrap:wrap;
+        margin-top:14px;
+    }
+
+    .org-heading {
+        display:flex;
+        justify-content:space-between;
+        align-items:flex-start;
+        gap:16px;
+        margin-bottom:18px;
+    }
+
+    .org-heading h3 {
+        margin:0 0 5px;
+        font-family:var(--font-display);
+        font-size:18px;
+        font-weight:700;
+    }
+
+    .org-status {
+        display:inline-flex;
+        align-items:center;
+        gap:6px;
+        font-family:'JetBrains Mono',monospace;
+        font-size:10px;
+        font-weight:700;
+        padding:5px 10px;
+        border-radius:999px;
+        background:var(--bg-sunk);
+        color:var(--ink3);
+        text-transform:uppercase;
+        letter-spacing:.4px;
+        margin-top:3px;
+    }
+
+    .seat-grid {
+        display:grid;
+        grid-template-columns:repeat(3,1fr);
+        gap:10px;
+        margin:18px 0;
+    }
+
+    .seat-stat {
+        text-align:center;
+        padding:16px 10px;
+        border-radius:var(--r-sm);
+        background:var(--bg-sunk);
+        border:1px solid var(--line);
+        transition:border-color .2s ease, transform .2s ease;
+    }
+
+    .seat-stat:hover {
+        border-color:var(--line2);
+        transform:translateY(-1px);
+    }
+
+    .seat-stat b {
+        display:block;
+        font-family:'JetBrains Mono',monospace;
+        font-size:22px;
+        line-height:1.1;
+        color:var(--ink);
+        margin-bottom:5px;
+    }
+
+    .seat-stat span {
+        font-size:10px;
+        color:var(--ink3);
+        text-transform:uppercase;
+        letter-spacing:.45px;
+    }
+
+    .org-actions {
+        display:flex;
+        gap:8px;
+        flex-wrap:wrap;
+        margin-bottom:22px;
+    }
+
+    .dashboard-section {
+        margin-top:24px;
+        padding-top:22px;
+        border-top:1px solid var(--line);
+    }
+
+    .dashboard-section:first-of-type {
+        margin-top:0;
+        padding-top:0;
+        border-top:0;
+    }
+
+    .dashboard-section-title {
+        display:flex;
+        justify-content:space-between;
+        align-items:center;
+        gap:12px;
+        margin-bottom:10px;
+    }
+
+    .dashboard-section-title h4 {
+        margin:0;
+        font-family:var(--font-display);
+        font-size:12.5px;
+        font-weight:700;
+        text-transform:uppercase;
+        letter-spacing:.5px;
+        color:var(--ink3);
+    }
+
+    .section-sub {
+        font-size:11.5px;
+        color:var(--ink3);
+        line-height:1.5;
+        margin-bottom:12px;
+    }
+
+    .member-row {
+        display:flex;
+        justify-content:space-between;
+        align-items:center;
+        gap:14px;
+        padding:12px 0;
+        border-bottom:1px solid var(--line);
+    }
+
+    .member-row:last-child {
+        border-bottom:none;
+    }
+
+    .member-info {
+        min-width:0;
+    }
+
+    .member-name {
+        font-family:var(--font-display);
+        font-size:13px;
+        font-weight:600;
+        color:var(--ink);
+    }
+
+    .member-email {
+        display:block;
+        margin-top:3px;
+        font-size:11px;
+        color:var(--ink3);
+        word-break:break-word;
+    }
+
+    .member-role {
+        display:inline-flex;
+        align-items:center;
+        padding:3px 8px;
+        margin-left:6px;
+        border-radius:999px;
+        background:var(--bg-sunk);
+        color:var(--ink3);
+        font-family:'JetBrains Mono',monospace;
+        font-size:9px;
+        text-transform:uppercase;
+        letter-spacing:.35px;
+    }
+
+    .status-dot {
+        width:7px;
+        height:7px;
+        border-radius:50%;
+        display:inline-block;
+        margin-right:7px;
+        vertical-align:1px;
+    }
+
+    .status-dot.active { background:var(--good); box-shadow:0 0 0 3px var(--good-soft); }
+    .status-dot.suspended { background:var(--warn); box-shadow:0 0 0 3px var(--warn-soft); }
+
+    .member-actions {
+        display:flex;
+        gap:6px;
+        flex-wrap:wrap;
+        justify-content:flex-end;
+        flex-shrink:0;
+    }
+
+    .progress-wrap {
+        width:100%;
+        overflow-x:auto;
+        border:1px solid var(--line);
+        border-radius:var(--r);
+        background:var(--bg-elev);
+    }
+
+    .progress-table {
+        width:100%;
+        min-width:620px;
+        border-collapse:collapse;
+    }
+
+    .progress-table th {
+        text-align:left;
+        padding:10px 12px;
+        background:var(--bg-sunk);
+        border-bottom:1px solid var(--line);
+        font-family:'JetBrains Mono',monospace;
+        font-size:9.5px;
+        font-weight:700;
+        text-transform:uppercase;
+        letter-spacing:.45px;
+        color:var(--ink3);
+    }
+
+    .progress-table th:not(:first-child),
+    .progress-table td:not(:first-child) {
+        text-align:center;
+    }
+
+    .progress-table td {
+        padding:11px 12px;
+        border-top:1px solid var(--line);
+        font-size:12.5px;
+        color:var(--ink2);
+    }
+
+    .progress-table tbody tr {
+        transition:background .15s ease;
+    }
+
+    .progress-table tbody tr:hover {
+        background:var(--bg-sunk);
+    }
+
+    .progress-table .employee-cell {
+        text-align:left !important;
+    }
+
+    .progress-table .employee-name {
+        font-family:var(--font-display);
+        font-weight:600;
+        color:var(--ink);
+    }
+
+    .progress-table .employee-email {
+        display:block;
+        margin-top:2px;
+        font-size:10.5px;
+        color:var(--ink3);
+    }
+
+    .progress-number {
+        font-family:'JetBrains Mono',monospace;
+        font-weight:700;
+    }
+
+    .activity-list {
+        display:flex;
+        flex-direction:column;
+        gap:7px;
+        max-height:340px;
+        overflow-y:auto;
+        padding-right:2px;
+    }
+
+    .activity-item {
+        padding:11px 13px;
+        border:1px solid var(--line);
+        border-radius:var(--r-sm);
+        background:var(--bg-elev);
+        transition:border-color .15s ease, background .15s ease;
+    }
+
+    .activity-item:hover {
+        border-color:var(--line2);
+        background:var(--bg-sunk);
+    }
+
+    .activity-top {
+        display:flex;
+        justify-content:space-between;
+        align-items:center;
+        gap:10px;
+    }
+
+    .activity-event {
+        font-family:var(--font-display);
+        font-size:12px;
+        font-weight:600;
+        color:var(--ink);
+    }
+
+    .activity-date {
+        color:var(--ink3);
+        font-size:10px;
+        white-space:nowrap;
+    }
+
+    .activity-meta {
+        color:var(--ink3);
+        font-size:10.5px;
+        margin-top:4px;
+    }
+
+    .branding-box {
+        display:grid;
+        grid-template-columns:minmax(0,1fr) auto auto;
+        align-items:end;
+        gap:10px;
+        margin-top:12px;
+    }
+
+    .field-label {
+        display:block;
+        margin-bottom:5px;
+        font-family:var(--font-display);
+        font-size:10.5px;
+        font-weight:700;
+        color:var(--ink3);
+        text-transform:uppercase;
+        letter-spacing:.45px;
+    }
+
+    .branding-box input[type="url"] {
+        width:100%;
+        padding:10px 12px;
+        border:1px solid var(--line2);
+        border-radius:var(--r-sm);
+        background:var(--bg);
+        color:var(--ink);
+        font-family:var(--font-body);
+        font-size:13px;
+        transition:border-color .15s, box-shadow .15s;
+    }
+
+    .branding-box input[type="url"]:focus {
+        outline:none;
+        border-color:var(--accent);
+        box-shadow:0 0 0 3px var(--ring);
+    }
+
+    .branding-color-wrap {
+        min-width:56px;
+    }
+
+    .branding-box input[type="color"] {
+        width:52px;
+        height:38px;
+        padding:2px;
+        border-radius:var(--r-sm);
+        border:1px solid var(--line);
+        background:var(--bg-elev);
+        cursor:pointer;
+    }
+
+    .report-row {
+        display:flex;
+        justify-content:space-between;
+        align-items:center;
+        gap:12px;
+    }
+
+    .alert-banner {
+        margin-bottom:16px;
+        padding:13px 15px;
+        border-radius:var(--r);
+        font-size:12.5px;
+        line-height:1.5;
+        font-weight:600;
+    }
+
+    .alert-banner.locked {
+        background:var(--bad-soft);
+        border:1px solid var(--bad);
+        color:var(--bad);
+    }
+
+    .alert-banner.warning {
+        background:var(--warn-soft);
+        border:1px solid var(--warn);
+        color:var(--warn);
+    }
+
+    @media (max-width:700px) {
+        .seat-grid {
+            grid-template-columns:1fr;
+        }
+
+        .org-heading {
+            flex-direction:column;
+        }
+
+        .branding-box {
+            grid-template-columns:1fr;
+        }
+
+        .branding-color-wrap {
+            min-width:0;
+        }
+
+        .member-row {
+            align-items:flex-start;
+            flex-direction:column;
+        }
+
+        .member-actions {
+            justify-content:flex-start;
+        }
+
+        .report-row {
+            align-items:flex-start;
+            flex-direction:column;
+        }
+    }
+
+    @media (max-width:520px) {
+        .plan-card {
+            padding:19px 17px;
+        }
+
+        .billing-actions,
+        .org-actions {
+            flex-direction:column;
+            align-items:stretch;
+        }
+
+        .billing-actions .btn,
+        .org-actions .btn {
+            width:100%;
+        }
+    }
+
+    .btn-spinner {
+        display:inline-block;
+        width:13px;
+        height:13px;
+        border:2px solid rgba(255,255,255,.5);
+        border-top-color:#fff;
+        border-radius:50%;
+        animation:btnspin .7s linear infinite;
+        margin-right:4px;
+        vertical-align:-2px;
+    }
+
+    .btn.ghost .btn-spinner {
+        border-color:var(--line2);
+        border-top-color:var(--ink2);
+    }
+
+    @keyframes btnspin {
+        to { transform:rotate(360deg); }
+    }
 </style>
 </head>
 <body>
 <div class="wrap">
     <?php pro_header($user, 'billing'); ?>
 
-    <h1 class="page-title">💳 Billing &amp; Plan</h1>
-    <div class="sub">Your Taskvel Pro subscription, trial status, and organization licensing.</div>
+    <div class="billing-intro">
+        <h1 class="page-title">💳 Billing &amp; Plan</h1>
+        <div class="sub">Manage your Taskvel Pro subscription, organization seats, and team licensing.</div>
+    </div>
 
-    <div id="plan-section" style="margin-top:20px"></div>
-    <div id="org-section" style="margin-top:20px"></div>
+    <div class="billing-section" id="plan-section"></div>
+    <div class="billing-section" id="org-section"></div>
     <?php pro_footer($user); ?>
 </div>
 
@@ -116,8 +635,10 @@ async function loadPlanStatus() {
     try {
         const s = await Taskvel.request('/api/billing.php?action=status');
         if (s.membership) {
-            box.innerHTML = `<div class="plan-card"><span class="plan-badge">Pro · via ${esc(s.membership.org_name)}</span>
-                <div style="margin-top:10px;font-size:13.5px;color:var(--ink2)">Your account is licensed by your organization. You have full Pro access as long as your seat stays active.</div></div>`;
+            box.innerHTML = `<div class="plan-card">
+                <span class="plan-badge">Pro · via ${esc(s.membership.org_name)}</span>
+                        <div class="sub" style="margin-top:10px">Your account is licensed by your organization. You have full Pro access as long as your seat stays active.</div>
+                    </div>`;
             return;
         }
         if (s.plan === 'pro' && s.plan_source === 'trial') {
@@ -125,22 +646,32 @@ async function loadPlanStatus() {
                 <span class="plan-badge">Free trial</span>
                 <div class="plan-days">${s.days_remaining} day${s.days_remaining===1?'':'s'} left</div>
                 <div class="sub">Trial ends ${esc((s.trial_ends_at||'').slice(0,10))}. You have full Pro access until then.</div>
-                <button class="btn" style="margin-top:12px" onclick="startCheckout()">Upgrade to Pro now</button>
+                <div class="billing-actions">
+                    <button class="btn" onclick="startCheckout()">Upgrade to Pro now</button>
+                </div>
             </div>`;
         } else if (s.plan === 'pro' && s.plan_source === 'stripe') {
-            box.innerHTML = `<div class="plan-card"><span class="plan-badge">Pro</span>
-                <div style="margin-top:10px;font-size:13.5px;color:var(--ink2)">You're subscribed to Taskvel Pro. Thanks for supporting Taskvel!</div></div>`;
+            box.innerHTML = `<div class="plan-card">
+                <span class="plan-badge">Pro</span>
+                <div class="sub" style="margin-top:10px">You're subscribed to Taskvel Pro. Thanks for supporting Taskvel!</div>
+            </div>`;
         } else if (s.trial_expired) {
             box.innerHTML = `<div class="plan-card expired">
                 <span class="plan-badge" style="background:var(--bad-soft);color:var(--bad)">Trial ended</span>
-                <div style="margin:10px 0;font-size:14.5px;font-weight:600">Your 30-day Pro trial has ended.</div>
+                <div style="margin:10px 0 5px;font-family:var(--font-display);font-size:15px;font-weight:700">Your 30-day Pro trial has ended.</div>
                 <div class="sub">You're on the free plan now (2 teams, 5 members per team, 1 project per team). Upgrade to get unlimited teams, seats, and projects back.</div>
-                <button class="btn" style="margin-top:12px" onclick="startCheckout()">Upgrade to Pro</button>
+                <div class="billing-actions">
+                    <button class="btn" onclick="startCheckout()">Upgrade to Pro</button>
+                </div>
             </div>`;
         } else {
-            box.innerHTML = `<div class="plan-card"><span class="plan-badge" style="background:var(--bg-sunk);color:var(--ink3)">Free plan</span>
+            box.innerHTML = `<div class="plan-card">
+                <span class="plan-badge" style="background:var(--bg-sunk);color:var(--ink3)">Free plan</span>
                 <div class="sub" style="margin-top:8px">2 teams, 5 members per team, 1 project per team.</div>
-                <button class="btn" style="margin-top:12px" onclick="startCheckout()">Upgrade to Pro</button></div>`;
+                <div class="billing-actions">
+                    <button class="btn" onclick="startCheckout()">Upgrade to Pro</button>
+                </div>
+            </div>`;
         }
     } catch (e) { box.innerHTML = `<div class="empty">Couldn't load your plan — ${esc(e.message)}.</div>`; }
 }
@@ -158,10 +689,16 @@ async function loadOrgSection() {
         const { membership } = await Taskvel.request('/api/organizations.php?action=mine');
         if (!membership) {
             box.innerHTML = `<div class="plan-card">
-                <h3 style="margin:0 0 6px;font-family:var(--font-display)">🏢 For teams &amp; companies</h3>
-                <div class="sub" style="margin-bottom:12px">Purchase seats for your whole team and manage everyone's Pro access from one dashboard.</div>
+            <div class="org-heading">
+                <div>
+                    <h3>🏢 For teams &amp; companies</h3>
+                    <div class="sub">Purchase seats for your whole team and manage everyone's Pro access from one dashboard.</div>
+                </div>
+            </div>
+            <div class="billing-actions">
                 <button class="btn" onclick="openCreateOrg()">Set up an organization</button>
-            </div>`;
+            </div>
+        </div>`;
             return;
         }
         currentOrg = membership;
@@ -185,58 +722,144 @@ function renderOrgDashboard(dash) {
         graceDaysLeft = Math.max(0, Math.ceil((new Date(org.grace_ends_at + 'T00:00:00') - new Date(new Date().toDateString())) / 86400000));
     }
     const banner = isLocked
-        ? `<div style="margin-bottom:16px;padding:14px 16px;border-radius:12px;background:var(--bad-soft);border:1px solid var(--bad);color:var(--bad);font-size:13.5px;font-weight:600">
-             🔒 This organization is locked — payment wasn't received during the grace period. Every member has lost Pro access. Renew now to restore it instantly.
+    ? `<div class="alert-banner locked">
+         🔒 This organization is locked — payment wasn't received during the grace period. Every member has lost Pro access. Renew now to restore it instantly.
+       </div>`
+    : isGrace
+        ? `<div class="alert-banner warning">
+             ⚠️ Payment is overdue. Your account will be locked in <strong>${graceDaysLeft} day${graceDaysLeft === 1 ? '' : 's'}</strong> — kindly renew to avoid interruption.
            </div>`
-        : isGrace
-            ? `<div style="margin-bottom:16px;padding:14px 16px;border-radius:12px;background:var(--warn-soft);border:1px solid var(--warn);color:var(--warn);font-size:13.5px;font-weight:600">
-                 ⚠️ Payment is overdue. Your account will be locked in <strong>${graceDaysLeft} day${graceDaysLeft === 1 ? '' : 's'}</strong> — kindly renew to avoid interruption.
-               </div>`
-            : '';
+        : '';
     box.innerHTML = `
-    ${banner}
-    <div class="plan-card">
-        <div class="row2" style="align-items:flex-start">
-            <div>
-                <h3 style="margin:0 0 4px;font-family:var(--font-display)">🏢 ${esc(org.name)}</h3>
-                <div class="sub">${org.billing_cycle} billing · renews ${esc(org.renewal_date || '—')} · status: ${esc(org.plan_status)}</div>
-            </div>
-            <button class="btn sm" onclick="openInvite()" ${isLocked ? 'disabled title="Renew to add employees"' : ''}>+ Add employee</button>
-        </div>
-        <div class="seat-grid">
-            <div class="seat-stat"><b>${seats.purchased}</b>Seats purchased</div>
-            <div class="seat-stat"><b>${seats.assigned}</b>Assigned</div>
-            <div class="seat-stat"><b>${seats.available}</b>Available</div>
-        </div>
-        <button class="btn ghost sm" id="add-seats-btn" onclick="addSeats()" ${isLocked ? 'disabled' : ''}>+ Add more seats</button>
-        <button class="btn ghost sm" onclick="openBusinessBundle()" style="${isLocked ? 'border-color:var(--bad);color:var(--bad)' : ''}">${isLocked ? '🔒 Renew — Business, ' : '🏢 Business — '}<?= BUSINESS_BUNDLE_SEATS ?> seats bundled</button>
-        <h4 style="margin:20px 0 6px;font-family:var(--font-display)">Members</h4>
-        <div id="org-members"></div>
-        <h4 style="margin:20px 0 6px;font-family:var(--font-display)">Team task progress</h4>
-        <div id="org-progress"></div>
-        <h4 style="margin:20px 0 6px;font-family:var(--font-display)">Activity log</h4>
-        <div id="org-activity"></div>
+        ${banner}
 
-        <h4 style="margin:20px 0 6px;font-family:var(--font-display)">Branding</h4>
-        <div class="sub" style="margin-bottom:10px">Replace Taskvel's default logo and accent color with your own, for every member of this org.</div>
-        <div style="display:flex;gap:10px;align-items:flex-end;flex-wrap:wrap;margin-bottom:10px">
-            <div style="flex:1;min-width:220px">
-                <label style="font-size:11.5px;font-weight:700;display:block;margin-bottom:4px">Logo image URL</label>
-                <input type="url" id="org-logo-url" placeholder="https://yourcompany.com/logo.png" value="${esc(org.logo_url || '')}" style="width:100%;padding:9px 12px;border-radius:9px;border:1px solid var(--line);background:var(--bg-elev)">
-            </div>
-            <div>
-                <label style="font-size:11.5px;font-weight:700;display:block;margin-bottom:4px">Accent color</label>
-                <input type="color" id="org-brand-color" value="${org.brand_color || '#4f46e5'}" style="width:52px;height:38px;padding:2px;border-radius:9px;border:1px solid var(--line);background:var(--bg-elev)">
-            </div>
-            <button class="btn sm" onclick="saveOrgBranding(${org.id})">Save branding</button>
-        </div>
+        <div class="plan-card">
 
-        <div style="margin:20px 0 6px;display:flex;justify-content:space-between;align-items:center">
-            <h4 style="margin:0;font-family:var(--font-display)">Reports</h4>
-            <a class="btn ghost sm" href="/api/organizations.php?action=export-report&org_id=${org.id}">⬇ Download full report (CSV)</a>
-        </div>
-    </div>`;
+            <div class="org-heading">
+                <div>
+                    <h3>🏢 ${esc(org.name)}</h3>
+                    <div class="sub">
+                        ${org.billing_cycle} billing · renews ${esc(org.renewal_date || '—')}
+                    </div>
+                    <span class="org-status">● ${esc(org.plan_status)}</span>
+                </div>
+
+                <button class="btn sm" onclick="openInvite()" ${isLocked ? 'disabled title="Renew to add employees"' : ''}>
+                    + Add employee
+                </button>
+            </div>
+
+            <div class="seat-grid">
+                <div class="seat-stat">
+                    <b>${seats.purchased}</b>
+                    <span>Seats purchased</span>
+                </div>
+                <div class="seat-stat">
+                    <b>${seats.assigned}</b>
+                    <span>Assigned</span>
+                </div>
+                <div class="seat-stat">
+                    <b>${seats.available}</b>
+                    <span>Available</span>
+                </div>
+            </div>
+
+            <div class="org-actions">
+                <button class="btn ghost sm" id="add-seats-btn" onclick="addSeats()" ${isLocked ? 'disabled' : ''}>
+                    + Add more seats
+                </button>
+
+                <button class="btn ghost sm"
+                    onclick="openBusinessBundle()"
+                    style="${isLocked ? 'border-color:var(--bad);color:var(--bad)' : ''}">
+                    ${isLocked ? '🔒 Renew — Business, ' : '🏢 Business — '}<?= BUSINESS_BUNDLE_SEATS ?> seats bundled
+                </button>
+            </div>
+
+            <div class="dashboard-section">
+                <div class="dashboard-section-title">
+                    <h4>Members</h4>
+                </div>
+                <div class="section-sub">Manage your organization members, access, and assigned seats.</div>
+                <div id="org-members"></div>
+            </div>
+
+            <div class="dashboard-section">
+                <div class="dashboard-section-title">
+                    <h4>Projects &amp; teams</h4>
+                </div>
+                <div class="section-sub">Every Team/Project board your organization's employees work in — the actual collaborative Kanban work, separate from anyone's private to-do list.</div>
+                <div id="org-projects"></div>
+            </div>
+
+            <div class="dashboard-section">
+                <div class="dashboard-section-title">
+                    <h4>Employee task progress</h4>
+                </div>
+                <div class="section-sub">Personal to-do list completion and assigned Team/Project work, side by side, per employee.</div>
+                <div id="org-progress"></div>
+            </div>
+
+            <div class="dashboard-section">
+                <div class="dashboard-section-title">
+                    <h4>Activity log</h4>
+                </div>
+                <div class="section-sub">Recent organization and billing activity.</div>
+                <div id="org-activity"></div>
+            </div>
+
+            <div class="dashboard-section">
+                <div class="dashboard-section-title">
+                    <h4>Branding</h4>
+                </div>
+
+                <div class="section-sub">
+                    Replace Taskvel's default logo and accent color with your own, for every member of this organization.
+                </div>
+
+                <div class="branding-box">
+                    <div>
+                        <label class="field-label">Logo image URL</label>
+                        <input type="url"
+                            id="org-logo-url"
+                            placeholder="https://yourcompany.com/logo.png"
+                            value="${esc(org.logo_url || '')}">
+                    </div>
+
+                    <div class="branding-color-wrap">
+                        <label class="field-label">Accent</label>
+                        <input type="color"
+                            id="org-brand-color"
+                            value="${org.brand_color || '#4f46e5'}">
+                    </div>
+
+                    <button class="btn sm" onclick="saveOrgBranding(${org.id})">
+                        Save branding
+                    </button>
+                </div>
+            </div>
+
+            <div class="dashboard-section">
+                <div class="report-row">
+                    <div>
+                        <div class="dashboard-section-title" style="margin-bottom:3px">
+                            <h4>Reports</h4>
+                        </div>
+                        <div class="section-sub" style="margin-bottom:0">
+                            Export your organization's complete activity report.
+                        </div>
+                    </div>
+
+                    <a class="btn ghost sm"
+                        href="/api/organizations.php?action=export-report&org_id=${org.id}">
+                        ⬇ Download CSV
+                    </a>
+                </div>
+            </div>
+
+        </div>`;
     loadOrgMembers(org.id);
+    loadOrgProjects(org.id);
     loadOrgProgress(org.id);
     loadOrgActivity(org.id);
 }
@@ -272,16 +895,18 @@ async function loadOrgActivity(orgId) {
     try {
         const { activity } = await Taskvel.request(`/api/organizations.php?action=activity&org_id=${orgId}`);
         if (!activity.length) { box.innerHTML = '<div class="empty">No activity yet.</div>'; return; }
-        box.innerHTML = `<div style="display:flex;flex-direction:column;gap:6px;max-height:340px;overflow-y:auto">
+        box.innerHTML = `<div class="activity-list">
             ${activity.map(a => {
                 const meta = (() => { try { return JSON.parse(a.meta || '{}'); } catch (e) { return {}; } })();
                 const who = a.actor_name ? esc(a.actor_name) : 'System';
-                return `<div style="padding:10px 12px;border:1px solid var(--line);border-radius:10px;background:var(--bg-elev);font-size:12.5px">
-                    <div style="display:flex;justify-content:space-between;gap:10px">
-                        <b>${esc(ACTIVITY_LABELS[a.event] || a.event)}</b>
-                        <span style="color:var(--ink3);font-size:11px;white-space:nowrap">${new Date(a.created_at).toLocaleString()}</span>
+                return `<div class="activity-item">
+                    <div class="activity-top">
+                        <span class="activity-event">${esc(ACTIVITY_LABELS[a.event] || a.event)}</span>
+                        <span class="activity-date">${new Date(a.created_at).toLocaleString()}</span>
                     </div>
-                    <div style="color:var(--ink3);margin-top:3px">by ${who}${meta.email ? ' · ' + esc(meta.email) : ''}${meta.seats ? ' · ' + meta.seats + ' seat(s)' : ''}</div>
+                    <div class="activity-meta">
+                        by ${who}${meta.email ? ' · ' + esc(meta.email) : ''}${meta.seats ? ' · ' + meta.seats + ' seat(s)' : ''}
+                    </div>
                 </div>`;
             }).join('')}
         </div>`;
@@ -296,25 +921,90 @@ async function loadOrgProgress(orgId) {
         const { progress } = await Taskvel.request(`/api/organizations.php?action=progress&org_id=${orgId}`);
         if (!progress.length) { box.innerHTML = '<div class="empty">No members yet.</div>'; return; }
         box.innerHTML = `
-        <table style="width:100%;border-collapse:collapse;background:var(--bg-elev);border:1px solid var(--line);border-radius:12px;overflow:hidden">
-            <thead><tr style="background:var(--bg-sunk)">
-                <th style="text-align:left;padding:9px 12px;font-size:10.5px;text-transform:uppercase;color:var(--ink3)">Employee</th>
-                <th style="text-align:center;padding:9px 12px;font-size:10.5px;text-transform:uppercase;color:var(--ink3)">Done</th>
-                <th style="text-align:center;padding:9px 12px;font-size:10.5px;text-transform:uppercase;color:var(--ink3)">Open</th>
-                <th style="text-align:center;padding:9px 12px;font-size:10.5px;text-transform:uppercase;color:var(--ink3)">Overdue</th>
-                <th style="text-align:left;padding:9px 12px;font-size:10.5px;text-transform:uppercase;color:var(--ink3)">Last active</th>
-            </tr></thead>
-            <tbody>
-            ${progress.map(p => `
-                <tr style="border-top:1px solid var(--line)">
-                    <td style="padding:9px 12px;font-size:13px"><b>${esc(p.name)}</b><div style="font-size:11px;color:var(--ink3)">${esc(p.email)}</div></td>
-                    <td style="padding:9px 12px;text-align:center;color:var(--good);font-weight:700">${p.done_tasks || 0}</td>
-                    <td style="padding:9px 12px;text-align:center">${p.open_tasks || 0}</td>
-                    <td style="padding:9px 12px;text-align:center;color:${(p.overdue_tasks||0) > 0 ? 'var(--bad)' : 'var(--ink3)'};font-weight:${(p.overdue_tasks||0) > 0 ? '700' : '400'}">${p.overdue_tasks || 0}</td>
-                    <td style="padding:9px 12px;font-size:12px;color:var(--ink3)">${p.last_activity ? new Date(p.last_activity).toLocaleDateString() : '—'}</td>
-                </tr>`).join('')}
-            </tbody>
-        </table>`;
+            <div class="progress-wrap">
+                <table class="progress-table">
+                    <thead>
+                        <tr>
+                            <th rowspan="2" class="employee-cell">Employee</th>
+                            <th colspan="3">Personal to-dos</th>
+                            <th colspan="3">Team/project work</th>
+                        </tr>
+                        <tr>
+                            <th>Done</th>
+                            <th>Open</th>
+                            <th>Overdue</th>
+                            <th>Done</th>
+                            <th>Open</th>
+                            <th>Overdue</th>
+                        </tr>
+                    </thead>
+
+                    <tbody>
+                    ${progress.map(p => `
+                        <tr>
+                            <td class="employee-cell">
+                                <span class="employee-name">${esc(p.name)}</span>
+                                <span class="employee-email">${esc(p.email)}</span>
+                            </td>
+
+                            <td><span class="progress-number" style="color:var(--good)">${p.done_tasks || 0}</span></td>
+                            <td><span class="progress-number">${p.open_tasks || 0}</span></td>
+                            <td><span class="progress-number" style="color:${(p.overdue_tasks||0) > 0 ? 'var(--bad)' : 'var(--ink3)'}">${p.overdue_tasks || 0}</span></td>
+
+                            <td><span class="progress-number" style="color:var(--good)">${p.team_done_tasks || 0}</span></td>
+                            <td><span class="progress-number">${p.team_open_tasks || 0}</span></td>
+                            <td><span class="progress-number" style="color:${(p.team_overdue_tasks||0) > 0 ? 'var(--bad)' : 'var(--ink3)'}">${p.team_overdue_tasks || 0}</span></td>
+                        </tr>
+                    `).join('')}
+                    </tbody>
+                </table>
+            </div>`;
+    } catch (e) { box.innerHTML = `<div class="empty">${esc(e.message)}</div>`; }
+}
+
+async function loadOrgProjects(orgId) {
+    const box = document.getElementById('org-projects');
+    if (!box) return;
+    box.innerHTML = '<div class="empty">Loading…</div>';
+    try {
+        const { projects } = await Taskvel.request(`/api/organizations.php?action=org-projects&org_id=${orgId}`);
+        if (!projects.length) {
+            box.innerHTML = '<div class="empty">No employees are working in a Team/Project board yet — Teams are created separately from this organization, on the Teams page.</div>';
+            return;
+        }
+        box.innerHTML = `
+            <div class="progress-wrap">
+                <table class="progress-table">
+                    <thead>
+                        <tr>
+                            <th class="employee-cell">Project</th>
+                            <th>Members</th>
+                            <th>Done</th>
+                            <th>Open</th>
+                            <th>Overdue</th>
+                            <th>Last activity</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                    ${projects.map(p => {
+                        const total = p.total_tasks || 0;
+                        const pct = total ? Math.round((p.done_tasks / total) * 100) : 0;
+                        return `
+                        <tr>
+                            <td class="employee-cell">
+                                <span class="employee-name">${esc(p.project_name)}${p.archived == 1 ? ' <span class="member-role">archived</span>' : ''}</span>
+                                <span class="employee-email">${esc(p.team_name)} · ${total} task${total === 1 ? '' : 's'} · ${pct}% done</span>
+                            </td>
+                            <td><span class="progress-number">${p.org_members_in_team}</span></td>
+                            <td><span class="progress-number" style="color:var(--good)">${p.done_tasks || 0}</span></td>
+                            <td><span class="progress-number">${p.open_tasks || 0}</span></td>
+                            <td><span class="progress-number" style="color:${(p.overdue_tasks||0) > 0 ? 'var(--bad)' : 'var(--ink3)'}">${p.overdue_tasks || 0}</span></td>
+                            <td>${p.last_activity ? new Date(p.last_activity).toLocaleDateString() : '—'}</td>
+                        </tr>`;
+                    }).join('')}
+                    </tbody>
+                </table>
+            </div>`;
     } catch (e) { box.innerHTML = `<div class="empty">${esc(e.message)}</div>`; }
 }
 
@@ -324,14 +1014,22 @@ async function loadOrgMembers(orgId) {
         const { members } = await Taskvel.request(`/api/organizations.php?action=members&org_id=${orgId}`);
         box.innerHTML = members.map(m => `
             <div class="member-row">
-                <div>
-                    <span class="status-dot ${m.status}"></span><b>${esc(m.name)}</b> <span style="color:var(--ink3);font-size:12px">${esc(m.email)} · ${esc(m.role)}</span>
+                <div class="member-info">
+                    <div class="member-name">
+                        <span class="status-dot ${m.status}"></span>${esc(m.name)}
+                        <span class="member-role">${esc(m.role)}</span>
+                    </div>
+                    <span class="member-email">${esc(m.email)}</span>
                 </div>
-                <div style="display:flex;gap:6px;flex-wrap:wrap">
+
+                <div class="member-actions">
                     ${m.role !== 'owner' ? (m.status === 'active'
                         ? `<button class="btn ghost sm" onclick="suspendMember(${orgId}, ${m.user_id})">Suspend</button>`
                         : `<button class="btn ghost sm" onclick="reactivateMember(${orgId}, ${m.user_id})">Reactivate</button>`) : ''}
-                    ${m.role !== 'owner' ? `<button class="btn ghost sm" style="color:var(--bad)" onclick="removeMember(${orgId}, ${m.user_id})">Remove</button>` : ''}
+
+                    ${m.role !== 'owner'
+                        ? `<button class="btn ghost sm" style="color:var(--bad)" onclick="removeMember(${orgId}, ${m.user_id})">Remove</button>`
+                        : ''}
                 </div>
             </div>`).join('') || '<div class="empty">No members yet.</div>';
     } catch (e) { box.innerHTML = `<div class="empty">${esc(e.message)}</div>`; }

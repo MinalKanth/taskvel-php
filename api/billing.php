@@ -14,6 +14,11 @@ switch ("$method:$action") {
 
     // Personal trial/plan status — powers the billing.php banner/upgrade wall.
     case 'GET:status':
+        // Always recompute before reading — this is the page most likely
+        // to be stared at right after a trial/grace period should have
+        // ended, so it must never show a number that's stale by hours or
+        // days just because the person hasn't logged out and back in.
+        recompute_user_plan($uid);
         $stmt = $pdo->prepare('SELECT plan, plan_source, trial_ends_at FROM users WHERE id = ?');
         $stmt->execute([$uid]);
         $user = $stmt->fetch();

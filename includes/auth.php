@@ -205,6 +205,15 @@ function attempt_login(string $email, string $password): array
     unset($_SESSION['csrf_token']);
     audit_log((int)$user['id'], 'login_success', []);
 
+    // Re-evaluate plan/trial/org status right now, on every login — this is
+    // what actually enforces trial expiry, grace-period lockouts, and
+    // admin-granted extensions ending, instead of relying solely on the
+    // daily cron (cron/send_trial_reminders.php) having been scheduled.
+    // A stale trial_ends_at from months ago should never grant access
+    // just because nothing happened to touch that row since signup.
+    require_once __DIR__ . '/licensing.php';
+    recompute_user_plan((int)$user['id']);
+
     return ['ok' => true, 'user_id' => (int)$user['id']];
 }
 

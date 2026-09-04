@@ -11,33 +11,30 @@ $user = current_user();
 <meta name="csrf-token" content="<?= htmlspecialchars(csrf_token()) ?>">
 <?php pro_head('My Work'); ?>
 <style>
-    .wrap {
-        max-width: 760px;
-    }
     
-    .header-shell { max-width:920px; }
 
-    .mw-intro { margin-bottom:20px; }
-    .mw-intro h1 { font-family:var(--font-display); font-size:22px; font-weight:700; letter-spacing:-.2px; margin:0 0 4px; }
+    .mw-intro { margin-bottom:22px; }
+    .mw-intro h1 { font-family:var(--font-display); font-size:24px; font-weight:700; letter-spacing:-.4px; margin:0 0 5px; }
     .mw-intro p { color:var(--ink3); font-size:13.5px; margin:0; line-height:1.5; }
 
-    .mw-toolbar { display:flex; gap:8px; flex-wrap:wrap; align-items:center; margin-bottom:20px; }
+    .mw-toolbar { display:flex; gap:10px; flex-wrap:wrap; align-items:center; margin-bottom:22px; }
 
     .mw-toolbar input[type="text"],
     .mw-toolbar select {
-        height:38px;
-        border:1px solid var(--line2);
-        border-radius:var(--r-sm);
+        height:42px;
+        border:1px solid var(--line);
+        border-radius:12px;
         background:var(--bg-elev);
         color:var(--ink);
         font-family:var(--font-body);
         font-size:13px;
-        padding:0 12px;
+        padding:0 14px;
         outline:none;
+        box-shadow:var(--shadow-sm);
         transition:border-color .15s ease, box-shadow .15s ease;
     }
     .mw-toolbar input[type="text"]:hover,
-    .mw-toolbar select:hover { border-color:var(--ink4); }
+    .mw-toolbar select:hover { border-color:var(--line2); }
     .mw-toolbar input[type="text"]:focus,
     .mw-toolbar select:focus { border-color:var(--accent); box-shadow:0 0 0 3px var(--ring); }
     .mw-toolbar input[type="text"]::placeholder { color:var(--ink3); }
@@ -50,40 +47,49 @@ $user = current_user();
         appearance:none; -webkit-appearance:none; -moz-appearance:none;
         background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20' fill='none' stroke='%238a8f98' stroke-width='2'%3E%3Cpath d='M5 7.5l5 5 5-5' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
         background-repeat:no-repeat;
-        background-position:right 10px center;
+        background-position:right 12px center;
         background-size:16px;
-        padding-right:32px;
+        padding-right:34px;
     }
 
-    .mw-section { margin-bottom:26px; }
-    .mw-section-head { display:flex; align-items:center; gap:8px; margin-bottom:10px; }
-    .mw-section-head h2 { font-size:13px; font-weight:800; text-transform:uppercase; letter-spacing:.5px; margin:0; }
-    .mw-section-head .count { font-size:11.5px; color:var(--ink3); font-family:var(--font-display); background:var(--bg-sunk); padding:2px 9px; border-radius:20px; }
+    .mw-section { margin-bottom:28px; }
+    .mw-section-head { display:flex; align-items:center; gap:9px; margin-bottom:12px; }
+    .mw-section-head h2 { font-size:12.5px; font-weight:800; text-transform:uppercase; letter-spacing:.6px; margin:0; }
+    .mw-section-head .count { font-size:11px; font-weight:700; color:var(--ink3); font-family:var(--font-display); background:var(--bg-sunk); padding:3px 10px; border-radius:20px; }
+    .mw-section-head::before { content:''; width:7px; height:7px; border-radius:50%; background:var(--ink4); }
     .mw-section-head.overdue h2 { color:var(--bad); }
+    .mw-section-head.overdue::before { background:var(--bad); }
+    .mw-section-head.overdue .count { color:var(--bad); background:var(--bad-soft); }
     .mw-section-head.today h2 { color:var(--accent); }
+    .mw-section-head.today::before { background:var(--accent); }
+    .mw-section-head.today .count { color:var(--accent); background:var(--accent-soft); }
 
-    .mw-row { display:flex; align-items:center; gap:11px; padding:15px 16px; background:var(--bg-elev); border:1px solid var(--line);
-        border-radius:var(--r-lg); margin-bottom:7px; cursor:pointer; position:relative; overflow:hidden;
-        transition:border-color .15s ease, box-shadow .2s ease, transform .2s ease; }
-    .mw-row::before { content:''; position:absolute; left:0; top:0; bottom:0; width:3px; background:transparent; transition:background .15s ease; }
-    .mw-row:hover { transform:translateY(-1px); box-shadow:var(--shadow); border-color:var(--line2); }
-    .mw-row:hover::before { background:var(--line2); }
-    .mw-check { width:19px; height:19px; border-radius:50%; border:2px solid var(--line2); flex-shrink:0; cursor:pointer;
-        display:flex; align-items:center; justify-content:center; transition:all .15s; }
-    .mw-check:hover { border-color:var(--good); }
+    .mw-row { display:flex; align-items:center; gap:12px; padding:16px 17px; background:var(--bg-elev); border:1px solid var(--line);
+        border-radius:var(--r-lg); margin-bottom:8px; cursor:pointer; position:relative; overflow:hidden;
+        box-shadow:var(--shadow-sm);
+        transition:border-color .2s ease, box-shadow .25s ease, transform .2s var(--ease); }
+    .mw-row::before { content:''; position:absolute; left:0; top:0; bottom:0; width:3px; background:var(--ink4); opacity:.6; transition:width .2s ease, opacity .2s ease; }
+    .mw-row[data-source="personal"]::before { background:var(--accent); }
+    .mw-row[data-source="project"]::before { background:var(--good); }
+    .mw-row[data-source="team"]::before { background:var(--warn); }
+    .mw-row:hover { transform:translateY(-2px); box-shadow:var(--shadow); border-color:var(--line2); }
+    .mw-row:hover::before { width:5px; opacity:1; }
+    .mw-check { width:20px; height:20px; border-radius:50%; border:2px solid var(--line2); flex-shrink:0; cursor:pointer;
+        display:flex; align-items:center; justify-content:center; transition:all .15s var(--ease); }
+    .mw-check:hover { border-color:var(--good); transform:scale(1.08); }
     .mw-check.done { background:var(--good); border-color:var(--good); color:#fff; font-size:11px; }
     .mw-body { flex:1; min-width:0; }
     .mw-title { font-size:13.5px; font-weight:700; margin-bottom:3px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
     .mw-meta { display:flex; gap:8px; align-items:center; flex-wrap:wrap; font-size:10.5px; color:var(--ink3); font-family:var(--font-display); font-weight:600; }
-    .mw-source { padding:2px 8px; border-radius:6px; font-size:9.5px; text-transform:uppercase; letter-spacing:.4px; }
+    .mw-source { padding:3px 9px; border-radius:7px; font-size:9.5px; font-weight:700; text-transform:uppercase; letter-spacing:.4px; }
     .mw-source.personal { background:var(--accent-soft); color:var(--accent); }
     .mw-source.project { background:var(--good-soft); color:var(--good); }
     .mw-source.team { background:var(--warn-soft); color:var(--warn); }
     .mw-due.overdue { color:var(--bad); font-weight:700; }
-    .mw-empty { text-align:center; color:var(--ink3); font-size:13px; padding:26px 20px; background:var(--bg-sunk); border-radius:var(--r-lg); }
+    .mw-empty { text-align:center; color:var(--ink3); font-size:13px; padding:30px 20px; background:var(--bg-sunk); border:1px dashed var(--line2); border-radius:var(--r-lg); }
     .mw-loading { text-align:center; color:var(--ink3); font-size:13px; padding:40px 20px; }
 
-    .pill { font-weight:700; padding:2px 8px; border-radius:6px; text-transform:uppercase; letter-spacing:.4px; font-family:var(--font-display); }
+    .pill { font-weight:700; padding:3px 9px; border-radius:7px; text-transform:uppercase; letter-spacing:.4px; font-family:var(--font-display); }
     .pri-critical { background:var(--ink); color:var(--bg); }
     :root[data-theme="dark"] .pri-critical { background:var(--accent); color:var(--on-accent); }
     .pri-urgent { background:var(--bad); color:#fff; }
@@ -214,7 +220,7 @@ function renderWork() {
 function rowHTML(t) {
     const overdue = bucketFor(t) === 'overdue' && t.status !== 'done';
     const sourceLabel = { personal: 'Personal', project: 'Project', team: 'Team' }[t.source];
-    return `<div class="mw-row" onclick="location.href='${esc(t.contextUrl)}'">
+    return `<div class="mw-row" data-source="${t.source}" onclick="location.href='${esc(t.contextUrl)}'">
         <div class="mw-check ${t.status === 'done' ? 'done' : ''}" onclick="event.stopPropagation(); toggleDone(this, '${t.source}', ${t.id})">${t.status === 'done' ? '✓' : ''}</div>
         <div class="mw-body">
             <div class="mw-title" style="${t.status === 'done' ? 'text-decoration:line-through;color:var(--ink3)' : ''}">${esc(t.title)}${t.blocked ? ' 🔒' : ''}</div>

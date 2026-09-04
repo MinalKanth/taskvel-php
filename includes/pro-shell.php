@@ -98,29 +98,34 @@ function pro_head(string $title): void
 
         .aurora { display:none; }
 
-        .wrap { max-width:560px; margin:0 auto; padding:0 18px 90px; }
-
+                .wrap { max-width:560px; margin:0 auto; padding:0 18px 120px; }
             @media (min-width: 720px) {
-                .wrap { max-width:660px; padding:0 24px 90px; }
+                .wrap { max-width:660px; padding:0 24px 120px; }
             }
-
             @media (min-width: 980px) {
                 .wrap { max-width:760px; }
+            }
+            @media (min-width: 1040px) {
+                .wrap { max-width:1040px; }
+            }
+            @media (max-width: 380px) {
+                .wrap { padding:0 14px 120px; }
             }
 
         /* ═══════ HEADER — kept byte-for-byte visually identical to
            taskvel-pro.php's own header CSS, including its responsive
            breakpoints, so the app doesn't visibly "reset" size/style
            when you navigate from My Tasks to any other page. ═══════ */
-        .header { padding:24px 0 8px; position:sticky; top:0; z-index:40; background:var(--bg); border-bottom:1px solid transparent; }
+        .header { padding:24px 0 8px; position:sticky; top:0; z-index:40; background:color-mix(in srgb, var(--bg) 88%, transparent); backdrop-filter:blur(14px) saturate(1.4); -webkit-backdrop-filter:blur(14px) saturate(1.4); border-bottom:1px solid transparent; }
         .brand-row { display:flex; justify-content:space-between; align-items:flex-start; gap:12px; }
         .brand { display:flex; align-items:center; gap:12px; text-decoration:none; }
-        .logo { width:38px; height:38px; border-radius:11px; background:linear-gradient(150deg, var(--accent), var(--accent-2));
+        .logo { width:40px; height:40px; border-radius:12px; background:linear-gradient(150deg, var(--accent), var(--accent-2));
             display:flex; align-items:center; justify-content:center; font-family:var(--font-display); font-weight:700; font-size:17px;
             color:var(--on-accent); flex-shrink:0; position:relative; overflow:hidden;
-            box-shadow:0 1px 0 rgba(255,255,255,.22) inset, 0 6px 16px -8px var(--accent-glow); transition:box-shadow .3s var(--ease); }
+            box-shadow:0 1px 0 rgba(255,255,255,.22) inset, 0 8px 20px -8px var(--accent-glow); transition:box-shadow .3s var(--ease), transform .3s var(--ease); }
+        .brand:hover .logo { transform:translateY(-1px) rotate(-2deg); box-shadow:0 1px 0 rgba(255,255,255,.22) inset, 0 10px 24px -6px var(--accent-glow); }
         .logo::after { content:''; position:absolute; inset:0; border-radius:inherit; border:1px solid rgba(255,255,255,.14); pointer-events:none; }
-        .brand-txt h1 { font-family:var(--font-display); font-size:19px; font-weight:700; letter-spacing:-.3px; line-height:1; color:var(--ink); }
+        .brand-txt h1 { font-family:'Sora'; font-size:19px; font-weight:700; letter-spacing:-.3px; line-height:1; color:var(--ink); }
         .brand-txt h1 span { font-weight:400; color:var(--ink3); }
         .brand-txt .tag { font-family:'JetBrains Mono',monospace; font-size:9.5px; color:var(--ink3); letter-spacing:1.2px; text-transform:uppercase; margin-top:4px; }
 
@@ -172,12 +177,14 @@ function pro_head(string $title): void
 
         /* Labeled primary navigation — must stay identical to the
            .main-nav block in taskvel-pro.php's <style>. */
-        .main-nav { display:flex; gap:6px; margin:14px 0 22px; flex-wrap:wrap; }
+        .main-nav { display:flex; gap:3px; margin:16px 0 22px; flex-wrap:wrap; padding:4px; background:var(--bg-sunk);
+            border:1px solid var(--line); border-radius:14px; width:fit-content; max-width:100%; overflow-x:auto; scrollbar-width:none; }
+        .main-nav::-webkit-scrollbar { display:none; }
         .main-nav a { text-decoration:none; font-family:var(--font-display); font-size:12.5px; font-weight:600;
-            padding:8px 14px; border-radius:var(--r-sm); border:1px solid var(--line); background:var(--bg-elev); color:var(--ink2);
-            transition:background .15s ease, border-color .15s ease, color .15s ease; }
-        .main-nav a:hover { background:var(--bg-sunk); border-color:var(--line2); color:var(--ink); }
-        .main-nav a.active { background:var(--accent); color:var(--on-accent); border-color:var(--accent); }
+            padding:8px 14px; border-radius:10px; border:1px solid transparent; background:transparent; color:var(--ink2); white-space:nowrap;
+            transition:background .18s var(--ease), color .18s var(--ease), box-shadow .18s var(--ease); }
+        .main-nav a:hover { background:var(--bg-elev); color:var(--ink); }
+        .main-nav a.active { background:var(--bg-elev); color:var(--accent); border-color:var(--line); box-shadow:var(--shadow-sm); }
 
         /* ── Responsive — mirrors taskvel-pro.php's breakpoints exactly,
            so the header scales the same way on every page. ── */
@@ -314,6 +321,7 @@ function pro_head(string $title): void
         .header-shell { max-width:560px; margin:0 auto; }
         @media (min-width: 720px) { .header-shell { max-width:660px; } }
         @media (min-width: 980px) { .header-shell { max-width:760px; } }
+        @media (min-width: 1040px) { .header-shell { max-width:1040px; } }
 
         /* ═══════ FOOTER — mirrors taskvel-pro.php's .foot block ═══════ */
         .foot { text-align:center; padding:42px 20px 10px; color:var(--ink3); }

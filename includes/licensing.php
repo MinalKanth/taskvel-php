@@ -35,7 +35,7 @@ function recompute_user_plan(int $userId): void
         return;
     }
 
-    $stmt = $pdo->prepare('SELECT plan, plan_source, trial_ends_at FROM users WHERE id = ?');
+    $stmt = $pdo->prepare('SELECT plan, plan_source, trial_ends_at, admin_extended_until FROM users WHERE id = ?');
     $stmt->execute([$userId]);
     $user = $stmt->fetch();
     if (!$user) return;
@@ -43,12 +43,22 @@ function recompute_user_plan(int $userId): void
     // A real paid subscription (set by the Stripe webhook) is untouched here.
     if ($user['plan_source'] === 'stripe') return;
 
+    // Admin manually granted access (e.g. an offline/cash payment) — its
+    // own source so it survives independently of trial/Stripe state, good
+    // until the date the admin picked in admin/subscriptions.php.
+    if ($user['admin_extended_until'] && $user['admin_extended_until'] > date('Y-m-d H:i:s')) {
+        if ($user['plan'] !== 'pro' || $user['plan_source'] !== 'admin') {
+            $pdo->prepare("UPDATE users SET plan = 'pro', plan_source = 'admin' WHERE id = ?")->execute([$userId]);
+        }
+        return;
+    }
+
     // Still within the trial window.
     if ($user['plan_source'] === 'trial' && $user['trial_ends_at'] && $user['trial_ends_at'] > date('Y-m-d H:i:s')) {
         return; // already 'pro'/'trial' — nothing to change
     }
 
-    // Trial expired (or was never on one, or their org seat was just taken away): free.
+    // Nothing active: free.
     $pdo->prepare("UPDATE users SET plan = 'free', plan_source = 'none' WHERE id = ?")->execute([$userId]);
 }
 
@@ -107,6 +117,120 @@ function require_org_member(int $orgId): void
     if (!org_role($orgId, current_user_id())) {
         json_response(['error' => 'You are not a member of this organization'], 403);
     }
+}
+
+// All user_ids currently holding a seat in this org (active + suspended —
+// a suspended employee still exists and admins should still see their
+// standing work, just not grant them Pro access). Used anywhere we need
+// to scope a query to "everyone this org licenses" — org-wide task/project
+// oversight, the CSV report, etc. — so that scoping logic lives in one
+// place rather than being re-derived per caller.
+function org_member_user_ids(int $orgId): array
+{
+    $stmt = db()->prepare('SELECT user_id FROM organization_members WHERE organization_id = ?');
+    $stmt->execute([$orgId]);
+    return array_map('intval', $stmt->fetchAll(PDO::FETCH_COLUMN));
+}
+
+// Team/Project (Kanban) task stats per user, for every $userIds given.
+// Deliberately a SEPARATE query from personal_tasks stats rather than a
+// second LEFT JOIN in the same SELECT — joining both personal_tasks and
+// project_tasks off the same organization_members row multiplies rows
+// (every personal task paired with every project task for that user),
+// which silently inflates every COUNT/SUM. Two single-table aggregates
+// merged by user_id in PHP is slower by one query but always correct.
+// Returns [] for an empty $userIds so callers don't need to special-case it.
+function org_team_task_stats_by_user(array $userIds): array
+{
+    if (!$userIds) return [];
+    $placeholders = implode(',', array_fill(0, count($userIds), '?'));
+    $stmt = db()->prepare(
+        "SELECT assignee_id AS user_id,
+                COUNT(*) AS total_tasks,
+                SUM(status = 'done') AS done_tasks,
+                SUM(status != 'done') AS open_tasks,
+                SUM(status != 'done' AND due_date IS NOT NULL AND due_date < CURDATE()) AS overdue_tasks,
+                MAX(updated_at) AS last_activity
+         FROM project_tasks
+         WHERE assignee_id IN ($placeholders)
+         GROUP BY assignee_id"
+    );
+    $stmt->execute($userIds);
+    $byUser = [];
+    foreach ($stmt->fetchAll() as $row) {
+        $byUser[(int)$row['user_id']] = $row;
+    }
+    return $byUser;
+}
+
+// Portfolio view of every Team/Project a set of org members participates
+// in — the actual collaborative Kanban work, as opposed to personal_tasks
+// (each member's private to-do list). Built from three narrow queries
+// rather than one big join across team_members + project_tasks, again to
+// avoid a fan-out: a team with 3 org members joined straight to its
+// project_tasks would triple-count every task.
+function org_projects_overview(array $userIds): array
+{
+    if (!$userIds) return [];
+    $pdo = db();
+    $placeholders = implode(',', array_fill(0, count($userIds), '?'));
+
+    // 1) Which projects does this org's roster actually touch?
+    $stmt = $pdo->prepare(
+        "SELECT DISTINCT p.id AS project_id, p.name AS project_name, p.archived,
+                t.id AS team_id, t.name AS team_name
+         FROM team_members tm
+         JOIN teams t ON t.id = tm.team_id
+         JOIN projects p ON p.team_id = t.id
+         WHERE tm.user_id IN ($placeholders)
+         ORDER BY t.name, p.name"
+    );
+    $stmt->execute($userIds);
+    $projects = $stmt->fetchAll();
+    if (!$projects) return [];
+
+    $projectIds = array_column($projects, 'project_id');
+    $teamIds = array_values(array_unique(array_column($projects, 'team_id')));
+
+    // 2) Task-status breakdown per project.
+    $projPlaceholders = implode(',', array_fill(0, count($projectIds), '?'));
+    $stmt = $pdo->prepare(
+        "SELECT project_id,
+                COUNT(*) AS total_tasks,
+                SUM(status = 'done') AS done_tasks,
+                SUM(status != 'done') AS open_tasks,
+                SUM(status != 'done' AND due_date IS NOT NULL AND due_date < CURDATE()) AS overdue_tasks,
+                MAX(updated_at) AS last_activity
+         FROM project_tasks
+         WHERE project_id IN ($projPlaceholders)
+         GROUP BY project_id"
+    );
+    $stmt->execute($projectIds);
+    $statsByProject = [];
+    foreach ($stmt->fetchAll() as $row) $statsByProject[(int)$row['project_id']] = $row;
+
+    // 3) How many of THIS org's members sit on each team (vs. outside
+    // collaborators who happen to share the team but license their Pro
+    // access some other way).
+    $teamPlaceholders = implode(',', array_fill(0, count($teamIds), '?'));
+    $stmt = $pdo->prepare(
+        "SELECT team_id, COUNT(DISTINCT user_id) AS org_members
+         FROM team_members
+         WHERE team_id IN ($teamPlaceholders) AND user_id IN ($placeholders)
+         GROUP BY team_id"
+    );
+    $stmt->execute(array_merge($teamIds, $userIds));
+    $orgMembersByTeam = [];
+    foreach ($stmt->fetchAll() as $row) $orgMembersByTeam[(int)$row['team_id']] = (int)$row['org_members'];
+
+    foreach ($projects as &$p) {
+        $stats = $statsByProject[$p['project_id']] ?? ['total_tasks' => 0, 'done_tasks' => 0, 'open_tasks' => 0, 'overdue_tasks' => 0, 'last_activity' => null];
+        $p = array_merge($p, $stats);
+        $p['org_members_in_team'] = $orgMembersByTeam[$p['team_id']] ?? 0;
+    }
+    unset($p);
+
+    return $projects;
 }
 
 function org_seat_counts(int $orgId): array

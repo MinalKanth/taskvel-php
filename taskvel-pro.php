@@ -451,7 +451,9 @@ $user = current_user();
         position: sticky;
         top: 0;
         z-index: 40;
-        background: var(--bg);
+        background: color-mix(in srgb, var(--bg) 88%, transparent);
+        backdrop-filter: blur(14px) saturate(1.4);
+        -webkit-backdrop-filter: blur(14px) saturate(1.4);
         border-bottom: 1px solid transparent;
     }
 
@@ -469,9 +471,9 @@ $user = current_user();
     }
 
     .logo {
-        width: 38px;
-        height: 38px;
-        border-radius: 11px;
+        width: 40px;
+        height: 40px;
+        border-radius: 12px;
         background: linear-gradient(150deg, var(--accent), var(--accent-2));
         display: flex;
         align-items: center;
@@ -483,8 +485,13 @@ $user = current_user();
         flex-shrink: 0;
         position: relative;
         overflow: hidden;
-        box-shadow: 0 1px 0 rgba(255,255,255,.22) inset, 0 6px 16px -8px var(--accent-glow);
-        transition: box-shadow .3s var(--ease);
+        box-shadow: 0 1px 0 rgba(255,255,255,.22) inset, 0 8px 20px -8px var(--accent-glow);
+        transition: box-shadow .3s var(--ease), transform .3s var(--spring);
+    }
+
+    .brand:hover .logo {
+        transform: translateY(-1px) rotate(-2deg);
+        box-shadow: 0 1px 0 rgba(255,255,255,.22) inset, 0 10px 24px -6px var(--accent-glow);
     }
 
     .logo::after {
@@ -620,9 +627,21 @@ $user = current_user();
        always get a text label, only secondary tools stay icon-only. */
     .main-nav {
         display: flex;
-        gap: 6px;
-        margin: 14px 0 22px;
+        gap: 3px;
+        margin: 16px 0 22px;
         flex-wrap: wrap;
+        padding: 4px;
+        background: var(--bg-sunk);
+        border: 1px solid var(--line);
+        border-radius: 14px;
+        width: fit-content;
+        max-width: 100%;
+        overflow-x: auto;
+        scrollbar-width: none;
+    }
+
+    .main-nav::-webkit-scrollbar {
+        display: none;
     }
 
     .main-nav a {
@@ -631,23 +650,24 @@ $user = current_user();
         font-size: 12.5px;
         font-weight: 600;
         padding: 8px 14px;
-        border-radius: var(--r-sm);
-        border: 1px solid var(--line);
-        background: var(--bg-elev);
+        border-radius: 10px;
+        border: 1px solid transparent;
+        background: transparent;
         color: var(--ink2);
-        transition: background .15s ease, border-color .15s ease, color .15s ease;
+        white-space: nowrap;
+        transition: background .18s var(--ease), color .18s var(--ease), box-shadow .18s var(--ease);
     }
 
     .main-nav a:hover {
-        background: var(--bg-sunk);
-        border-color: var(--line2);
+        background: var(--bg-elev);
         color: var(--ink);
     }
 
     .main-nav a.active {
-        background: var(--accent);
-        color: var(--on-accent);
-        border-color: var(--accent);
+        background: var(--bg-elev);
+        color: var(--accent);
+        border-color: var(--line);
+        box-shadow: var(--shadow-sm);
     }
 
     .clock-time {
@@ -1261,9 +1281,9 @@ $user = current_user();
     .stat {
         background: var(--bg-elev);
         border: 1px solid var(--line);
-        border-radius: var(--r);
-        padding: 14px 10px 12px;
-        text-align: center;
+        border-radius: var(--r-lg);
+        padding: 16px 14px 14px;
+        text-align: left;
         position: relative;
         overflow: hidden;
         box-shadow: var(--shadow-sm);
@@ -1299,35 +1319,56 @@ $user = current_user();
         animation-delay: 180ms;
     }
 
+    .stat:nth-child(5) {
+        animation-delay: 240ms;
+    }
+
     .stat::before {
         content: '';
         position: absolute;
         top: 0;
         left: 0;
-        right: 0;
-        height: 2px;
+        bottom: 0;
+        width: 3px;
         background: var(--accent);
-        transform: scaleX(0);
-        transition: transform .35s var(--ease);
+        opacity: .9;
+        transition: width .25s var(--ease);
+    }
+
+    .stat:nth-child(2)::before {
+        background: var(--bad);
+    }
+
+    .stat:nth-child(3)::before {
+        background: var(--good);
+    }
+
+    .stat:nth-child(4)::before {
+        background: var(--accent-2);
+    }
+
+    .stat:nth-child(5)::before {
+        background: var(--warn);
     }
 
     .stat:hover {
-        transform: translateY(-5px);
-        border-color: var(--accent);
+        transform: translateY(-4px);
+        border-color: var(--line2);
         box-shadow: var(--shadow);
     }
 
     .stat:hover::before {
-        transform: scaleX(1);
+        width: 5px;
     }
 
     .stat-num {
         font-family: 'JetBrains Mono';
-        font-size: 26px;
+        font-size: 25px;
         font-weight: 700;
         line-height: 1;
         color: var(--ink);
         transition: color .3s;
+        letter-spacing: -.5px;
     }
 
     .stat:hover .stat-num {
@@ -1335,12 +1376,13 @@ $user = current_user();
     }
 
     .stat-label {
-        font-size: 9.5px;
+        font-size: 10px;
         color: var(--ink3);
-        margin-top: 6px;
+        margin-top: 7px;
         text-transform: uppercase;
         letter-spacing: 1px;
         font-family: 'JetBrains Mono';
+        font-weight: 600;
     }
 
     .stat-hint {
@@ -1369,10 +1411,10 @@ $user = current_user();
 
     /* ── Daily goal + productivity score bar ── */
     .goal-bar {
-        background: var(--bg-elev);
+        background: linear-gradient(135deg, var(--accent-soft), var(--bg-elev) 60%);
         border: 1px solid var(--line);
-        border-radius: var(--r);
-        padding: 12px 14px;
+        border-radius: var(--r-lg);
+        padding: 14px 16px;
         margin-bottom: 18px;
         cursor: pointer;
         transition: border-color .3s, box-shadow .3s, transform .25s var(--spring);
@@ -1390,10 +1432,10 @@ $user = current_user();
         justify-content: space-between;
         align-items: center;
         font-family: 'Space Grotesk';
-        font-size: 12.5px;
+        font-size: 13px;
         font-weight: 600;
-        color: var(--ink2);
-        margin-bottom: 8px;
+        color: var(--ink);
+        margin-bottom: 10px;
     }
 
     .goal-score {
@@ -1401,10 +1443,14 @@ $user = current_user();
         font-size: 11px;
         color: var(--accent);
         font-weight: 700;
+        background: var(--bg-elev);
+        border: 1px solid var(--accent-glow);
+        padding: 3px 9px;
+        border-radius: 999px;
     }
 
     .goal-track {
-        height: 6px;
+        height: 8px;
         border-radius: 5px;
         background: var(--bg-sunk);
         overflow: hidden;
@@ -1414,9 +1460,23 @@ $user = current_user();
         display: block;
         height: 100%;
         width: 0;
-        background: var(--accent);
+        background: linear-gradient(90deg, var(--accent), var(--accent-2));
         border-radius: 5px;
         transition: width .6s var(--ease);
+    }
+
+    /* ── Dashboard bento layout: single column on mobile/tablet,
+           two-column on wide desktop (see ≥1040px override below) ── */
+    .dash-grid {
+        display: flex;
+        flex-direction: column;
+    }
+
+    .dash-col-main,
+    .dash-col-side {
+        display: flex;
+        flex-direction: column;
+        min-width: 0;
     }
 
     /* ── Focus timer ── */
@@ -1643,7 +1703,7 @@ $user = current_user();
         font-family: 'Sora';
         background: var(--bg-elev);
         border: 1px solid var(--line);
-        border-radius: 12px;
+        border-radius: 14px;
         color: var(--ink);
         outline: none;
         box-shadow: var(--shadow-sm);
@@ -1677,8 +1737,8 @@ $user = current_user();
     .add-btn {
         width: 50px;
         height: 50px;
-        border-radius: 13px;
-        background: var(--accent);
+        border-radius: 14px;
+        background: linear-gradient(150deg, var(--accent), var(--accent-2));
         color: var(--on-accent);
         border: none;
         font-size: 26px;
@@ -1688,14 +1748,13 @@ $user = current_user();
         justify-content: center;
         flex-shrink: 0;
         font-weight: 300;
-        box-shadow: var(--shadow-sm);
+        box-shadow: 0 6px 16px -6px var(--accent-glow);
         transition: transform .3s var(--spring), box-shadow .3s, background .5s;
     }
 
     .add-btn:hover {
         transform: translateY(-2px);
-        box-shadow: var(--shadow);
-        background: var(--accent-2);
+        box-shadow: 0 10px 24px -6px var(--accent-glow);
     }
 
     .add-btn:active {
@@ -3928,6 +3987,39 @@ $user = current_user();
         }
     }
 
+    /* ── Wide desktop (≥ 1040px): roomier bento-style dashboard ── */
+
+    @media (min-width: 1040px) {
+        .app {
+            max-width: 1040px;
+        }
+
+        .dash-grid {
+            display: grid;
+            grid-template-columns: 1.6fr 1fr;
+            gap: 16px;
+            align-items: stretch;
+        }
+
+        .dash-col-main {
+            gap: 16px;
+        }
+
+        .dash-col-main .goal-bar,
+        .dash-col-main .team-hub {
+            margin-bottom: 0;
+        }
+
+        .dash-col-side {
+            gap: 16px;
+        }
+
+        .dash-col-side .focus {
+            flex: 1;
+            margin-bottom: 0;
+        }
+    }
+
     /* ── Respect notch / home-indicator safe areas on supported devices ── */
 
     @supports (padding: max(0px)) {
@@ -4235,7 +4327,7 @@ $user = current_user();
                 <div class="brand">
                     <div class="logo" id="brand-logo">T</div>
                     <div class="brand-txt" id="brand-txt">
-                        <h1>Task<span>vel</span></h1>
+                        <h1>Task<span>vel</span> Pro</h1>
                         <div class="tag">by <a href="https://www.samalconsultancy.com" target="_blank" rel="noopener"
                                 class="by-samal">Samal Consultancy</a></div>
                     </div>
@@ -4452,7 +4544,7 @@ $user = current_user();
                 </div>
             </div>
 
-            <div class="greeting" id="greeting">Welcome back.</div>
+            <div class="greeting" id="greeting">Welcome back<?php if (!empty($user['name'])): ?>, <b><?= htmlspecialchars(explode(' ', trim($user['name']))[0]) ?></b><?php endif; ?>.</div>
         </div>
 
         <!-- Onboarding carousel (shown only on first load when there are zero tasks ever created) -->
@@ -4533,50 +4625,57 @@ $user = current_user();
             </div>
         </div>
 
-        <!-- Daily goal + productivity score — premium at-a-glance motivation strip -->
-        <div class="goal-bar" id="goal-bar" onclick="setDailyGoal()" title="Tap to change your daily goal">
-            <div class="goal-bar-top">
-                <span id="goal-text">Today: 0 / 5 tasks</span>
-                <span id="goal-score" class="goal-score">⚡ 0</span>
-            </div>
-            <div class="goal-track"><i id="goal-fill"></i></div>
-        </div>
+        <!-- Dashboard bento: goal + team hub on the left, focus timer highlighted on the right on wide screens -->
+        <div class="dash-grid">
+            <div class="dash-col-main">
+                <!-- Daily goal + productivity score — premium at-a-glance motivation strip -->
+                <div class="goal-bar" id="goal-bar" onclick="setDailyGoal()" title="Tap to change your daily goal">
+                    <div class="goal-bar-top">
+                        <span id="goal-text">Today: 0 / 5 tasks</span>
+                        <span id="goal-score" class="goal-score">⚡ 0</span>
+                    </div>
+                    <div class="goal-track"><i id="goal-fill"></i></div>
+                </div>
 
-        <!-- Teams · Projects · Events hub — all your team activity, checked at once -->
-        <div class="team-hub" id="team-hub">
-            <div class="team-hub-head" onclick="toggleTeamHub()">
-                <h3>👥 Teams · Projects · Events <span class="hub-caret">▾</span></h3>
-                <div class="hub-actions" onclick="event.stopPropagation()">
-                    <a class="hub-link" href="teams.php">Open Teams →</a>
+                <!-- Teams · Projects · Events hub — all your team activity, checked at once -->
+                <div class="team-hub" id="team-hub">
+                    <div class="team-hub-head" onclick="toggleTeamHub()">
+                        <h3>👥 Teams · Projects · Events <span class="hub-caret">▾</span></h3>
+                        <div class="hub-actions" onclick="event.stopPropagation()">
+                            <a class="hub-link" href="teams.php">Open Teams →</a>
+                        </div>
+                    </div>
+                    <div class="team-hub-body">
+                        <div class="hub-teams" id="hub-teams"></div>
+                        <div class="hub-events" id="hub-events"></div>
+                    </div>
                 </div>
             </div>
-            <div class="team-hub-body">
-                <div class="hub-teams" id="hub-teams"></div>
-                <div class="hub-events" id="hub-events"></div>
-            </div>
-        </div>
 
-        <!-- Focus timer -->
-        <div class="focus">
-            <div class="timer-ring">
-                <svg width="92" height="92" viewBox="0 0 92 92">
-                    <circle class="ring-bg" cx="46" cy="46" r="40" />
-                    <circle class="ring-fg" id="ring" cx="46" cy="46" r="40" stroke-dasharray="251.3"
-                        stroke-dashoffset="0" />
-                </svg>
-                <div class="timer-display">
-                    <div class="timer-time" id="t-time">25:00</div>
-                    <div class="timer-mode" id="t-mode">Focus</div>
-                </div>
-            </div>
-            <div class="focus-body">
-                <div class="focus-title"><span>Focus session</span><span class="today-mins" id="focus-today-inline">0m
-                        today</span></div>
-                <div class="focus-sub" id="t-task">No task selected</div>
-                <div class="timer-btns">
-                    <button class="tbtn primary" id="t-toggle" onclick="toggleTimer()">▶ Start</button>
-                    <button class="tbtn" onclick="resetTimer()">↺ Reset</button>
-                    <button class="tbtn" onclick="cycleMode()" id="t-cycle">25 / 5</button>
+            <div class="dash-col-side">
+                <!-- Focus timer -->
+                <div class="focus">
+                    <div class="timer-ring">
+                        <svg width="92" height="92" viewBox="0 0 92 92">
+                            <circle class="ring-bg" cx="46" cy="46" r="40" />
+                            <circle class="ring-fg" id="ring" cx="46" cy="46" r="40" stroke-dasharray="251.3"
+                                stroke-dashoffset="0" />
+                        </svg>
+                        <div class="timer-display">
+                            <div class="timer-time" id="t-time">25:00</div>
+                            <div class="timer-mode" id="t-mode">Focus</div>
+                        </div>
+                    </div>
+                    <div class="focus-body">
+                        <div class="focus-title"><span>Focus session</span><span class="today-mins" id="focus-today-inline">0m
+                                today</span></div>
+                        <div class="focus-sub" id="t-task">No task selected</div>
+                        <div class="timer-btns">
+                            <button class="tbtn primary" id="t-toggle" onclick="toggleTimer()">▶ Start</button>
+                            <button class="tbtn" onclick="resetTimer()">↺ Reset</button>
+                            <button class="tbtn" onclick="cycleMode()" id="t-cycle">25 / 5</button>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>

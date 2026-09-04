@@ -11,22 +11,57 @@ $user = current_user();
 <meta name="csrf-token" content="<?= htmlspecialchars(csrf_token()) ?>">
 <?php pro_head('Teams'); ?>
 <style>
+    
+
+    .teams-intro { margin-bottom:22px; }
+    .teams-intro h1.page-title { margin-bottom:5px; }
+    .teams-intro .sub { margin-bottom:0; }
+
+    .teams-toolbar { display:flex; align-items:center; justify-content:space-between; gap:12px; flex-wrap:wrap; margin-bottom:22px; }
+    .teams-toolbar .btn { box-shadow:0 6px 16px -6px var(--accent-glow); }
+
+    #team-limit-note { font-family:'JetBrains Mono',monospace; font-size:11px; color:var(--ink3); background:var(--bg-sunk);
+        border:1px solid var(--line); padding:5px 11px; border-radius:20px; margin:0; }
+
+    .card-list a.card {
+        padding:16px 17px;
+        border-radius:var(--r-lg);
+        position:relative;
+        overflow:hidden;
+        box-shadow:var(--shadow-sm);
+        transition:border-color .2s ease, box-shadow .25s ease, transform .2s var(--ease);
+    }
+    .card-list a.card::before {
+        content:''; position:absolute; left:0; top:0; bottom:0; width:3px;
+        background:var(--accent); opacity:.6; transition:width .2s ease, opacity .2s ease;
+    }
+    .card-list a.card:hover { transform:translateY(-2px); box-shadow:var(--shadow); border-color:var(--line2); }
+    .card-list a.card:hover::before { width:5px; opacity:1; }
+
     .team-meta { font-size:12px; color:var(--ink3); display:flex; gap:14px; margin-top:5px; flex-wrap:wrap; }
     .team-meta b { color:var(--ink2); font-weight:600; }
+    .team-meta span { display:inline-flex; align-items:center; gap:4px; }
     .team-name { font-family:var(--font-display); font-size:16.5px; font-weight:700; }
     .team-row { display:flex; justify-content:space-between; align-items:center; gap:12px; }
+
+    .empty .ic { font-size:32px; }
 </style>
 </head>
 <body>
 <div class="wrap">
     <?php pro_header($user, 'teams'); ?>
 
-    <h1 class="page-title">👥 Teams</h1>
-    <div class="sub">Create a team so managers and teammates can share projects, assign tasks, and plan events together — all inside Taskvel Pro.</div>
-    <button class="btn" onclick="openCreateTeam()">+ Create a team</button>
-    <div class="sub" id="team-limit-note" style="margin-top:8px"></div>
+    <div class="teams-intro">
+        <h1 class="page-title">👥 Teams</h1>
+        <div class="sub">Create a team so managers and teammates can share projects, assign tasks, and plan events together — all inside Taskvel Pro.</div>
+    </div>
 
-    <div class="card-list" id="team-list" style="margin-top:22px"></div>
+    <div class="teams-toolbar">
+        <button class="btn" onclick="openCreateTeam()">+ Create a team</button>
+        <div id="team-limit-note"></div>
+    </div>
+
+    <div class="card-list" id="team-list"></div>
     <?php pro_footer($user); ?>
 </div>
 
@@ -57,14 +92,14 @@ async function loadTeams() {
             list.innerHTML = `<div class="empty"><span class="ic">👥</span>No teams yet — create one to start assigning tasks and planning events with coworkers.</div>`;
             return;
         }
-        list.innerHTML = teams.map(t => `
-            <a class="card" href="team.php?id=${t.id}">
+        list.innerHTML = teams.map((t, idx) => `
+            <a class="card" href="team.php?id=${t.id}" style="animation:cardIn .4s var(--ease) backwards;animation-delay:${idx * 40}ms">
                 <div class="team-row">
                     <div>
                         <div class="team-name">${esc(t.name)}</div>
                         <div class="team-meta">
-                            <span><b>${t.member_count}</b> member${t.member_count == 1 ? '' : 's'}</span>
-                            <span><b>${t.project_count}</b> project${t.project_count == 1 ? '' : 's'}</span>
+                            <span>◴ <b>${t.member_count}</b> member${t.member_count == 1 ? '' : 's'}</span>
+                            <span>▦ <b>${t.project_count}</b> project${t.project_count == 1 ? '' : 's'}</span>
                         </div>
                     </div>
                     <span class="role-badge role-${t.role}">${t.role}</span>

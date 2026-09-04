@@ -13,76 +13,104 @@ $user = current_user();
 <style>
     
 
-    .status-card { background:var(--bg-elev); border:1px solid var(--line); border-radius:var(--r); padding:22px;
-        text-align:center; margin-bottom:20px; box-shadow:var(--shadow); }
+    .checkin-intro { margin-bottom:22px; }
+    .checkin-intro h1.page-title { margin-bottom:5px; }
+    .checkin-intro .sub { margin-bottom:0; }
+
+    .status-card { background:var(--bg-elev); border:1px solid var(--line); border-radius:var(--r-lg); padding:28px 22px;
+        text-align:center; margin-bottom:22px; box-shadow:var(--shadow); }
     .status-card .big-icon { font-size:40px; margin-bottom:10px; }
-    .status-card h2 { margin:0 0 6px; font-size:18px; }
-    .status-card .meta { color:var(--ink3); font-size:13px; }
-    .status-card input { width:100%; max-width:320px; padding:11px 13px; border:1px solid var(--line2); border-radius:10px;
-        font-size:14px; margin:14px auto 0; display:block; font-family:inherit; }
-    
+    .status-card h2 { margin:0 0 6px; font-family:var(--font-display); font-size:18px; font-weight:700; }
+    .status-card .meta { color:var(--ink3); font-size:13px; line-height:1.5; }
+    .status-card input { width:100%; max-width:340px; padding:12px 14px; border:1px solid var(--line2); border-radius:var(--r-sm);
+        font-size:14px; margin:18px auto 14px; display:block; font-family:var(--font-body); background:var(--bg); color:var(--ink);
+        transition:border-color .15s, box-shadow .15s; }
+    .status-card input:focus { outline:none; border-color:var(--accent); box-shadow:0 0 0 3px var(--ring); }
+    .status-card .btn { margin-top:4px; }
 
-    .break-bar { display:flex; gap:8px; align-items:center; justify-content:center; margin-top:12px; flex-wrap:wrap; }
-    .break-bar select { padding:8px 10px; border:1px solid var(--line2); border-radius:9px; font-size:13px; }
-    .idle-badge { font-size:11px; color:var(--ink3); text-align:center; margin-top:8px; }
+    .break-bar { display:flex; gap:10px; align-items:center; justify-content:center; margin-top:16px; flex-wrap:wrap; }
+    .break-bar select { padding:9px 12px; border:1px solid var(--line2); border-radius:var(--r-sm); font-size:13px;
+        background:var(--bg); color:var(--ink); font-family:var(--font-body); }
+    .idle-badge { font-size:11px; color:var(--ink3); text-align:center; margin-top:10px; }
 
-    section { margin-top:24px; }
+    section { margin-top:26px; }
+    section > h3 { font-family:var(--font-display); font-size:12.5px; font-weight:700; text-transform:uppercase;
+        letter-spacing:.5px; color:var(--ink3); margin-bottom:12px; }
 
-    .add-task-row { display:flex; flex-direction:column; gap:8px; background:var(--bg-elev); border:1px solid var(--line);
-        border-radius:var(--r); padding:14px; margin-bottom:16px; }
-    .add-task-row input { padding:11px 13px; border:1px solid var(--line2); border-radius:10px; font-size:14px; font-family:inherit; }
-    .add-task-row .row2 { display:grid; grid-template-columns:1fr 1fr; gap:8px; }
-    .add-task-row .hint { font-size:11px; color:var(--ink3); }
+    .add-task-row { display:flex; flex-direction:column; gap:10px; background:var(--bg-elev); border:1px solid var(--line);
+        border-radius:var(--r-lg); padding:16px; margin-bottom:16px; box-shadow:var(--shadow-sm); }
+    .add-task-row input { padding:12px 14px; border:1px solid var(--line2); border-radius:var(--r-sm); font-size:14px;
+        font-family:var(--font-body); background:var(--bg); color:var(--ink); transition:border-color .15s, box-shadow .15s; }
+    .add-task-row input:focus { outline:none; border-color:var(--accent); box-shadow:0 0 0 3px var(--ring); }
+    .add-task-row .row2 { display:grid; grid-template-columns:1fr 1fr; gap:10px; }
+    .add-task-row .hint { font-size:11px; color:var(--ink3); line-height:1.5; }
 
-    .task-card { background:var(--bg-elev); border:1px solid var(--line); border-radius:12px; padding:13px 15px;
-        margin-bottom:10px; }
+    .task-card { background:var(--bg-elev); border:1px solid var(--line); border-radius:var(--r); padding:15px 16px;
+        margin-bottom:10px; box-shadow:var(--shadow-sm); transition:border-color .15s ease, box-shadow .2s ease; }
+    .task-card:hover { border-color:var(--line2); box-shadow:var(--shadow); }
     .task-top { display:flex; justify-content:space-between; align-items:flex-start; gap:10px; }
-    .task-title { font-size:14.5px; font-weight:600; }
+    .task-title { font-family:var(--font-display); font-size:14.5px; font-weight:600; }
     .task-meta { font-size:11.5px; color:var(--ink3); margin-top:4px; }
-    .pill { font-size:9.5px; font-weight:700; padding:3px 9px; border-radius:20px; text-transform:uppercase; letter-spacing:.4px; white-space:nowrap; }
+    .pill { font-family:'JetBrains Mono',monospace; font-size:9.5px; font-weight:700; padding:3px 9px; border-radius:20px;
+        text-transform:uppercase; letter-spacing:.4px; white-space:nowrap; }
     .pill-pending { background:var(--bg-sunk); color:var(--ink3); }
     .pill-in_progress { background:var(--warn-soft); color:var(--warn); }
     .pill-pending_approval { background:var(--accent-soft); color:var(--accent); }
     .pill-done { background:var(--good-soft); color:var(--good); }
-    .task-actions { display:flex; gap:6px; margin-top:10px; flex-wrap:wrap; }
-    .live-timer { font-family:monospace; font-size:12px; color:var(--warn); font-weight:700; }
+    .task-actions { display:flex; gap:7px; margin-top:12px; flex-wrap:wrap; }
+    .live-timer { font-family:'JetBrains Mono',monospace; font-size:12px; color:var(--warn); font-weight:700; }
 
+    .checkout-notes { width:100%; padding:12px 14px; border:1px solid var(--line2); border-radius:var(--r-sm); font-size:14px;
+        font-family:var(--font-body); background:var(--bg); color:var(--ink); resize:vertical; min-height:80px; margin-bottom:0;
+        transition:border-color .15s, box-shadow .15s; }
+    .checkout-notes:focus { outline:none; border-color:var(--accent); box-shadow:0 0 0 3px var(--ring); }
 
-    .checkout-notes { width:100%; padding:11px 13px; border:1px solid var(--line2); border-radius:10px; font-size:14px;
-        font-family:inherit; resize:vertical; min-height:70px; margin-bottom:12px; }
-
-    .summary-card { background:var(--bg-elev); border:1px solid var(--line); border-radius:var(--r); padding:22px; margin-top:16px; }
-    .summary-grid { display:grid; grid-template-columns:repeat(4,1fr); gap:10px; margin:16px 0; }
-    .summary-stat { text-align:center; background:var(--bg-sunk); border-radius:10px; padding:12px 6px; }
-    .summary-stat .num { font-size:20px; font-weight:700; font-family:monospace; }
-    .summary-stat .lbl { font-size:9px; color:var(--ink3); text-transform:uppercase; letter-spacing:.5px; margin-top:3px; }
-    .notified-line { font-size:12px; color:var(--ink3); margin-top:14px; padding-top:14px; border-top:1px solid var(--line); }
+    .summary-card { background:var(--bg-elev); border:1px solid var(--line); border-radius:var(--r-lg); padding:24px; margin-top:18px;
+        box-shadow:var(--shadow); }
+    .summary-card h3 { font-family:var(--font-display); }
+    .summary-grid { display:grid; grid-template-columns:repeat(4,1fr); gap:10px; margin:18px 0; }
+    .summary-stat { text-align:center; background:var(--bg-sunk); border-radius:var(--r-sm); padding:14px 6px; }
+    .summary-stat .num { font-size:20px; font-weight:700; font-family:'JetBrains Mono',monospace; color:var(--ink); }
+    .summary-stat .lbl { font-size:9px; color:var(--ink3); text-transform:uppercase; letter-spacing:.5px; margin-top:4px; }
+    .notified-line { font-size:12px; color:var(--ink3); margin-top:16px; padding-top:16px; border-top:1px solid var(--line); }
 
     /* Send end-of-day report to */
-    .report-card { background:var(--bg-elev); border:1px solid var(--line); border-radius:var(--r); padding:16px; margin-bottom:16px; }
-    .report-card label { font-size:12px; font-weight:700; color:var(--ink2); display:block; margin:12px 0 6px; }
+    .report-card { background:var(--bg-elev); border:1px solid var(--line); border-radius:var(--r-lg); padding:18px; margin-bottom:16px;
+        box-shadow:var(--shadow-sm); }
+    .report-card label { font-family:var(--font-display); font-size:11px; font-weight:700; color:var(--ink3);
+        text-transform:uppercase; letter-spacing:.5px; display:block; margin:16px 0 8px; }
     .report-card label:first-child { margin-top:0; }
-    .report-card select { width:100%; padding:10px 12px; border:1px solid var(--line2); border-radius:9px; font-size:13.5px; font-family:inherit; }
+    .report-card select { width:100%; padding:11px 13px; border:1px solid var(--line2); border-radius:var(--r-sm); font-size:13.5px;
+        font-family:var(--font-body); background:var(--bg); color:var(--ink); transition:border-color .15s, box-shadow .15s; }
+    .report-card select:focus { outline:none; border-color:var(--accent); box-shadow:0 0 0 3px var(--ring); }
     .team-member-list { display:flex; flex-wrap:wrap; gap:8px; }
-    .team-member-chip { display:flex; align-items:center; gap:6px; padding:7px 12px; border:1px solid var(--line2); border-radius:999px;
-        font-size:12.5px; cursor:pointer; user-select:none; transition:background .15s,border-color .15s; }
+    .team-member-chip { display:flex; align-items:center; gap:6px; padding:8px 13px; border:1px solid var(--line2); border-radius:999px;
+        font-size:12.5px; font-family:var(--font-display); font-weight:500; color:var(--ink2); background:var(--bg); cursor:pointer;
+        user-select:none; transition:background .15s, border-color .15s, color .15s; }
+    .team-member-chip:hover { border-color:var(--line2); background:var(--bg-sunk); }
     .team-member-chip.checked { background:var(--accent-soft); border-color:var(--accent); color:var(--accent); }
     .team-member-chip input { margin:0; }
-    .custom-email-row { display:flex; gap:8px; }
-    .custom-email-row input { flex:1; padding:10px 12px; border:1px solid var(--line2); border-radius:9px; font-size:13.5px; font-family:inherit; }
-    .custom-email-chips { display:flex; flex-wrap:wrap; gap:6px; margin-top:8px; }
-    .custom-email-chip { display:flex; align-items:center; gap:6px; background:var(--bg-sunk); border-radius:999px; padding:6px 8px 6px 12px; font-size:12.5px; }
+    .custom-email-row { display:flex; gap:10px; }
+    .custom-email-row input { flex:1; padding:11px 13px; border:1px solid var(--line2); border-radius:var(--r-sm); font-size:13.5px;
+        font-family:var(--font-body); background:var(--bg); color:var(--ink); transition:border-color .15s, box-shadow .15s; }
+    .custom-email-row input:focus { outline:none; border-color:var(--accent); box-shadow:0 0 0 3px var(--ring); }
+    .custom-email-chips { display:flex; flex-wrap:wrap; gap:7px; margin-top:10px; }
+    .custom-email-chip { display:flex; align-items:center; gap:7px; background:var(--bg-sunk); border:1px solid var(--line);
+        border-radius:999px; padding:7px 9px 7px 13px; font-size:12.5px; font-family:var(--font-display); color:var(--ink2); }
     .custom-email-chip button { border:none; background:var(--line2); color:var(--ink2); width:18px; height:18px; border-radius:50%;
-        cursor:pointer; font-size:11px; line-height:1; display:flex; align-items:center; justify-content:center; }
-    .report-hint { font-size:11px; color:var(--ink3); margin-top:8px; }
+        cursor:pointer; font-size:11px; line-height:1; display:flex; align-items:center; justify-content:center; transition:background .15s; }
+    .custom-email-chip button:hover { background:var(--bad-soft); color:var(--bad); }
+    .report-hint { font-size:11px; color:var(--ink3); margin-top:10px; line-height:1.5; }
 </style>
 </head>
 <body>
 <div class="wrap">
     <?php pro_header($user, 'checkin'); ?>
 
-    <h1 class="page-title">📍 Daily Check-in</h1>
-    <div class="sub">Optional office mode — check in, log what you work on, report finished tasks to whoever needs to know, and check out with a full summary.</div>
+    <div class="checkin-intro">
+        <h1 class="page-title">📍 Daily Check-in</h1>
+        <div class="sub">Optional office mode — check in, log what you work on, report finished tasks to whoever needs to know, and check out with a full summary.</div>
+    </div>
 
     <div id="status-area"></div>
     <div id="task-area" style="display:none">
@@ -104,7 +132,7 @@ $user = current_user();
         </section>
         <section>
             <h3>End of day notes (optional)</h3>
-            <textarea class="checkout-notes" id="checkout-notes" placeholder="Anything worth mentioning — accomplishments, blockers, plans for tomorrow…"></textarea>
+            <textarea class="checkout-notes" id="checkout-notes" placeholder="Anything worth mentioning — accomplishments, blockers, plans for tomorrow…" style="margin-bottom:0"></textarea>
         </section>
         <section>
             <h3>📤 Send end-of-day report to</h3>
@@ -124,7 +152,7 @@ $user = current_user();
                 <div class="report-hint">Pick a manager, any number of teammates, and/or type in any other email — everyone selected gets the same report when you check out.</div>
             </div>
         </section>
-        <button class="btn danger" id="checkout-btn" onclick="checkOut()">🚪 Check out for the day</button>
+        <button class="btn danger" id="checkout-btn" onclick="checkOut()" style="margin-top:4px;width:100%;justify-content:center;padding:13px">🚪 Check out for the day</button>
     </div>
     <div id="summary-area"></div>
     <?php pro_footer($user); ?>
@@ -170,7 +198,7 @@ function renderStatus() {
                 <div class="big-icon">☀️</div>
                 <h2>Ready to start your day?</h2>
                 <div class="meta">Check in to start logging and tracking today's tasks.</div>
-                <input type="email" id="checkin-report-to" placeholder="Report to (optional — manager/lead email)" />
+                <input type="email" id="checkin-report-to" placeholder="Report to (optional — manager/lead email)" style="margin-bottom:16px" />
                 <button class="btn" id="checkin-btn" onclick="checkIn()">✅ Check in</button>
             </div>`;
         return;
