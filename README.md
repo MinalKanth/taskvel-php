@@ -27,6 +27,8 @@
 [Features](#-features) •
 [Team Tasks & Progress Updates](#-team-tasks--progress-updates) •
 [Global Search & My Work](#-global-search--my-work) •
+[AI-Powered Assistance](#-ai-powered-assistance) •
+[Trading Journal & P/L Dashboard](#-trading-journal--pl-dashboard) •
 [Billing & Enterprise Licensing](#-billing--enterprise-licensing) •
 [Every Function, Explained](#-every-function-explained) •
 [Tech Stack](#-tech-stack) •
@@ -180,6 +182,36 @@ Two things every team member needs the moment work is spread across more than on
 | 📋 List/Table view for project boards | Any project can be viewed as a sortable, filterable table instead of the Kanban board — same task data, click any column to sort, filter by status/assignee/priority, persisted per-browser so it remembers your last choice |
 
 None of this requires a new database migration — search and My Work read from the same `tasks`, `project_tasks`, and `team_tasks` tables everything else already uses, scoped by your existing team memberships.
+
+### 🤖 AI-Powered Assistance
+
+Gemini-backed AI woven into the moments where typing everything by hand is the most friction — never required, always optional, and every feature fails gracefully with a clear message if `GEMINI_API_KEY` isn't configured.
+
+| Capability | Where | What it does |
+|---|---|---|
+| ✨ AI Suggest | Personal App — new task sheet | Given just a task name (+ optional note), fills in urgency, impact, a realistic deadline, a time estimate, up to 3 subtask steps, and up to 3 tags |
+| 🧠 AI Quick Add | Personal App — new task sheet | Parses a single free-form sentence ("Submit GST report next Friday, very urgent") straight into a clean structured task — title, urgency, deadline, steps, and tags all inferred at once |
+| 🔦 Daily Focus briefing | Personal App dashboard | A short, warm, spoken-style paragraph naming what to tackle first, generated from your current open task list |
+| 📝 Workday summary | Daily Check-in — checkout report | Turns today's completed/pending tasks into a short third-person summary paragraph, inserted into the end-of-day report email |
+| 📔 Journal Fix & Rephrase | Trading Journal | One click corrects spelling/grammar and lightly rephrases a trading-journal entry for clarity, while preserving the mood line and original meaning |
+
+Every AI action shares one plan-based daily quota (`ai_consume_daily_quota()` — Free plan gets a small shared daily allowance across *all* AI features combined; Pro/Business is effectively unlimited) plus a per-feature hourly rate limit as an abuse safety net. Requests are minimized by design — e.g. the Daily Focus briefing only ever sends task name/priority/deadline, never notes or collaborators.
+
+### 📈 Trading Journal & P/L Dashboard
+
+A dedicated profit/loss journal for traders, living alongside the task-management core.
+
+| Capability | Description |
+|---|---|
+| 🎯 Monthly goal tracking | Set a ₹ target per month; a live gauge, progress bar, and achieved/remaining stats track progress against it, with confetti when you cross 100% |
+| 💰 Daily P/L entries | Log each trading day as Profit / Loss / Break-even with an amount, an optional setup tag (Breakout, Trend, Reversal, Scalp, News, Swing), and notes |
+| 📊 Overview charts | Daily P/L, monthly/yearly P/L, goal vs. achieved, profit/loss distribution, win/loss percentage, and best/worst trading days |
+| 📈 Analytics tab | Profit factor, expectancy, average win/loss, best win streak, max drawdown, an all-time equity curve and drawdown chart, top setups/tags by P/L, month-over-month comparison, and a weekly performance table |
+| 🗓️ Calendar heatmap | Month-by-month color-coded view of daily P/L, navigable by month |
+| 🧮 Risk calculator | Position size and risk-per-trade calculator from account balance, risk %, stop-loss distance, and reward:risk ratio |
+| 📔 Trading journal & mood picker | A max-15-line daily journal entry with a one-tap mood picker (Confident/Calm/Neutral/Frustrated/Anxious/Tired), plus a **✨ AI Fix & Rephrase** button that corrects grammar and rephrases the entry via the shared AI integration |
+| 🏅 Achievement badges | Goal Crusher, On Fire (3+ win streak), Consistent Trader, Profit Factor Pro, 5-Day Journal Streak, and 50+ Trades Logged, unlocked automatically from entry/journal history |
+| ⬇️ Export & filters | CSV export and print-friendly report view, filterable by Today/Week/Month/Previous Month/Year/Custom range, with searchable, sortable entries |
 
 ### 📍 Daily Check-in *(optional "office mode")*
 
@@ -686,6 +718,10 @@ taskvel-php/
 │   ├── timer.php
 │   ├── remarks.php
 │   ├── attachments.php           # Personal-task + team-task attachments
+│   ├── ai_suggest.php            # AI Suggest — urgency/impact/deadline/estimate/steps/tags for a task
+│   ├── ai_focus.php              # AI daily focus briefing
+│   ├── ai_parse_task.php         # AI Quick Add — parses a free-form sentence into a structured task
+│   ├── trading_journal.php       # Trading Journal — goals, entries, journal, AI fix/rephrase
 │   ├── organizations.php         # Enterprise seat licensing — create/invite/suspend/remove/transfer
 │   ├── billing.php               # Personal trial status + Stripe Checkout session creation
 │   ├── stripe-webhook.php        # Public — reconciles Stripe payments (team/user/org)
@@ -697,6 +733,7 @@ taskvel-php/
 │   ├── webhooks.php
 │   ├── notifications.php        # create_notification() — shared in-app notification helper
 │   ├── team_task_updates.php    # Progress-update recipient resolution + notify (in-app + email)
+│   ├── ai.php                   # Gemini integration — suggest/focus/parse/workday-summary/journal-fix
 │   ├── billing.php               # team_plan()/user_plan(), plan_limits(), seat/team-count guards
 │   ├── licensing.php              # Organization seat assignment, recompute_user_plan(), temp passwords
 │   ├── stripe_client.php          # Minimal curl-based Stripe Checkout Session client (no SDK)
@@ -732,6 +769,7 @@ taskvel-php/
 ├── checkin.php                  # Daily Check-in page
 ├── manager.php                  # Manager Dashboard
 ├── teams.php                    # Teams directory
+├── trading-journal.php          # Trading Journal & P/L Dashboard page
 ├── team.php                     # Single team / Kanban board / Team Tasks
 ├── billing.php                  # Personal trial status + organization dashboard
 └── taskvel-pro.php               # Main personal app entry
@@ -826,6 +864,10 @@ Taskvel exposes clean, REST-style JSON endpoints under `api/`. All state-changin
 | `api/timer.php` | Focus sessions and time logs, scoped to visible tasks |
 | `api/remarks.php` | Notes/remarks attached to tasks |
 | `api/attachments.php` | File uploads (personal tasks and team-task progress updates) with MIME sniffing and safe storage |
+| `api/ai_suggest.php` | AI Suggest — urgency/impact/deadline/estimate/steps/tags for a task name |
+| `api/ai_focus.php` | AI daily focus briefing from the user's open task list |
+| `api/ai_parse_task.php` | AI Quick Add — parses one free-form sentence into a structured task |
+| `api/trading_journal.php` | Trading Journal — goals, daily P/L entries, journal entries, and AI fix/rephrase |
 | `api/organizations.php` | Enterprise seat licensing — create org, dashboard, invite/remove/suspend/reactivate/transfer seats, billing history |
 | `api/billing.php` | Personal trial/plan status and Stripe Checkout session creation (individual + org seats) |
 | `api/stripe-webhook.php` | Public — reconciles completed Stripe payments and cancellations across teams, individuals, and organizations |

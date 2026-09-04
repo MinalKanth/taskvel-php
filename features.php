@@ -394,10 +394,27 @@ body{font-family:'Sora',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;b
     </div>
   </section>
 
+  <!-- TRADING JOURNAL -->
+  <section class="rail-section">
+    <div class="rail-head">
+      <span class="rail-eyebrow">07 — Trading Journal</span>
+      <h2>Your P/L, tracked as carefully as your tasks</h2>
+      <p>A dedicated journal for traders — goals, daily entries, analytics, and an AI editor for your notes, living right alongside the rest of Taskvel.</p>
+    </div>
+    <div class="feat-grid" data-stagger>
+      <div class="feat-card"><div class="feat-ic">🎯</div><h3>Monthly goal tracking</h3><p>Set a ₹ target per month and watch a live gauge and progress bar track it, with confetti the moment you cross 100%.</p></div>
+      <div class="feat-card"><div class="feat-ic">💰</div><h3>Daily P/L entries</h3><p>Log each day as Profit, Loss, or Break-even, with an optional setup tag — Breakout, Trend, Reversal, Scalp, News, Swing — and notes.</p></div>
+      <div class="feat-card"><div class="feat-ic">📊</div><h3>Analytics that matter</h3><p>Profit factor, expectancy, average win/loss, best streak, max drawdown, an all-time equity curve, and a weekly performance table.</p></div>
+      <div class="feat-card"><div class="feat-ic">🗓</div><h3>Calendar heatmap</h3><p>A month-by-month, color-coded view of daily P/L you can navigate back through your entire trading history.</p></div>
+      <div class="feat-card"><div class="feat-ic">🧮</div><h3>Risk calculator</h3><p>Work out position size and risk per trade from your account balance, risk %, stop-loss distance, and reward:risk ratio.</p></div>
+      <div class="feat-card"><span class="feat-tag">AI</span><div class="feat-ic">📔</div><h3>Journal &amp; AI Fix</h3><p>A daily journal with a one-tap mood picker, plus an AI Fix &amp; Rephrase button that cleans up grammar and clarity while keeping your meaning intact.</p></div>
+    </div>
+  </section>
+
   <!-- PRICING -->
   <section class="rail-section pricing-section" id="pricing">
     <div class="pricing-head">
-      <span class="rail-eyebrow">07 — Pricing</span>
+      <span class="rail-eyebrow">08 — Pricing</span>
       <h2>Simple, honest pricing.</h2>
       <p>Every plan starts with a 14-day free trial — every premium feature unlocked, no card required to begin.</p>
     </div>
@@ -533,6 +550,7 @@ document.getElementById('replay-tour-btn').addEventListener('click', function(){
       'Unlimited AI assistant — suggest, quick add, daily focus & summaries',
       'Multi-device sync & personal analytics',
       'Custom Pomodoro focus sessions',
+      'Trading journal & P/L dashboard',
       'Compliance & client tracker',
       'Real push notifications, even offline',
       'Priority email support'
@@ -542,6 +560,7 @@ document.getElementById('replay-tour-btn').addEventListener('click', function(){
       'Team collaboration & task assignment',
       'Unlimited AI across every team member',
       'Team Chat, with 7-day message history',
+      'Trading journal & P/L dashboard',
       'Role & permission control',
       'Daily check-in & manager dashboard',
       'Team-wide analytics dashboard',

@@ -885,6 +885,8 @@ footer{border-top:1px solid var(--line);padding:48px 0 30px;}
       <div class="instr"><span class="instr-badge">Premium</span><div class="instr-dial">📍</div><h3>Daily check-in &amp; manager dashboard</h3><p>Check in, log tasks against a report-to email, and check out to an automatic summary — with approvals, break tracking, and a manager dashboard that flags late arrivals and overdue work before anyone has to ask.</p></div>
       <div class="instr"><span class="instr-badge">Premium</span><div class="instr-dial">⇡</div><h3>Real push, even when it's closed</h3><p>Native OS notifications on desktop and mobile — installable as an app, working offline, alerting your team to assignments and deadlines even with the tab shut.</p></div>
       <div class="instr"><span class="instr-badge">Premium</span><div class="instr-dial">🛡</div><h3>Audit-grade security</h3><p>CSRF protection, rate limiting, and role checks enforced on every request — plus a full audit log of logins, edits and approvals, so trust isn't a UI promise.</p></div>
+      <div class="instr"><span class="instr-badge">Premium</span><div class="instr-dial">🤖</div><h3>AI-powered assistance</h3><p>One click fills in urgency, deadline, and steps for a new task, parses a plain-English sentence into a structured task, briefs you each morning on what to tackle first, and proofreads your trading journal — all from a shared AI quota, never required.</p></div>
+      <div class="instr"><span class="instr-badge">Premium</span><div class="instr-dial">📈</div><h3>Trading journal &amp; P/L dashboard</h3><p>Monthly goal tracking, daily P/L entries, a calendar heatmap, equity curve and drawdown analytics, a risk calculator, and a mood-tagged journal — built for anyone tracking trades alongside their tasks.</p></div>
     </div>
   </div>
 </section>
@@ -1029,6 +1031,8 @@ footer{border-top:1px solid var(--line);padding:48px 0 30px;}
       <div class="spec-row"><div class="spec-cell feat">Compliance &amp; client tracker</div><div class="spec-cell val dim">—</div><div class="spec-cell val premium-yes">✓</div></div>
       <div class="spec-row"><div class="spec-cell feat">Role &amp; permission control</div><div class="spec-cell val dim">—</div><div class="spec-cell val premium-yes">✓</div></div>
       <div class="spec-row"><div class="spec-cell feat">Daily check-in &amp; manager dashboard</div><div class="spec-cell val dim">—</div><div class="spec-cell val premium-yes">✓</div></div>
+      <div class="spec-row"><div class="spec-cell feat">AI-powered task assistance</div><div class="spec-cell val dim">—</div><div class="spec-cell val premium-yes">✓</div></div>
+      <div class="spec-row"><div class="spec-cell feat">Trading journal &amp; P/L dashboard</div><div class="spec-cell val dim">—</div><div class="spec-cell val premium-yes">✓</div></div>
       <div class="spec-row"><div class="spec-cell feat">Real push notifications</div><div class="spec-cell val dim">—</div><div class="spec-cell val premium-yes">✓</div></div>
       <div class="spec-row"><div class="spec-cell feat">Audit log &amp; rate-limited security</div><div class="spec-cell val dim">—</div><div class="spec-cell val premium-yes">✓</div></div>
       <div class="spec-row"><div class="spec-cell feat">Priority support</div><div class="spec-cell val dim">—</div><div class="spec-cell val premium-yes">✓</div></div>
@@ -1252,7 +1256,7 @@ function renderLedger(id,count){
 renderLedger('ledger-rows'); renderLedger('ledger-rows-2'); renderLedger('ledger-rows-3',3);
 
 /* ═══════════════════════ MARQUEE ═══════════════════════ */
-const marqueeItems=['GST Ready','EPFO Compliant','ESIC Tracked','SOC2-style access control','Multi-device sync','Real-time reconciliation','Role-based permissions','Daily check-in & approvals','Real push, even offline','Full audit logging','Trusted by 340+ teams'];
+const marqueeItems=['GST Ready','EPFO Compliant','ESIC Tracked','SOC2-style access control','Multi-device sync','Real-time reconciliation','Role-based permissions','Daily check-in & approvals','Real push, even offline','Full audit logging','AI-powered task assist','Trading journal & P/L','Trusted by 340+ teams'];
 const track=document.getElementById('marqueeTrack');
 track.innerHTML=[...marqueeItems,...marqueeItems].map(t=>`<span class="marquee-item">${t}</span>`).join('');
 
@@ -1379,6 +1383,8 @@ const planFeatures = {
     'Team collaboration & task assignment',
     'Role & permission control',
     'Daily check-in & manager dashboard',
+    'AI-powered task assistance',
+    'Trading journal & P/L dashboard',
     'Team-wide analytics dashboard',
     'Audit log & rate-limited security',
     'Dedicated priority support & onboarding'
