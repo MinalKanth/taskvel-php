@@ -185,6 +185,24 @@ function pro_head(string $title): void
             transition:background .18s var(--ease), color .18s var(--ease), box-shadow .18s var(--ease); }
         .main-nav a:hover { background:var(--bg-elev); color:var(--ink); }
         .main-nav a.active { background:var(--bg-elev); color:var(--accent); border-color:var(--line); box-shadow:var(--shadow-sm); }
+        .main-nav details.nav-group { position:relative; }
+        .main-nav details.nav-group summary { list-style:none; cursor:pointer; text-decoration:none; font-family:var(--font-display);
+            font-size:12.5px; font-weight:600; padding:8px 14px; border-radius:10px; border:1px solid transparent; background:transparent;
+            color:var(--ink2); white-space:nowrap; transition:background .18s var(--ease), color .18s var(--ease), box-shadow .18s var(--ease); }
+        .main-nav details.nav-group summary::-webkit-details-marker { display:none; }
+        .main-nav details.nav-group summary::marker { content:''; }
+        .main-nav details.nav-group summary::after { content:'▾'; margin-left:6px; font-size:9px; opacity:.65; }
+        .main-nav details.nav-group summary:hover { background:var(--bg-elev); color:var(--ink); }
+        .main-nav details.nav-group[open] summary, .main-nav details.nav-group.nav-group-active summary {
+            background:var(--bg-elev); color:var(--accent); border-color:var(--line); box-shadow:var(--shadow-sm); }
+        .main-nav details.nav-group .nav-group-menu { display:none !important; /* replaced by #nav-dropdown-portal below —
+            .header's backdrop-filter creates a containing block that breaks fixed/absolute positioning for descendants */ }
+        #nav-dropdown-portal { position:fixed; min-width:200px; background:var(--bg-elev); border:1px solid var(--line);
+            border-radius:14px; box-shadow:var(--shadow-lg); padding:6px; display:none; flex-direction:column; gap:2px; z-index:9999; }
+        #nav-dropdown-portal a { text-decoration:none; font-family:var(--font-display); font-size:12.5px; font-weight:600;
+            padding:9px 12px; border-radius:8px; border:1px solid transparent; background:transparent; color:var(--ink2); white-space:nowrap; }
+        #nav-dropdown-portal a:hover { background:var(--bg-sunk); color:var(--ink); }
+        #nav-dropdown-portal a.active { color:var(--accent); background:var(--accent-soft); }
 
         /* ── Responsive — mirrors taskvel-pro.php's breakpoints exactly,
            so the header scales the same way on every page. ── */
@@ -340,7 +358,7 @@ function pro_header(array $user, string $active = 'teams', string $crumbHtml = '
     <div class="header">
         <div class="brand-row">
             <a class="brand" href="taskvel-pro.php">
-                <div class="logo">T</div>
+                <div class="logo" id="brand-logo">T</div>
                 <div class="brand-txt">
                     <h1>Task<span>vel</span> Pro</h1>
                     <div class="tag">by Samal Consultancy</div>
@@ -382,14 +400,25 @@ function pro_header(array $user, string $active = 'teams', string $crumbHtml = '
         <div class="main-nav">
             <a href="taskvel-pro.php" class="<?= $active === 'tasks' ? 'active' : '' ?>">✓ My Tasks</a>
             <a href="my-work.php" class="<?= $active === 'mywork' ? 'active' : '' ?>">🗂 My Work</a>
-            <a href="teams.php" class="<?= $active === 'teams' ? 'active' : '' ?>">👥 Teams</a>
-            <a href="checkin.php" class="<?= $active === 'checkin' ? 'active' : '' ?>">📍 Check-in</a>
-            <a href="trading-journal.php" class="<?= $active === 'journal' ? 'active' : '' ?>">📈 Trading</a>
-            <a href="trading-calendar.php" class="<?= $active==='calendar'?'active':'' ?>">🗓️ Trading Calendar</a>
+            <details class="nav-group<?= in_array($active, ['teams', 'checkin'], true) ? ' nav-group-active' : '' ?>">
+                <summary>🏢 Enterprise</summary>
+                <div class="nav-group-menu">
+                    <a href="teams.php" class="<?= $active === 'teams' ? 'active' : '' ?>">👥 My Teams</a>
+                    <a href="checkin.php" class="<?= $active === 'checkin' ? 'active' : '' ?>">📍 Check-in</a>
+                </div>
+            </details>
+            <details class="nav-group<?= in_array($active, ['journal', 'calendar'], true) ? ' nav-group-active' : '' ?>">
+                <summary>📈 Trading</summary>
+                <div class="nav-group-menu">
+                    <a href="trading-journal.php" class="<?= $active === 'journal' ? 'active' : '' ?>">📈 Trading Journal</a>
+                    <a href="trading-calendar.php" class="<?= $active === 'calendar' ? 'active' : '' ?>">🗓️ Trading Calendar</a>
+                </div>
+            </details>
             <a href="billing.php" class="<?= $active === 'billing' ? 'active' : '' ?>">💳 Billing</a>
         </div>
     </div>
     </div>
+    <div id="nav-dropdown-portal"></div>
     <?php if ($crumbHtml !== ''): ?><div class="crumb"><?= $crumbHtml ?></div><?php endif; ?>
     <div class="toast" id="pro-toast"></div>
 
@@ -445,6 +474,97 @@ function pro_header(array $user, string $active = 'teams', string $crumbHtml = '
         }
         proTickClock();
         setInterval(proTickClock, 1000);
+
+        // ═══════ ORG BRANDING — must mirror taskvel-pro.php's applyOrgBranding()
+        // exactly, otherwise a member of an org with a custom brand colour
+        // sees the org colour on My Tasks but their own picked theme colour
+        // on every other page (Teams, My Work, Billing, etc.), since only
+        // My Tasks was applying this override before. ═══════
+        function proHexToRgb(hex) {
+            const h = hex.replace('#', '');
+            return [0, 2, 4].map(i => parseInt(h.substr(i, 2), 16));
+        }
+        function proEsc(s) {
+            return (s || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+        }
+        (async function applyOrgBranding() {
+            try {
+                const res = await fetch('api/organizations.php?action=mine', { credentials: 'same-origin' });
+                const { membership } = await res.json();
+                if (!membership) return;
+
+                if (membership.org_logo_url) {
+                    const logoEl = document.getElementById('brand-logo');
+                    if (logoEl) logoEl.innerHTML = `<img src="${proEsc(membership.org_logo_url)}" alt="" style="width:100%;height:100%;object-fit:cover" onerror="this.remove();this.parentElement.textContent='${proEsc(membership.org_name || 'T').charAt(0)}'">`;
+                }
+                // Only use organization branding when the user has NOT selected
+                // a personal accent theme. Personal theme must remain consistent
+                // across every Pro Shell page.
+                const hasPersonalAccent = (() => {
+                    try {
+                        return localStorage.getItem('taskvel_accent_v1') !== null;
+                    } catch (e) {
+                        return false;
+                    }
+                })();
+
+                if (!hasPersonalAccent && membership.org_brand_color) {
+                    const [r, g, b] = proHexToRgb(membership.org_brand_color);
+                    const root = document.documentElement.style;
+
+                    root.setProperty('--accent', membership.org_brand_color);
+                    root.setProperty('--accent-soft', `rgba(${r},${g},${b},.10)`);
+                    root.setProperty('--accent-glow', `rgba(${r},${g},${b},.28)`);
+                }
+            } catch (e) { /* not in an org — keep the person's own theme */ }
+        })();
+
+        // Enterprise / Trading dropdowns — rendered via a fixed-position
+        // portal, since .header's backdrop-filter breaks fixed/absolute
+        // positioning for elements still nested inside it.
+        (function() {
+            const portal = document.getElementById('nav-dropdown-portal');
+            if (!portal) return;
+            let openDetails = null;
+
+            function closeNav() {
+                if (openDetails) openDetails.removeAttribute('open');
+                openDetails = null;
+                portal.style.display = 'none';
+                portal.innerHTML = '';
+            }
+            function openNav(details) {
+                const summary = details.querySelector('summary');
+                const menu = details.querySelector('.nav-group-menu');
+                if (!summary || !menu) return;
+                document.querySelectorAll('.main-nav details.nav-group[open]').forEach(d => {
+                    if (d !== details) d.removeAttribute('open');
+                });
+                openDetails = details;
+                portal.innerHTML = menu.innerHTML;
+                portal.style.display = 'flex';
+                const rect = summary.getBoundingClientRect();
+                const portalWidth = Math.max(portal.offsetWidth, 200);
+                let left = rect.left;
+                const maxLeft = window.innerWidth - portalWidth - 8;
+                if (left > maxLeft) left = Math.max(8, maxLeft);
+                portal.style.top = (rect.bottom + 6) + 'px';
+                portal.style.left = left + 'px';
+            }
+            document.querySelectorAll('.main-nav details.nav-group').forEach(details => {
+                details.addEventListener('toggle', () => {
+                    if (details.open) openNav(details);
+                    else if (openDetails === details) closeNav();
+                });
+            });
+            document.addEventListener('click', e => {
+                if (portal.contains(e.target)) return;
+                if (e.target.closest && e.target.closest('.main-nav details.nav-group')) return;
+                closeNav();
+            });
+            window.addEventListener('resize', closeNav);
+            window.addEventListener('scroll', closeNav, true);
+        })();
 
         // ═══════════════════════ GLOBAL SEARCH ═══════════════════════
         let gsTimer = null;
@@ -515,7 +635,7 @@ function pro_footer(array $user): void
     <div class="foot">
         <div class="n">Taskvel</div>
         <div class="d">Focus · Rank · Ship</div>
-        <div class="k">Signed in as <b><?= htmlspecialchars($user['email']) ?></b> · <a href="#" onclick="logoutUser();return false;" style="color:var(--accent);font-weight:600">Log out</a></div>
+        <div class="k">Signed in as <b><?= htmlspecialchars($user['email']) ?></b> · <a href="terms.php" style="color:var(--accent);font-weight:600">Terms</a> · <a href="privacy.php" style="color:var(--accent);font-weight:600">Privacy</a> · <a href="#" onclick="logoutUser();return false;" style="color:var(--accent);font-weight:600">Log out</a></div>
     </div>
     <?php
 }

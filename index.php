@@ -2922,7 +2922,7 @@ html, body{ max-width:100%; overflow-x:hidden; }
     </div>
     <div class="footer-bottom">
       <span>© <span id="year"></span> Samal Consultancy. All rights reserved.</span>
-      <span>Privacy Policy · Terms of Service</span>
+      <span><a href="legal.php#terms" style="color:inherit;text-decoration:underline;">Terms of Service</a> · <a href="legal.php#privacy" style="color:inherit;text-decoration:underline;">Privacy Policy</a></span>
     </div>
   </div>
 </footer>

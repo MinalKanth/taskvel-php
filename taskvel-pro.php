@@ -670,6 +670,113 @@ $user = current_user();
         box-shadow: var(--shadow-sm);
     }
 
+    .main-nav details.nav-group {
+        position: relative;
+    }
+
+    .main-nav details.nav-group summary {
+        list-style: none;
+        cursor: pointer;
+        text-decoration: none;
+        font-family: 'Space Grotesk';
+        font-size: 12.5px;
+        font-weight: 600;
+        padding: 8px 14px;
+        border-radius: 10px;
+        border: 1px solid transparent;
+        background: transparent;
+        color: var(--ink2);
+        white-space: nowrap;
+        transition: background .18s var(--ease), color .18s var(--ease), box-shadow .18s var(--ease);
+    }
+
+    .main-nav details.nav-group summary::-webkit-details-marker {
+        display: none;
+    }
+
+    .main-nav details.nav-group summary::marker {
+        content: '';
+    }
+
+    .main-nav details.nav-group summary::after {
+        content: '▾';
+        margin-left: 6px;
+        font-size: 9px;
+        opacity: .65;
+    }
+
+    .main-nav details.nav-group summary:hover {
+        background: var(--bg-elev);
+        color: var(--ink);
+    }
+
+    .main-nav details.nav-group[open] summary,
+    .main-nav details.nav-group.nav-group-active summary {
+        background: var(--bg-elev);
+        color: var(--accent);
+        border-color: var(--line);
+        box-shadow: var(--shadow-sm);
+    }
+
+        .main-nav details.nav-group .nav-group-menu {
+        display: none !important; /* hidden — replaced by the fixed JS portal below,
+                                      since .header's backdrop-filter breaks fixed/absolute
+                                      positioning for descendants */
+    }
+
+    #nav-dropdown-portal {
+        position: fixed;
+        min-width: 200px;
+        background: var(--bg-elev);
+        border: 1px solid var(--line);
+        border-radius: 14px;
+        box-shadow: var(--shadow-lg);
+        padding: 6px;
+        display: none;
+        flex-direction: column;
+        gap: 2px;
+        z-index: 9999;
+    }
+
+    #nav-dropdown-portal a {
+        text-decoration: none;
+        font-family: 'Space Grotesk';
+        font-size: 12.5px;
+        font-weight: 600;
+        padding: 9px 12px;
+        border-radius: 8px;
+        border: 1px solid transparent;
+        background: transparent;
+        color: var(--ink2);
+        white-space: nowrap;
+    }
+
+    #nav-dropdown-portal a:hover {
+        background: var(--bg-sunk);
+        color: var(--ink);
+    }
+
+    #nav-dropdown-portal a.active {
+        color: var(--accent);
+        background: var(--accent-soft);
+    }
+
+    .main-nav details.nav-group .nav-group-menu a {
+        padding: 9px 12px;
+        border-radius: 8px;
+        border: 1px solid transparent;
+    }
+
+    .main-nav details.nav-group .nav-group-menu a:hover {
+        background: var(--bg-sunk);
+        color: var(--ink);
+    }
+
+    .main-nav details.nav-group .nav-group-menu a.active {
+        color: var(--accent);
+        background: var(--accent-soft);
+    }
+
     .clock-time {
         font-family: 'JetBrains Mono';
         font-size: 16px;
@@ -4394,12 +4501,23 @@ $user = current_user();
             <div class="main-nav">
                 <a href="taskvel-pro.php" class="<?= $active === 'tasks' ? 'active' : '' ?>">✓ My Tasks</a>
                 <a href="my-work.php" class="<?= $active === 'mywork' ? 'active' : '' ?>">🗂 My Work</a>
-                <a href="teams.php" class="<?= $active === 'teams' ? 'active' : '' ?>">👥 Teams</a>
-                <a href="checkin.php" class="<?= $active === 'checkin' ? 'active' : '' ?>">📍 Check-in</a>
-                <a href="trading-journal.php" class="<?= $active === 'journal' ? 'active' : '' ?>">📈 Trading</a>
-                <a href="trading-calendar.php" class="<?= $active === 'calendar' ? 'active' : '' ?>">🗓️ Trading Calendar</a>
+                <details class="nav-group<?= in_array($active, ['teams', 'checkin'], true) ? ' nav-group-active' : '' ?>">
+                    <summary>🏢 Enterprise</summary>
+                    <div class="nav-group-menu">
+                        <a href="teams.php" class="<?= $active === 'teams' ? 'active' : '' ?>">👥 My Teams</a>
+                        <a href="checkin.php" class="<?= $active === 'checkin' ? 'active' : '' ?>">📍 Check-in</a>
+                    </div>
+                </details>
+                <details class="nav-group<?= in_array($active, ['journal', 'calendar'], true) ? ' nav-group-active' : '' ?>">
+                    <summary>📈 Trading</summary>
+                    <div class="nav-group-menu">
+                        <a href="trading-journal.php" class="<?= $active === 'journal' ? 'active' : '' ?>">📈 Trading Journal</a>
+                        <a href="trading-calendar.php" class="<?= $active === 'calendar' ? 'active' : '' ?>">🗓️ Trading Calendar</a>
+                    </div>
+                </details>
                 <a href="billing.php" class="<?= $active === 'billing' ? 'active' : '' ?>">💳 Billing</a>
             </div>
+
 
             <!-- Theme picker panel -->
             <div class="panel" id="palette-panel">
@@ -4969,7 +5087,7 @@ $user = current_user();
     <div class="foot">
         <div class="n">Taskvel</div>
         <div class="d">Focus · Rank · Ship</div>
-        <div class="k">Signed in as <b><?= htmlspecialchars($user['email']) ?></b> · <a href="features.php" style="color:var(--accent);font-weight:600">Explore features</a> · <a href="#"
+        <div class="k">Signed in as <b><?= htmlspecialchars($user['email']) ?></b> · <a href="features.php" style="color:var(--accent);font-weight:600">Explore features</a> · <a href="terms.php" style="color:var(--accent);font-weight:600">Terms</a> · <a href="privacy.php" style="color:var(--accent);font-weight:600">Privacy</a> · <a href="#"
                 onclick="logoutUser();return false;" style="color:var(--accent);font-weight:600">Log out</a></div>
         <div class="k">Shortcuts: <kbd>⌘K</kbd> commands · <kbd>N</kbd> new · <kbd>/</kbd> search · <kbd>Space</kbd>
             timer · <kbd>T</kbd> dark · <kbd>Esc</kbd> close</div>
@@ -5870,7 +5988,20 @@ $user = current_user();
         amber: 'Amber'
     };
 
+    // Clears any org-branding inline overrides so a manually picked accent
+    // actually takes effect. applyOrgBranding() sets these same vars via
+    // documentElement.style (inline), which always wins over the
+    // :root[data-accent="..."] CSS rules regardless of their specificity —
+    // without this, picking a swatch updates the checkmark but the colours
+    // never visually change because the inline override is still in force.
+    function clearOrgAccentOverride() {
+        const root = document.documentElement.style;
+        ['--accent', '--accent-2', '--accent-soft', '--accent-glow', '--on-accent', '--line-ink', '--ring']
+            .forEach(v => root.removeProperty(v));
+    }
+
     function setAccent(name) {
+        clearOrgAccentOverride();
         document.documentElement.setAttribute('data-accent', name);
         try {
             localStorage.setItem(LS_ACCENT, name);
@@ -8400,7 +8531,23 @@ $user = current_user();
         return [0, 2, 4].map(i => parseInt(h.substr(i, 2), 16));
     }
 
-    async function applyOrgBranding() {
+    // Adjusts a hex colour by a fixed RGB amount (positive = lighter, negative = darker).
+    function shadeHex(hex, amt) {
+        const [r, g, b] = hexToRgb(hex);
+        const clamp = v => Math.min(255, Math.max(0, v));
+        return '#' + [clamp(r + amt), clamp(g + amt), clamp(b + amt)]
+            .map(v => v.toString(16).padStart(2, '0')).join('');
+    }
+
+    // Picks readable text colour (white or near-black) for a given background colour.
+    function contrastForHex(hex) {
+        const [r, g, b] = hexToRgb(hex);
+        const luminance = (0.299 * r + 0.587 * g + 0.114 * b) / 255;
+        return luminance > 0.6 ? '#0e0f13' : '#ffffff';
+    }
+
+
+        async function applyOrgBranding() {
         try {
             const { membership } = await Taskvel.request('/api/organizations.php?action=mine');
             if (!membership) return;
@@ -8410,12 +8557,29 @@ $user = current_user();
                 logoEl.innerHTML = `<img src="${esc(membership.org_logo_url)}" alt="" style="width:100%;height:100%;object-fit:cover" onerror="this.remove();this.parentElement.textContent='${esc(membership.org_name || 'T').charAt(0)}'">`;
             }
 
+            // Org branding is only a DEFAULT accent — once the person has picked
+            // their own colour theme from the palette (LS_ACCENT exists in
+            // localStorage), that personal choice always wins and org branding
+            // must not silently override it again on every page load/navigation.
+            const hasPersonalAccent = (() => {
+                try { return localStorage.getItem(LS_ACCENT) !== null; } catch (e) { return false; }
+            })();
+            if (hasPersonalAccent) return;
+
             if (membership.org_brand_color) {
-                const [r, g, b] = hexToRgb(membership.org_brand_color);
+                const brand = membership.org_brand_color;
+                const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+                const accent2 = shadeHex(brand, isDark ? 40 : -30);
+                const [r, g, b] = hexToRgb(brand);
+                const onAccent = contrastForHex(brand);
                 const root = document.documentElement.style;
-                root.setProperty('--accent', membership.org_brand_color);
+                root.setProperty('--accent', brand);
+                root.setProperty('--accent-2', accent2);
                 root.setProperty('--accent-soft', `rgba(${r},${g},${b},.10)`);
                 root.setProperty('--accent-glow', `rgba(${r},${g},${b},.28)`);
+                root.setProperty('--on-accent', onAccent);
+                root.setProperty('--line-ink', brand);
+                root.setProperty('--ring', `rgba(${r},${g},${b},.16)`);
             }
         } catch (e) { /* not in an org — keep default Taskvel branding */ }
     }
@@ -9522,6 +9686,59 @@ $user = current_user();
         loadHub();
     })();
     </script>
+        <div id="nav-dropdown-portal"></div>
+    <script>
+    // Enterprise / Trading dropdowns — rendered via a fixed-position portal
+    // appended directly to <body> (not inside .header), because .header's
+    // backdrop-filter creates a new containing block for fixed/absolute
+    // descendants — any fixed-position element still inside .header gets
+    // positioned relative to .header instead of the viewport.
+    (function() {
+        const portal = document.getElementById('nav-dropdown-portal');
+        let openDetails = null;
+
+        function closeNav() {
+            if (openDetails) openDetails.removeAttribute('open');
+            openDetails = null;
+            portal.style.display = 'none';
+            portal.innerHTML = '';
+        }
+
+        function openNav(details) {
+            const summary = details.querySelector('summary');
+            const menu = details.querySelector('.nav-group-menu');
+            if (!summary || !menu) return;
+            document.querySelectorAll('.main-nav details.nav-group[open]').forEach(d => {
+                if (d !== details) d.removeAttribute('open');
+            });
+            openDetails = details;
+            portal.innerHTML = menu.innerHTML;
+            portal.style.display = 'flex';
+
+            const rect = summary.getBoundingClientRect();
+            const portalWidth = Math.max(portal.offsetWidth, 200);
+            let left = rect.left;
+            const maxLeft = window.innerWidth - portalWidth - 8;
+            if (left > maxLeft) left = Math.max(8, maxLeft);
+            portal.style.top = (rect.bottom + 6) + 'px';
+            portal.style.left = left + 'px';
+        }
+
+        document.querySelectorAll('.main-nav details.nav-group').forEach(details => {
+            details.addEventListener('toggle', () => {
+                if (details.open) openNav(details);
+                else if (openDetails === details) closeNav();
+            });
+        });
+        document.addEventListener('click', e => {
+            if (portal.contains(e.target)) return;
+            if (e.target.closest && e.target.closest('.main-nav details.nav-group')) return;
+            closeNav();
+        });
+        window.addEventListener('resize', closeNav);
+        window.addEventListener('scroll', closeNav, true);
+    })();
+</script>
 </body>
 
 </html>
