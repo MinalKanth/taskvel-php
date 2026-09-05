@@ -2,6 +2,8 @@
 require_once __DIR__ . '/../includes/licensing.php';
 require_once __DIR__ . '/../includes/stripe_client.php';
 require_once __DIR__ . '/../config/stripe.php';
+require_once __DIR__ . '/../includes/razorpay_client.php';
+require_once __DIR__ . '/../config/razorpay.php';
 require_login();
 
 $uid = current_user_id();
@@ -123,6 +125,95 @@ switch ("$method:$action") {
         } catch (Throwable $e) {
             json_response(['error' => $e->getMessage()], 502);
         }
+        break;
+
+//     default:
+//         json_response(['error' => 'Unknown route'], 404);
+// }
+    // ================= RAZORPAY (UPI/QR-capable alternative to Stripe) =================
+
+    // Individual "Upgrade to Pro" via Razorpay — sibling of
+    // create-checkout-session above, same eligibility rule. Returns a
+    // subscription_id for the browser to open with Razorpay's Checkout.js.
+    case 'POST:create-razorpay-subscription':
+        if (user_organization_membership($uid)) {
+            json_response(['error' => 'Your account is already licensed through an organization.'], 422);
+        }
+        try {
+            $planId = razorpay_get_or_create_plan('user_pro_month', RAZORPAY_PRICE_PRO, 'monthly', 'Taskvel Pro');
+            $sub = razorpay_create_subscription($planId, RAZORPAY_TOTAL_CYCLES_MONTHLY, 1, ['ref' => "user:$uid"]);
+            json_response(['subscription_id' => $sub['id'], 'key_id' => RAZORPAY_KEY_ID]);
+        } catch (Throwable $e) {
+            json_response(['error' => $e->getMessage()], 502);
+        }
+        break;
+
+    // Organization seat purchase via Razorpay — sibling of
+    // create-org-checkout-session above.
+    case 'POST:create-razorpay-org-subscription':
+        $orgId = (int)($in['org_id'] ?? 0);
+        require_org_admin($orgId);
+        $seats = max(1, (int)($in['seats'] ?? 5));
+
+        $stmt = $pdo->prepare('SELECT billing_cycle FROM organizations WHERE id = ?');
+        $stmt->execute([$orgId]);
+        $cycle = $stmt->fetchColumn();
+        if (!$cycle) json_response(['error' => 'Organization not found'], 404);
+
+        $period = $cycle === 'yearly' ? 'yearly' : 'monthly';
+        $price = $cycle === 'yearly' ? RAZORPAY_PRICE_ORG_SEAT_YEARLY : RAZORPAY_PRICE_ORG_SEAT_MONTHLY;
+        $totalCount = $cycle === 'yearly' ? RAZORPAY_TOTAL_CYCLES_YEARLY : RAZORPAY_TOTAL_CYCLES_MONTHLY;
+        try {
+            $planId = razorpay_get_or_create_plan("org_seat_$period", $price, $period, 'Taskvel Pro — Organization seat');
+            $sub = razorpay_create_subscription($planId, $totalCount, $seats, ['ref' => "org:$orgId:seats:$seats"]);
+            json_response(['subscription_id' => $sub['id'], 'key_id' => RAZORPAY_KEY_ID]);
+        } catch (Throwable $e) {
+            json_response(['error' => $e->getMessage()], 502);
+        }
+        break;
+
+    // Business tier via Razorpay — sibling of create-business-checkout-session above.
+    case 'POST:create-razorpay-business-subscription':
+        $orgId = (int)($in['org_id'] ?? 0);
+        require_org_admin($orgId);
+        $cycle = one_of($in['billing_cycle'] ?? 'monthly', ['monthly', 'yearly'], 'monthly');
+
+        $stmt = $pdo->prepare('SELECT id FROM organizations WHERE id = ?');
+        $stmt->execute([$orgId]);
+        if (!$stmt->fetchColumn()) json_response(['error' => 'Organization not found'], 404);
+
+        $amount = $cycle === 'yearly' ? RAZORPAY_PRICE_BUSINESS_YEARLY : RAZORPAY_PRICE_BUSINESS_MONTHLY;
+        $totalCount = $cycle === 'yearly' ? RAZORPAY_TOTAL_CYCLES_YEARLY : RAZORPAY_TOTAL_CYCLES_MONTHLY;
+        try {
+            $planId = razorpay_get_or_create_plan("business_$cycle", $amount, $cycle, 'Taskvel Business — ' . BUSINESS_BUNDLE_SEATS . ' seats (' . ucfirst($cycle) . ')');
+            $sub = razorpay_create_subscription($planId, $totalCount, 1, ['ref' => 'org:' . $orgId . ':seats:' . BUSINESS_BUNDLE_SEATS]);
+            json_response(['subscription_id' => $sub['id'], 'key_id' => RAZORPAY_KEY_ID]);
+        } catch (Throwable $e) {
+            json_response(['error' => $e->getMessage()], 502);
+        }
+        break;
+
+    // Client-side confirmation right after Razorpay Checkout succeeds for
+    // an INDIVIDUAL subscription — verifies the signature Razorpay handed
+    // the browser and grants Pro immediately, purely so the UI doesn't have
+    // to wait on webhook delivery lag. api/razorpay-webhook.php still
+    // applies the same update (idempotently) and is the authoritative path
+    // for org seats and all renewals.
+    case 'POST:confirm-razorpay-subscription':
+        $paymentId = clean_str($in['razorpay_payment_id'] ?? '', 100);
+        $subscriptionId = clean_str($in['razorpay_subscription_id'] ?? '', 100);
+        $signature = clean_str($in['razorpay_signature'] ?? '', 200);
+        if ($paymentId === '' || $subscriptionId === '' || $signature === '') {
+            json_response(['error' => 'Missing Razorpay confirmation fields'], 422);
+        }
+        if (!razorpay_verify_subscription_signature($paymentId, $subscriptionId, $signature)) {
+            json_response(['error' => 'Could not verify payment signature'], 400);
+        }
+        if (!user_organization_membership($uid)) {
+            $pdo->prepare("UPDATE users SET plan = 'pro', plan_source = 'razorpay', razorpay_subscription_id = ? WHERE id = ?")
+                ->execute([$subscriptionId, $uid]);
+        }
+        json_response(['ok' => true]);
         break;
 
     default:

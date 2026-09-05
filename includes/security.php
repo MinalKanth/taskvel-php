@@ -27,13 +27,19 @@ function send_security_headers(): void
 
     // Content-Security-Policy: this app is a single-origin, no-framework
     // vanilla JS/CSS app with no third-party scripts, so a tight policy is
-    // realistic. Google Fonts stylesheet is the one external origin used.
+    // realistic. Google Fonts stylesheet is the one external origin used —
+    // Razorpay Checkout is the other: it loads its own script from
+    // checkout.razorpay.com, opens its payment UI in an iframe/popup served
+    // from api.razorpay.com / checkout.razorpay.com, and makes its own XHR
+    // calls (including to its lumberjack logging endpoint) that connect-src
+    // must allow, or the widget silently fails after the script itself loads.
     $csp = "default-src 'self'; "
-         . "script-src 'self' 'unsafe-inline'; "   // inline <script> blocks are used throughout by design
+         . "script-src 'self' 'unsafe-inline' https://checkout.razorpay.com; "   // inline <script> blocks are used throughout by design
          . "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; "
          . "font-src 'self' https://fonts.gstatic.com data:; "
-         . "img-src 'self' data:; "
-         . "connect-src 'self'; "
+         . "img-src 'self' data: https://*.razorpay.com; "
+         . "connect-src 'self' https://api.razorpay.com https://checkout.razorpay.com https://lumberjack.razorpay.com; "
+         . "frame-src https://api.razorpay.com https://checkout.razorpay.com; "
          . "frame-ancestors 'none'; "
          . "base-uri 'self'; "
          . "form-action 'self'";

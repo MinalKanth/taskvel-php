@@ -589,6 +589,12 @@ $user = current_user();
                 <option value="yearly">Yearly — ₹<?= number_format(STRIPE_PRICE_BUSINESS_YEARLY, 0) ?> (2 months free)</option>
             </select>
         </div>
+        <div class="fg"><label>Payment method</label>
+            <select id="biz-gateway">
+                <option value="stripe">Card (Stripe)</option>
+                <option value="razorpay">UPI / Card / Netbanking (Razorpay)</option>
+            </select>
+        </div>
         <div class="modal-actions">
             <button class="btn ghost" onclick="closeBusinessBundle()">Cancel</button>
             <button class="btn" id="biz-save-btn" onclick="submitBusinessBundle()">Continue to payment</button>
@@ -619,6 +625,7 @@ $user = current_user();
     </div>
 </div>
 
+<script src="https://checkout.razorpay.com/v1/checkout.js"></script>
 <script src="js/api-client.js?v=2"></script>
 <script>
 const MY_USER_ID = <?= (int)current_user_id() ?>;
@@ -648,9 +655,10 @@ async function loadPlanStatus() {
                 <div class="sub">Trial ends ${esc((s.trial_ends_at||'').slice(0,10))}. You have full Pro access until then.</div>
                 <div class="billing-actions">
                     <button class="btn" onclick="startCheckout()">Upgrade to Pro now</button>
+                    <button class="btn ghost" onclick="startRazorpayCheckout()">Pay with UPI</button>
                 </div>
             </div>`;
-        } else if (s.plan === 'pro' && s.plan_source === 'stripe') {
+        } else if (s.plan === 'pro' && (s.plan_source === 'stripe' || s.plan_source === 'razorpay')) {
             box.innerHTML = `<div class="plan-card">
                 <span class="plan-badge">Pro</span>
                 <div class="sub" style="margin-top:10px">You're subscribed to Taskvel Pro. Thanks for supporting Taskvel!</div>
@@ -662,6 +670,7 @@ async function loadPlanStatus() {
                 <div class="sub">You're on the free plan now (2 teams, 5 members per team, 1 project per team). Upgrade to get unlimited teams, seats, and projects back.</div>
                 <div class="billing-actions">
                     <button class="btn" onclick="startCheckout()">Upgrade to Pro</button>
+                    <button class="btn ghost" onclick="startRazorpayCheckout()">Pay with UPI</button>
                 </div>
             </div>`;
         } else {
@@ -670,6 +679,7 @@ async function loadPlanStatus() {
                 <div class="sub" style="margin-top:8px">2 teams, 5 members per team, 1 project per team.</div>
                 <div class="billing-actions">
                     <button class="btn" onclick="startCheckout()">Upgrade to Pro</button>
+                    <button class="btn ghost" onclick="startRazorpayCheckout()">Pay with UPI</button>
                 </div>
             </div>`;
         }
@@ -681,6 +691,75 @@ async function startCheckout() {
         const { url } = await Taskvel.request('/api/billing.php?action=create-checkout-session', { method: 'POST' });
         window.location.href = url;
     } catch (e) { toast(e.message || 'Could not start checkout — is Stripe configured?'); }
+}
+
+// Opens Razorpay's Checkout widget (shows UPI intent/QR, cards, and
+// netbanking as tabs) for a given subscription_id, and calls onSuccess
+// with Razorpay's response once the customer completes payment/mandate setup.
+function openRazorpayCheckout(keyId, subscriptionId, description, onSuccess) {
+    if (typeof Razorpay === 'undefined') { toast('Razorpay checkout script failed to load — check your network/ad-blocker.'); return; }
+    const rzp = new Razorpay({
+        key: keyId,
+        subscription_id: subscriptionId,
+        name: 'Taskvel Pro',
+        description,
+        theme: { color: '#a3811f' },
+        handler: onSuccess,
+    });
+    rzp.on('payment.failed', function (resp) {
+        toast('Payment failed: ' + (resp.error && resp.error.description ? resp.error.description : 'please try again'));
+    });
+    rzp.open();
+}
+
+async function startRazorpayCheckout() {
+    try {
+        const { subscription_id, key_id } = await Taskvel.request('/api/billing.php?action=create-razorpay-subscription', { method: 'POST' });
+        openRazorpayCheckout(key_id, subscription_id, 'Taskvel Pro', async (resp) => {
+            try {
+                await Taskvel.request('/api/billing.php?action=confirm-razorpay-subscription', {
+                    method: 'POST',
+                    body: {
+                        razorpay_payment_id: resp.razorpay_payment_id,
+                        razorpay_subscription_id: resp.razorpay_subscription_id,
+                        razorpay_signature: resp.razorpay_signature,
+                    },
+                });
+                toast("You're Pro now ✓");
+            } catch (e) {
+                toast('Payment received — refresh in a moment if your plan hasn\'t updated yet.');
+            }
+            loadPlanStatus();
+        });
+    } catch (e) { toast(e.message || 'Could not start Razorpay checkout — is Razorpay configured?'); }
+}
+
+async function startRazorpayOrgCheckout(orgId, seats) {
+    try {
+        const { subscription_id, key_id } = await Taskvel.request('/api/billing.php?action=create-razorpay-org-subscription', {
+            method: 'POST', body: { org_id: orgId, seats },
+        });
+        openRazorpayCheckout(key_id, subscription_id, 'Taskvel Pro — Organization seats', () => {
+            // Seats are only ever applied by api/razorpay-webhook.php
+            // (subscription.activated) — it re-derives org/seat context from
+            // the subscription itself, so there's nothing to grant client-side
+            // here without risking a double-credit.
+            toast('Payment received — seats will appear shortly ✓');
+            setTimeout(loadOrgSection, 2500);
+        });
+    } catch (e) { toast(e.message || 'Could not start Razorpay checkout — is Razorpay configured?'); }
+}
+
+async function startRazorpayBusinessCheckout(orgId, cycle) {
+    try {
+        const { subscription_id, key_id } = await Taskvel.request('/api/billing.php?action=create-razorpay-business-subscription', {
+            method: 'POST', body: { org_id: orgId, billing_cycle: cycle },
+        });
+        openRazorpayCheckout(key_id, subscription_id, 'Taskvel Business', () => {
+            toast('Payment received — your business plan will activate shortly ✓');
+            setTimeout(loadOrgSection, 2500);
+        });
+    } catch (e) { toast(e.message || 'Could not start Razorpay checkout — is Razorpay configured?'); }
 }
 
 async function loadOrgSection() {
@@ -1155,18 +1234,26 @@ async function handleBulkCsv(event) {
 async function addSeats() {
     const n = prompt('How many additional seats would you like to purchase?', '5');
     if (!n || isNaN(n) || parseInt(n, 10) < 1) return;
+    const seats = parseInt(n, 10);
+    const useUpi = confirm('Pay via UPI through Razorpay instead of card via Stripe?\n\nOK = UPI (Razorpay)   Cancel = Card (Stripe)');
     const btn = document.getElementById('add-seats-btn');
     if (btn.disabled) return;
     btn.disabled = true;
     const orig = btn.textContent;
     btn.textContent = 'Starting checkout…';
     try {
-        const { url } = await Taskvel.request('/api/billing.php?action=create-org-checkout-session', {
-            method: 'POST', body: { org_id: currentOrg.organization_id, seats: parseInt(n, 10) },
-        });
-        window.location.href = url; // Stripe Checkout — seats are added by the webhook once payment completes
+        if (useUpi) {
+            await startRazorpayOrgCheckout(currentOrg.organization_id, seats);
+        } else {
+            const { url } = await Taskvel.request('/api/billing.php?action=create-org-checkout-session', {
+                method: 'POST', body: { org_id: currentOrg.organization_id, seats },
+            });
+            window.location.href = url; // Stripe Checkout — seats are added by the webhook once payment completes
+            return;
+        }
     } catch (e) {
-        toast(e.message || 'Could not start checkout — is Stripe configured?');
+        toast(e.message || 'Could not start checkout');
+    } finally {
         btn.disabled = false;
         btn.textContent = orig;
     }
@@ -1180,13 +1267,21 @@ async function submitBusinessBundle() {
     btn.disabled = true;
     const orig = btn.textContent;
     btn.textContent = 'Starting checkout…';
+    const cycle = document.getElementById('biz-cycle').value;
+    const gateway = document.getElementById('biz-gateway').value;
     try {
-        const { url } = await Taskvel.request('/api/billing.php?action=create-business-checkout-session', {
-            method: 'POST', body: { org_id: currentOrg.organization_id, billing_cycle: document.getElementById('biz-cycle').value },
-        });
-        window.location.href = url;
+        if (gateway === 'razorpay') {
+            await startRazorpayBusinessCheckout(currentOrg.organization_id, cycle);
+        } else {
+            const { url } = await Taskvel.request('/api/billing.php?action=create-business-checkout-session', {
+                method: 'POST', body: { org_id: currentOrg.organization_id, billing_cycle: cycle },
+            });
+            window.location.href = url;
+            return;
+        }
     } catch (e) {
-        toast(e.message || 'Could not start checkout — is Stripe configured?');
+        toast(e.message || 'Could not start checkout');
+    } finally {
         btn.disabled = false;
         btn.textContent = orig;
     }

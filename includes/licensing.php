@@ -40,8 +40,8 @@ function recompute_user_plan(int $userId): void
     $user = $stmt->fetch();
     if (!$user) return;
 
-    // A real paid subscription (set by the Stripe webhook) is untouched here.
-    if ($user['plan_source'] === 'stripe') return;
+    // A real paid subscription (set by the Stripe or Razorpay webhook) is untouched here.
+    if (in_array($user['plan_source'], ['stripe', 'razorpay'], true)) return;
 
     // Admin manually granted access (e.g. an offline/cash payment) — its
     // own source so it survives independently of trial/Stripe state, good
