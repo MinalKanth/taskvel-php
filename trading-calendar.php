@@ -22,6 +22,26 @@ $user = current_user();
     .tc-total.pos { color:var(--good); }
     .tc-total.neg { color:var(--bad); }
 
+        .tc-goal-card { background:var(--bg-elev); border:1px solid var(--line); border-radius:var(--r-lg); padding:20px; margin-bottom:18px; box-shadow:var(--shadow-sm); }
+    .tc-goal-top { display:flex; gap:16px; flex-wrap:wrap; align-items:flex-end; justify-content:space-between; }
+    .tc-goal-form { display:flex; gap:10px; align-items:flex-end; flex-wrap:wrap; }
+    .tc-goal-form .fg { margin:0; min-width:180px; }
+    .tc-goal-form label { font-family:var(--font-display); font-size:10.5px; color:var(--ink3); text-transform:uppercase; letter-spacing:.6px; display:block; margin-bottom:6px; font-weight:600; }
+    .tc-goal-form input { width:100%; padding:10px 12px; border:1px solid var(--line2); border-radius:var(--r-sm); font-size:14px; background:var(--bg); color:var(--ink); }
+    .tc-goal-form input:focus { outline:none; border-color:var(--accent); box-shadow:0 0 0 3px var(--ring); }
+    .tc-goal-view-toggle { display:flex; gap:4px; }
+    .tc-goal-view-toggle button { font-family:var(--font-display); font-size:11.5px; font-weight:700; padding:7px 12px; border-radius:9px; border:1px solid var(--line2); background:var(--bg-elev); color:var(--ink2); cursor:pointer; }
+    .tc-goal-view-toggle button.active { background:var(--accent); color:var(--on-accent,#fff); border-color:var(--accent); }
+    .tc-goal-stats { display:grid; grid-template-columns:repeat(4,1fr); gap:10px; margin-top:16px; }
+    @media (max-width:700px) { .tc-goal-stats { grid-template-columns:1fr 1fr; } }
+    .tc-goal-stat { background:var(--bg-sunk); border-radius:var(--r-sm); padding:10px 12px; }
+    .tc-goal-stat .l { font-size:10px; color:var(--ink3); font-family:var(--font-display); text-transform:uppercase; letter-spacing:.4px; }
+    .tc-goal-stat .v { font-family:var(--font-display); font-weight:700; font-size:15px; margin-top:2px; }
+    .tc-goal-progress-bar { width:100%; height:12px; border-radius:999px; background:var(--bg-sunk); overflow:hidden; margin-top:14px; border:1px solid var(--line); }
+    .tc-goal-progress-fill { height:100%; border-radius:999px; background:linear-gradient(90deg,var(--accent),var(--accent-2,var(--accent))); transition:width .8s cubic-bezier(.22,1,.36,1); }
+    .tc-goal-progress-fill.full { background:linear-gradient(90deg,var(--good),#22c55e); }
+
+
         .tj-countdown{position:relative;overflow:hidden;display:flex;align-items:center;justify-content:space-between;gap:20px;
         flex-wrap:wrap;padding:18px 24px;border-radius:var(--r-lg);margin-bottom:18px;
         background:linear-gradient(135deg,var(--accent) 0%,var(--accent-2,var(--accent)) 100%);color:#fff;
@@ -71,6 +91,30 @@ $user = current_user();
     <div>
 
     <div id="tj-trial-banner" class="tj-countdown" style="display:none;"></div>
+    
+        <div class="tc-goal-card">
+        <div class="tc-goal-top">
+            <div class="tc-goal-form">
+                <div class="fg">
+                    <label for="tc-goal-amount">Monthly target for <span id="tc-goal-month-label">—</span> (₹)</label>
+                    <input type="number" id="tc-goal-amount" placeholder="e.g. 20000" min="0" step="0.01">
+                    <div class="fielderr" id="tc-goal-err">Please enter a valid target amount.</div>
+                </div>
+                <button class="btn" onclick="tcSaveGoal()">Save Goal</button>
+            </div>
+            <div class="tc-goal-view-toggle">
+                <button data-v="monthly" class="active" onclick="tcSetGoalView('monthly')">Monthly</button>
+                <button data-v="yearly" onclick="tcSetGoalView('yearly')">Yearly</button>
+            </div>
+        </div>
+        <div class="tc-goal-progress-bar"><div class="tc-goal-progress-fill" id="tc-goal-progress-fill" style="width:0%"></div></div>
+        <div class="tc-goal-stats">
+            <div class="tc-goal-stat"><div class="l">Target</div><div class="v" id="tc-goal-target">—</div></div>
+            <div class="tc-goal-stat"><div class="l">Achieved</div><div class="v" id="tc-goal-achieved">—</div></div>
+            <div class="tc-goal-stat"><div class="l">Remaining</div><div class="v" id="tc-goal-remaining">—</div></div>
+            <div class="tc-goal-stat"><div class="l">Achievement</div><div class="v" id="tc-goal-pct">—</div></div>
+        </div>
+    </div>
 
     <div class="tc-topbar">
         <div class="tc-nav">
@@ -153,6 +197,8 @@ $user = current_user();
 <script>
 let tcEntries = [];
 let tcJournalByDate = {};
+let tcGoals = [];
+let tcGoalView = 'monthly';
 let tcAccess = { can_write: true, is_paid: true };
 let tcCursor = new Date(); tcCursor.setDate(1);
 
@@ -174,14 +220,16 @@ function tcClosePaywall() { document.getElementById('tc-paywall-overlay').classL
 
 async function tcLoadAll() {
     try {
-        const [entriesRes, journalRes, accessRes] = await Promise.all([
+        const [entriesRes, journalRes, goalsRes, accessRes] = await Promise.all([
             Taskvel.request('/api/trading_journal.php?action=list-entries'),
             Taskvel.request('/api/trading_journal.php?action=list-journal'),
+            Taskvel.request('/api/trading_journal.php?action=list-goals'),
             Taskvel.request('/api/trading_journal.php?action=access-status'),
         ]);
         tcEntries = entriesRes.entries || [];
         tcJournalByDate = {};
         (journalRes.journal || []).forEach(j => { tcJournalByDate[j.entry_date] = j; });
+        tcGoals = goalsRes.goals || [];
         tcAccess = accessRes.access;
     } catch (e) {
         toast(e.message || 'Could not load calendar data');
@@ -270,6 +318,7 @@ function tcRenderCalendar() {
         </div>`;
     }
     document.getElementById('tc-grid').innerHTML = html;
+    tcRenderGoalSection();
 }
 
 function tcClearErrors() {
@@ -425,6 +474,59 @@ function renderTrialBanner() {
         <div class="tj-countdown-cta">
             <a class="btn" href="billing.php">Choose a plan →</a>
         </div>`;
+}
+function tcSetGoalView(view) {
+    tcGoalView = view;
+    document.querySelectorAll('.tc-goal-view-toggle button').forEach(b => b.classList.toggle('active', b.dataset.v === view));
+    tcRenderGoalSection();
+}
+
+function tcRenderGoalSection() {
+    const y = tcCursor.getFullYear(), m = tcCursor.getMonth();
+    const monthKey = `${y}-${String(m+1).padStart(2,'0')}`;
+    const monthGoal = tcGoals.find(g => g.month === monthKey);
+
+    document.getElementById('tc-goal-month-label').textContent = tcCursor.toLocaleDateString('en-US', { month:'long', year:'numeric' });
+    document.getElementById('tc-goal-amount').value = monthGoal ? monthGoal.target_amount : '';
+
+    let target, achieved;
+    if (tcGoalView === 'yearly') {
+        target = tcGoals.filter(g => g.month.slice(0,4) === String(y)).reduce((s,g) => s + Number(g.target_amount), 0);
+        achieved = tcEntries.filter(e => e.entry_date.slice(0,4) === String(y)).reduce((s,e) => s + Number(e.pnl_amount), 0);
+    } else {
+        target = monthGoal ? Number(monthGoal.target_amount) : 0;
+        achieved = tcEntries.filter(e => e.entry_date.slice(0,7) === monthKey).reduce((s,e) => s + Number(e.pnl_amount), 0);
+    }
+    const remaining = Math.max(target - achieved, 0);
+    const pct = target > 0 ? Math.max(0, Math.min(100, (achieved / target) * 100)) : 0;
+
+    document.getElementById('tc-goal-target').textContent = fmtMoney(target);
+    document.getElementById('tc-goal-achieved').textContent = fmtMoney(achieved);
+    document.getElementById('tc-goal-remaining').textContent = fmtMoney(remaining);
+    document.getElementById('tc-goal-pct').textContent = pct.toFixed(1) + '%';
+
+    const fill = document.getElementById('tc-goal-progress-fill');
+    fill.style.width = pct + '%';
+    fill.classList.toggle('full', pct >= 100);
+}
+
+async function tcSaveGoal() {
+    if (!checkWriteAccess()) return;
+    const y = tcCursor.getFullYear(), m = tcCursor.getMonth();
+    const monthKey = `${y}-${String(m+1).padStart(2,'0')}`;
+    const input = document.getElementById('tc-goal-amount');
+    const amount = parseFloat(input.value);
+    const err = document.getElementById('tc-goal-err');
+    if (isNaN(amount) || amount < 0) { input.classList.add('err'); err.classList.add('show'); return; }
+    input.classList.remove('err'); err.classList.remove('show');
+    try {
+        await Taskvel.request('/api/trading_journal.php?action=save-goal', { method: 'POST', body: { month: monthKey, target_amount: amount } });
+        const existing = tcGoals.find(g => g.month === monthKey);
+        if (existing) existing.target_amount = amount;
+        else tcGoals.push({ month: monthKey, target_amount: amount });
+        tcRenderGoalSection();
+        toast('Monthly goal saved');
+    } catch (e) { toast(e.message || 'Could not save goal'); }
 }
 
 tcLoadAll();
