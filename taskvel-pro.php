@@ -5087,7 +5087,7 @@ $user = current_user();
     <div class="foot">
         <div class="n">Taskvel</div>
         <div class="d">Focus · Rank · Ship</div>
-        <div class="k">Signed in as <b><?= htmlspecialchars($user['email']) ?></b> · <a href="features.php" style="color:var(--accent);font-weight:600">Explore features</a> · <a href="terms.php" style="color:var(--accent);font-weight:600">Terms</a> · <a href="privacy.php" style="color:var(--accent);font-weight:600">Privacy</a> · <a href="#"
+                        <div class="k">Signed in as <b><?= htmlspecialchars($user['email']) ?></b> · <a href="features.php" style="color:var(--accent);font-weight:600">Explore features</a> · <a href="terms.php" style="color:var(--accent);font-weight:600">Terms</a> · <a href="privacy.php" style="color:var(--accent);font-weight:600">Privacy</a> · <a href="#"
                 onclick="logoutUser();return false;" style="color:var(--accent);font-weight:600">Log out</a></div>
         <div class="k">Shortcuts: <kbd>⌘K</kbd> commands · <kbd>N</kbd> new · <kbd>/</kbd> search · <kbd>Space</kbd>
             timer · <kbd>T</kbd> dark · <kbd>Esc</kbd> close</div>

@@ -632,7 +632,7 @@ function pro_header(array $user, string $active = 'teams', string $crumbHtml = '
 function pro_footer(array $user): void
 {
     ?>
-    <div class="foot">
+        <div class="foot">
         <div class="n">Taskvel</div>
         <div class="d">Focus · Rank · Ship</div>
         <div class="k">Signed in as <b><?= htmlspecialchars($user['email']) ?></b> · <a href="terms.php" style="color:var(--accent);font-weight:600">Terms</a> · <a href="privacy.php" style="color:var(--accent);font-weight:600">Privacy</a> · <a href="#" onclick="logoutUser();return false;" style="color:var(--accent);font-weight:600">Log out</a></div>
