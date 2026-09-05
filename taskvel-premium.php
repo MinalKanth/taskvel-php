@@ -6,7 +6,7 @@
 
 <!-- ═══════════════════════════════ SEO — CORE ═══════════════════════════════ -->
 <title>Taskvel Premium — The Command Deck for People Who Run on Deadlines</title>
-<meta name="description" content="Taskvel Premium is the task & focus management OS for professionals and teams — multi-device sync, real-time team collaboration, analytics dashboards, custom Pomodoro focus sessions, role permissions, and a GST/EPF/ESIC compliance & client tracker. Built by Samal Consultancy, trusted across Assam for 30+ years. Start a 14-day free trial, no card required." />
+<meta name="description" content="Taskvel Premium is the task & focus management OS for professionals and teams — multi-device sync, real-time team collaboration, analytics dashboards, custom Pomodoro focus sessions, role permissions, and a GST/EPF/ESIC compliance & client tracker. Built by Samal Consultancy, trusted across Assam for 30+ years. Start a 30-day free trial, no card required." />
 <meta name="keywords" content="task management software, team collaboration app, productivity OS, Pomodoro timer app, compliance tracker, GST EPF ESIC tracker, client management software, focus session app, analytics dashboard for teams, deadline tracker, Taskvel, Samal Consultancy, task ranking app India" />
 <meta name="author" content="Samal Consultancy" />
 <meta name="publisher" content="Samal Consultancy" />
@@ -35,7 +35,7 @@
 <meta property="og:image:alt" content="Taskvel Premium instrument-panel task console" />
 <meta name="twitter:card" content="summary_large_image" />
 <meta name="twitter:title" content="Taskvel Premium — The Command Deck for People Who Run on Deadlines" />
-<meta name="twitter:description" content="The task console for teams and professionals who cannot miss a deadline. 14-day free trial." />
+<meta name="twitter:description" content="The task console for teams and professionals who cannot miss a deadline. 30-day free trial." />
 <meta name="twitter:image" content="https://www.samalconsultancy.com/assets/taskvel-premium-og.png" />
 
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='22' fill='%230A0D1A'/%3E%3Ctext x='50' y='72' font-family='Georgia,serif' font-size='60' font-weight='700' fill='%23C9A15C' text-anchor='middle'%3ET%3C/text%3E%3C/svg%3E" />
@@ -70,7 +70,7 @@
   "@type": "FAQPage",
   "mainEntity": [
     { "@type": "Question", "name": "Is Taskvel Free actually free, forever?", "acceptedAnswer": { "@type": "Answer", "text": "Yes — no account, no card, no time limit. Premium exists for teams, not to pressure individual users into upgrading." } },
-    { "@type": "Question", "name": "Can I try Premium before paying?", "acceptedAnswer": { "@type": "Answer", "text": "Every plan starts with a 14-day trial with every instrument unlocked. No card required to start." } },
+    { "@type": "Question", "name": "Can I try Premium before paying?", "acceptedAnswer": { "@type": "Answer", "text": "Every plan starts with a 30-day trial with every instrument unlocked. No card required to start." } },
     { "@type": "Question", "name": "How does the compliance tracker relate to Samal Consultancy?", "acceptedAnswer": { "@type": "Answer", "text": "It is built directly from the workflow Samal Consultancy uses to run GST, EPFO and ESIC compliance for 70+ businesses, adapted so any team can track their own filings and clients." } },
     { "@type": "Question", "name": "Can I move my data from Taskvel Free into Premium?", "acceptedAnswer": { "@type": "Answer", "text": "Yes — import your existing tasks and tags in one step when you create your Premium workspace." } },
     { "@type": "Question", "name": "What happens to my data if I cancel?", "acceptedAnswer": { "@type": "Answer", "text": "You can export everything as CSV, PDF, or a full JSON backup at any time, and your data stays available for 30 days after cancellation." } }
@@ -810,7 +810,7 @@ footer{border-top:1px solid var(--line);padding:48px 0 30px;}
         <a href="register.php" class="btn btn-brass magnetic">Start your free trial →</a>
         <a href="#ledger" class="btn btn-ghost magnetic">See the console</a>
       </div>
-      <div class="hero-fine"><span class="dot"></span>14-day trial · no card required · cancel anytime</div>
+      <div class="hero-fine"><span class="dot"></span>30-day trial · no card required · cancel anytime</div>
       <div class="stat-row">
         <div class="stat"><b class="count" data-target="70">0</b><span>Businesses served</span></div>
         <div class="stat"><b class="count" data-target="30">0</b><span>Years compliance work</span></div>
@@ -1057,7 +1057,7 @@ footer{border-top:1px solid var(--line);padding:48px 0 30px;}
     <div class="section-head reveal" style="margin-left:auto;margin-right:auto;text-align:center">
       <span class="eyebrow" style="justify-content:center">Access</span>
       <h2>Plans for individuals and teams.</h2>
-      <p style="margin-left:auto;margin-right:auto">Every plan starts with a 14-day free trial. No card required to try it.</p>
+      <p style="margin-left:auto;margin-right:auto">Every plan starts with a 30-day free trial. No card required to try it.</p>
     </div>
 
     <!-- User type tabs -->
@@ -1094,7 +1094,7 @@ footer{border-top:1px solid var(--line);padding:48px 0 30px;}
     <div class="final-cta reveal">
       <span class="eyebrow" style="justify-content:center">Ready when you are</span>
       <h2>Give your team a ledger they can trust.</h2>
-      <p>14 days, every instrument unlocked, no card required.</p>
+      <p>30 days, every instrument unlocked, no card required.</p>
       <div class="final-actions">
         <a href="register.php" class="btn btn-brass magnetic">Start your free trial →</a>
         <a href="taskvel-free.php" class="btn btn-ghost magnetic">Try Taskvel Free instead</a>
@@ -1307,7 +1307,7 @@ document.querySelectorAll('.tl-item').forEach(el=>tlIo.observe(el));
 /* ═══════════════════════ FAQ ═══════════════════════ */
 const faqData=[
   {q:'Is Taskvel Free actually free, forever?',a:'Yes — no account, no card, no time limit. Premium exists for teams, not to pressure individual users into upgrading.'},
-  {q:'Can I try Premium before paying?',a:'Every plan starts with a 14-day trial with every instrument unlocked. No card required to start.'},
+  {q:'Can I try Premium before paying?',a:'Every plan starts with a 30-day trial with every instrument unlocked. No card required to start.'},
   {q:'How does the compliance tracker relate to Samal Consultancy?',a:'It\'s built directly from the workflow Samal Consultancy uses to run GST, EPFO and ESIC compliance for 70+ businesses — adapted so any team can track their own filings and clients.'},
   {q:'Can I move my data from Taskvel Free into Premium?',a:'Yes — import your existing tasks and tags in one step when you create your Premium workspace.'},
   {q:'What happens to my data if I cancel?',a:'You can export everything (CSV, PDF, full JSON backup) at any time, and your data stays available for 30 days after cancellation.'},
@@ -1422,7 +1422,7 @@ function renderPricingCards(){
       <ul class="price-feats">
         ${feats.map(f => `<li>${f}</li>`).join('')}
       </ul>
-      <a href="register.php?plan=${currentType}&cycle=${currentCycle}" class="btn btn-brass magnetic">Start 14-day free trial →</a>
+      <a href="register.php?plan=${currentType}&cycle=${currentCycle}" class="btn btn-brass magnetic">Start 30-day free trial →</a> 
     </div>
   `;
 }
