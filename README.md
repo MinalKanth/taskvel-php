@@ -20,6 +20,7 @@
 ![PHP](https://img.shields.io/badge/PHP-8.1%2B-777bb4?style=for-the-badge&logo=php&logoColor=white)
 ![MySQL](https://img.shields.io/badge/MySQL-8.0%2B-4479A1?style=for-the-badge&logo=mysql&logoColor=white)
 ![Billing](https://img.shields.io/badge/billing-Stripe%20ready-635bff?style=for-the-badge&logo=stripe&logoColor=white)
+![Billing](https://img.shields.io/badge/billing-Razorpay%20%2F%20UPI-0d2366?style=for-the-badge&logo=razorpay&logoColor=white)
 
 <br/>
 
@@ -63,7 +64,7 @@ Taskvel ships as four composable layers, each fully optional beyond the first:
 | 🧍 **Personal App** (`taskvel-pro.php`) | Smart, single-user task management with auto-ranking, focus timer, streaks, and offline PWA support |
 | 👥 **Teams & Projects** | Multi-user collaboration with Kanban boards, direct task assignment, roles, and activity logs |
 | 📍 **Daily Check-in** *(optional)* | A lightweight attendance + task-reporting ritual with manager dashboards, approvals, and email notifications |
-| 💳 **Billing & Enterprise Licensing** *(optional)* | 30-day Pro trial, individual Stripe upgrade, and seat-based licensing for organizations |
+| 💳 **Billing & Enterprise Licensing** *(optional)* | 30-day Pro trial, individual upgrade via Stripe or Razorpay (UPI intent/QR, cards, netbanking), and seat-based licensing for organizations |
 
 ---
 
@@ -213,6 +214,8 @@ A dedicated profit/loss journal for traders, living alongside the task-managemen
 | 🏅 Achievement badges | Goal Crusher, On Fire (3+ win streak), Consistent Trader, Profit Factor Pro, 5-Day Journal Streak, and 50+ Trades Logged, unlocked automatically from entry/journal history |
 | ⬇️ Export & filters | CSV export and print-friendly report view, filterable by Today/Week/Month/Previous Month/Year/Custom range, with searchable, sortable entries |
 
+> **Access model:** Trading is free to use for 10 days from your first journal entry — a separate, stricter clock than the 30-day general Pro trial. After that, the journal and calendar go **read-only**: every entry you've already logged stays fully visible, but creating or editing new entries requires an active Pro subscription. Enforced server-side (`require_trading_journal_write()` in `includes/billing.php`), not just hidden in the UI, so it can't be bypassed by calling `api/trading_journal.php` directly.
+
 ### 📍 Daily Check-in *(optional "office mode")*
 
 A third, completely optional area — separate from the personal app and Teams — for a lightweight daily attendance + task-reporting ritual.
@@ -286,8 +289,8 @@ Taskvel Pro is free to try, simple to pay for individually, and scales cleanly t
 
 ### 💰 Individual upgrade
 
-- One click on `billing.php` starts a real Stripe Checkout session for a personal Pro subscription
-- A dedicated webhook (`api/stripe-webhook.php`) reconciles the payment and flips the account to `plan_source = 'stripe'`, which the trial-expiry job will never touch
+- One click on `billing.php` starts a real Stripe Checkout session for a personal Pro subscription — or, for UPI intent/QR, cards, and netbanking without a Stripe/GSTIN-registered business account, a Razorpay Subscription instead
+- Two independent webhooks reconcile payment: `api/stripe-webhook.php` (sets `plan_source = 'stripe'`) and `api/razorpay-webhook.php` (sets `plan_source = 'razorpay'`) — either permanently exempts the account from the trial-expiry job
 
 ### 🏢 Enterprise seat-based licensing
 
@@ -620,6 +623,26 @@ Then set the following environment variables (get the price IDs from your Stripe
 
 Point your Stripe webhook endpoint at `https://yourdomain.com/api/stripe-webhook.php` and subscribe it to at least `checkout.session.completed` and `customer.subscription.deleted`. Until `STRIPE_SECRET_KEY` is set, the "Upgrade to Pro" and "add seats" buttons fail gracefully with a clear "Stripe is not configured yet" message instead of erroring — every other Taskvel feature works exactly as before.
 
+
+
+### Enabling Razorpay billing (optional, one-time)
+
+Taskvel's Razorpay integration (`includes/razorpay_client.php`, `api/razorpay-webhook.php`) is also **dependency-free** — plain `curl` against Razorpay's REST API, same philosophy as the Stripe client. It runs alongside Stripe rather than replacing it, so `billing.php` offers both as payment options and each subscriber's `plan_source` (`'stripe'` vs `'razorpay'`) tracks which one they're actually on.
+
+Set the following environment variables (get the Key ID/Secret from Razorpay Dashboard → Settings → API Keys):
+
+```bash
+RAZORPAY_KEY_ID=rzp_test_...
+RAZORPAY_KEY_SECRET=...
+RAZORPAY_WEBHOOK_SECRET=...
+```
+
+Point a Razorpay webhook at `https://yourdomain.com/api/razorpay-webhook.php` and subscribe it to: `subscription.authenticated`, `subscription.activated`, `subscription.charged`, `subscription.cancelled`, `subscription.completed`, `subscription.halted`, and `payment.failed`. Until `RAZORPAY_KEY_ID`/`RAZORPAY_KEY_SECRET` are set, the "Pay with UPI" buttons fail gracefully with a clear "Razorpay is not configured yet" message — every other Taskvel feature, including Stripe billing, works exactly as before.
+
+> Razorpay's UPI Autopay mandates are capped by NPCI at 30 years' validity — `config/razorpay.php`'s `RAZORPAY_TOTAL_CYCLES_MONTHLY`/`RAZORPAY_TOTAL_CYCLES_YEARLY` are set to exactly that ceiling (360 / 30 cycles) so subscription creation doesn't fail with `expire_at cannot be more than 30 years for upi`.
+
+
+
 ## ⚙️ Configuration
 
 | File | Purpose |
@@ -655,6 +678,11 @@ STRIPE_PRICE_PRO=price_...
 STRIPE_PRICE_ORG_SEAT_MONTHLY=price_...
 STRIPE_PRICE_ORG_SEAT_YEARLY=price_...
 APP_BASE_URL=https://yourdomain.com
+
+# Optional — only needed once you enable Razorpay billing (see Getting Started)
+RAZORPAY_KEY_ID=rzp_test_...
+RAZORPAY_KEY_SECRET=...
+RAZORPAY_WEBHOOK_SECRET=...
 ```
 
 Rotate `VAPID_PRIVATE_KEY`, SMTP credentials, `STRIPE_SECRET_KEY`, and `DB_PASS` through your host's secret manager rather than plain environment variables if your compliance requirements call for it.
@@ -723,8 +751,9 @@ taskvel-php/
 │   ├── ai_parse_task.php         # AI Quick Add — parses a free-form sentence into a structured task
 │   ├── trading_journal.php       # Trading Journal — goals, entries, journal, AI fix/rephrase
 │   ├── organizations.php         # Enterprise seat licensing — create/invite/suspend/remove/transfer
-│   ├── billing.php               # Personal trial status + Stripe Checkout session creation
+│   ├── billing.php               # Personal trial status + Stripe/Razorpay checkout+subscription creation
 │   ├── stripe-webhook.php        # Public — reconciles Stripe payments (team/user/org)
+│   ├── razorpay-webhook.php      # Public — reconciles Razorpay subscriptions (user/org)
 │   ├── settings.php              # VAPID key, push subscribe, device touch, notification prefs
 │   └── auth.php
 ├── includes/                   # Shared server-side logic
@@ -737,6 +766,7 @@ taskvel-php/
 │   ├── billing.php               # team_plan()/user_plan(), plan_limits(), seat/team-count guards
 │   ├── licensing.php              # Organization seat assignment, recompute_user_plan(), temp passwords
 │   ├── stripe_client.php          # Minimal curl-based Stripe Checkout Session client (no SDK)
+│   ├── razorpay_client.php        # Minimal curl-based Razorpay Plan/Subscription client (no SDK)
 │   ├── mailer.php
 │   ├── pro-shell.php              # Shared header/nav/design tokens for Teams & Billing pages
 │   └── auth.php
@@ -749,7 +779,8 @@ taskvel-php/
 │   ├── vapid.php
 │   ├── webhooks.php
 │   ├── workhours.php
-│   └── stripe.php                # STRIPE_SECRET_KEY, price IDs, APP_BASE_URL
+│   ├── stripe.php                # STRIPE_SECRET_KEY, price IDs, APP_BASE_URL
+│   └── razorpay.php              # RAZORPAY_KEY_ID/SECRET, price IDs, UPI Autopay cycle limits
 ├── sql/
 │   ├── schema.sql
 │   ├── migration_02_premium_sync.sql
@@ -763,7 +794,8 @@ taskvel-php/
 │   ├── migration_10_user_plan_limits.sql # Free: 2 teams/5 members · Pro: unlimited
 │   ├── migration_11_team_events.sql
 │   ├── migration_12_task_updates.sql     # Progress-update history + generalized attachments
-│   └── migration_13_trial_and_orgs.sql   # Trial fields + organizations/seats/billing history
+│   ├── migration_13_trial_and_orgs.sql   # Trial fields + organizations/seats/billing history
+│   └── migration_20_razorpay.sql         # Razorpay ids on users/organizations + plan cache tables
 ├── js/
 │   └── api-client.js            # Handles CSRF token attachment, API calls, file uploads
 ├── checkin.php                  # Daily Check-in page
@@ -869,8 +901,9 @@ Taskvel exposes clean, REST-style JSON endpoints under `api/`. All state-changin
 | `api/ai_parse_task.php` | AI Quick Add — parses one free-form sentence into a structured task |
 | `api/trading_journal.php` | Trading Journal — goals, daily P/L entries, journal entries, and AI fix/rephrase |
 | `api/organizations.php` | Enterprise seat licensing — create org, dashboard, invite/remove/suspend/reactivate/transfer seats, billing history |
-| `api/billing.php` | Personal trial/plan status and Stripe Checkout session creation (individual + org seats) |
+| `api/billing.php` | Personal trial/plan status, Stripe Checkout session creation, and Razorpay Subscription creation (individual + org seats + business bundle) |
 | `api/stripe-webhook.php` | Public — reconciles completed Stripe payments and cancellations across teams, individuals, and organizations |
+| `api/razorpay-webhook.php` | Public — reconciles Razorpay subscription activation, renewals, cancellations, and failed charges across individuals and organizations |
 | `api/settings.php` | VAPID public key, push subscription registration, device touch/last-seen, notification preferences |
 
 <details>
