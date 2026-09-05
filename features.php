@@ -399,7 +399,7 @@ body{font-family:'Sora',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;b
     <div class="rail-head">
       <span class="rail-eyebrow">07 — Trading Journal</span>
       <h2>Your P/L, tracked as carefully as your tasks</h2>
-      <p>A dedicated journal for traders — goals, daily entries, analytics, and an AI editor for your notes, living right alongside the rest of Taskvel.</p>
+      <p>A dedicated journal for traders — goals, daily entries, analytics, and an AI editor for your notes, living right alongside the rest of Taskvel. Free to use for your first 10 days of entries; after that, everything you've logged stays fully visible, but adding new entries requires Premium or Enterprise.</p>
     </div>
     <div class="feat-grid" data-stagger>
       <div class="feat-card"><div class="feat-ic">🎯</div><h3>Monthly goal tracking</h3><p>Set a ₹ target per month and watch a live gauge and progress bar track it, with confetti the moment you cross 100%.</p></div>
@@ -416,7 +416,7 @@ body{font-family:'Sora',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;b
     <div class="pricing-head">
       <span class="rail-eyebrow">08 — Pricing</span>
       <h2>Simple, honest pricing.</h2>
-      <p>Every plan starts with a 14-day free trial — every premium feature unlocked, no card required to begin.</p>
+      <p>Every plan starts with a 30-day free trial — every premium feature unlocked, no card required to begin.</p>
     </div>
 
     <div class="plan-toggle-row">
@@ -438,7 +438,7 @@ body{font-family:'Sora',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;b
         <div class="trial-notice-ic">!</div>
         <h4>What happens after your free trial</h4>
       </div>
-      <p>Your first <strong>14 days are fully free</strong> — every premium feature is unlocked, exactly as shown on this page. If you started on a <strong>1-month free promotional plan</strong>, here's exactly what happens the moment it ends:</p>
+      <p>Your first <strong>30 days are fully free</strong> — every premium feature is unlocked, exactly as shown on this page. Here's exactly what happens the moment your trial ends:</p>
       <ul class="trial-notice-list">
         <li>Your account automatically reverts to the <strong>Free tier</strong> — no charge is ever made without your consent.</li>
         <li>Premium features are locked: <strong>team collaboration, unlimited AI assistant, team chat, analytics dashboard, multi-device sync, manager dashboard, compliance tracker, and push notifications</strong> will stop working.</li>
@@ -550,7 +550,7 @@ document.getElementById('replay-tour-btn').addEventListener('click', function(){
       'Unlimited AI assistant — suggest, quick add, daily focus & summaries',
       'Multi-device sync & personal analytics',
       'Custom Pomodoro focus sessions',
-      'Trading journal & P/L dashboard',
+      'Trading journal — no 10-day limit, unlimited new entries',
       'Compliance & client tracker',
       'Real push notifications, even offline',
       'Priority email support'
@@ -560,7 +560,7 @@ document.getElementById('replay-tour-btn').addEventListener('click', function(){
       'Team collaboration & task assignment',
       'Unlimited AI across every team member',
       'Team Chat, with 7-day message history',
-      'Trading journal & P/L dashboard',
+      'Trading journal — no 10-day limit, unlimited new entries',
       'Role & permission control',
       'Daily check-in & manager dashboard',
       'Team-wide analytics dashboard',
@@ -584,6 +584,7 @@ document.getElementById('replay-tour-btn').addEventListener('click', function(){
           <li>Tags, deadlines, recurring tasks</li>
           <li>CSV / PDF / calendar export</li>
           <li>AI assistant — 3 actions/day</li>
+          <li>Trading journal — first 10 days of new entries free</li>
           <li>Works offline, installs like an app</li>
         </ul>
         <a href="taskvel-pro.php" class="btn btn-ghost">Continue on Free</a>
@@ -596,7 +597,7 @@ document.getElementById('replay-tour-btn').addEventListener('click', function(){
           ? 'For anyone using team features. Every member is billed individually at this rate.'
           : 'For professionals who need the full toolkit, every day.'}</p>
         <ul class="price-feats">${feats.map(f => `<li>${f}</li>`).join('')}</ul>
-        <a href="register.php?plan=${curType}&cycle=${curCycle}" class="btn btn-primary">Start 14-day free trial →</a>
+        <a href="register.php?plan=${curType}&cycle=${curCycle}" class="btn btn-primary">Start 30-day free trial →</a>
       </div>
     `;
   }
